@@ -2,10 +2,13 @@ package us.parr.rf;
 
 import us.parr.rf.misc.DataPair;
 import us.parr.rf.misc.FrequencySet;
+import us.parr.rf.misc.RFUtils;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
 
 import static us.parr.rf.RandomForest.INVALID_CATEGORY;
 
@@ -65,22 +68,22 @@ public class DecisionTree {
 		int yi = M-1; // last index is the target variable
 		// if all predict same category or only one row of data,
 		// create leaf predicting that
-		int pureCategory = uniqueValue(data, yi);
+		int pureCategory = RFUtils.uniqueValue(data, yi);
 		if ( pureCategory!=INVALID_CATEGORY ) {
 			return new DecisionTree(pureCategory);
 		}
 
-		double complete_gini = gini(values(data, yi), N);
+		double complete_gini = gini(RFUtils.values(data, yi), N);
 		double best_gain = 0.0;
 		int best_var = -1;
 		int best_val = 0;
 		DataPair best_split = null;
 		for (int i = 0; i<M; i++) { // for each variable
-			FrequencySet<Integer> values = values(data, i);
+			FrequencySet<Integer> values = RFUtils.values(data, i);
 			for (Integer uniqueValue : values.keySet()) { // for each value that variable takes on
 				DataPair s = split(data, i, uniqueValue);
-				FrequencySet<Integer> r1_categoryCounts = values(s.region1, yi);
-				FrequencySet<Integer> r2_categoryCounts = values(s.region2, yi);
+				FrequencySet<Integer> r1_categoryCounts = RFUtils.values(s.region1, yi);
+				FrequencySet<Integer> r2_categoryCounts = RFUtils.values(s.region2, yi);
 				int n1 = s.region1.size();
 				int n2 = s.region2.size();
 				double r1_gini = gini(r1_categoryCounts, n1);
@@ -120,43 +123,23 @@ public class DecisionTree {
 		return impurity;
 	}
 
-	public static FrequencySet<Integer> values(List<int[]> X, int splitVariable) {
-		FrequencySet<Integer> valueCounts = new FrequencySet<>();
-		for (int i = 0; i<X.size(); i++) { // for each row, count different values for col splitVariable
-			int[] row = X.get(i);
-			int col = row[splitVariable];
-			valueCounts.add(col);
-		}
-		return valueCounts;
-	}
-
 	public static DataPair split(List<int[]> X, int splitVariable, int splitValue) {
-		List<int[]> a = filter(X, x -> x[splitVariable] < splitValue);
-		List<int[]> b = filter(X, x -> x[splitVariable] >= splitValue);
+		List<int[]> a = RFUtils.filter(X, x -> x[splitVariable] < splitValue);
+		List<int[]> b = RFUtils.filter(X, x -> x[splitVariable] >= splitValue);
 		return new DataPair(a,b);
 	}
 
-	public static int uniqueValue(List<int[]> data, int varIndex) {
-		if ( data==null ) {
-			return INVALID_CATEGORY;
+	public JsonObject toJSON() {
+		JsonObjectBuilder builder =  Json.createObjectBuilder();
+		if ( isLeaf() ) {
+			builder.add("predict", category);
 		}
-		int[] firstRow = data.get(0);
-		int v = firstRow[varIndex];
-		for (int[] row : data) {
-			if ( row[varIndex]!=v ) {
-				return INVALID_CATEGORY;
-			}
+		else {
+			builder.add("var", splitVariable);
+			builder.add("val", splitValue);
+			builder.add("left", left.toJSON());
+			builder.add("right", right.toJSON());
 		}
-		return v;
-	}
-
-	public static <T> List<T> filter(List<T> data, Predicate<T> pred) {
-		List<T> output = new ArrayList<>();
-		if ( data!=null ) for (T x : data) {
-			if ( pred.test(x) ) {
-				output.add(x);
-			}
-		}
-		return output;
+		return builder.build();
 	}
 }

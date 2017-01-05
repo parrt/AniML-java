@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static us.parr.rf.RandomForest.INVALID_CATEGORY;
 
 public class TestBasics {
 	// Figure 18.3 Examples for the restaurant domain. from Russell and Norvig
@@ -40,16 +39,64 @@ public class TestBasics {
 		{1, 1, 1, 1, Full, $,   0, 0, Burger,   delay_30_60, 1}
 	};
 
-	@Test public void testEmpty() throws Exception {
-		RandomForest rf = new RandomForest(10);
-		List<int[]> X = new ArrayList<>();
-		List<Integer> Y = new ArrayList<>();
-		int[] variables = new int[5];
-		rf.train(X,variables,Y, 2);
+	// data from chap 7: http://shop.oreilly.com/product/9780596529321.do
+	public static final int slashdot = 0;
+	public static final int google = 0;
+	public static final int digg = 0;
+	public static final int kiwitobes = 0;
+	public static final int direct = 0;
+	public static final int USA = 0;
+	public static final int France = 0;
+	public static final int UK = 0;
+	public static final int NewZealand = 0;
+	public static final int NoSignUp = 0;
+	public static final int Basic = 0;
+	public static final int Premium = 0;
+	public static int[][] signups = {
+		{slashdot,  USA,        1, 18,NoSignUp},
+		{google,    France,     1, 23,NoSignUp},
+		{digg,      USA,        1, 24,Basic},
+		{kiwitobes, France,     1, 23,Basic},
+		{google,    UK,         0, 21,Premium},
+		{(direct),  NewZealand, 0, 12,NoSignUp},
+		{(direct),  UK,         0, 21,Basic},
+		{google,    USA,        0, 24,Premium},
+		{slashdot,  France,     1, 19,NoSignUp},
+		{digg,      USA,        0, 18,NoSignUp},
+		{google,    UK,         0, 18,NoSignUp},
+		{kiwitobes, UK,         0, 19,NoSignUp},
+		{digg,      NewZealand, 1, 12,Basic},
+		{slashdot,  UK,         0, 21,NoSignUp},
+		{google,    UK,         1, 18,Basic},
+		{kiwitobes, France,     1, 19,Basic}
+	};
 
-		int[] test = new int[5];
-		int result = rf.classify(test);
-		int expecting = INVALID_CATEGORY;
+	@Test public void testEmptyData() {
+		List<int[]> data = new ArrayList<>();
+		DecisionTree tree = DecisionTree.build(data);
+		assertEquals(null, tree);
+	}
+
+	@Test public void testOneRow() {
+		List<int[]> data = new ArrayList<>();
+		data.add(new int[] {1,2}); // 1 row with 1 var of value 1 predicting category 2
+		DecisionTree tree = DecisionTree.build(data);
+		String expecting = "{\"predict\":2}";
+		String result = tree.toJSON().toString();
 		assertEquals(expecting, result);
 	}
+
+//
+//	@Test public void testEmpty() throws Exception {
+//		RandomForest rf = new RandomForest(10);
+//		List<int[]> X = new ArrayList<>();
+//		List<Integer> Y = new ArrayList<>();
+//		int[] variables = new int[5];
+//		rf.train(X,variables,Y, 2);
+//
+//		int[] test = new int[5];
+//		int result = rf.classify(test);
+//		int expecting = INVALID_CATEGORY;
+//		assertEquals(expecting, result);
+//	}
 }
