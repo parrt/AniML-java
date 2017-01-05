@@ -79,11 +79,55 @@ public class TestBasics {
 
 	@Test public void testOneRow() {
 		List<int[]> data = new ArrayList<>();
-		data.add(new int[] {1,2}); // 1 row with 1 var of value 1 predicting category 2
+		data.add(new int[] {1,99}); // 1 row with 1 var of value 1 predicting category 99
 		DecisionTree tree = DecisionTree.build(data);
-		String expecting = "{\"predict\":2}";
-		String result = tree.toJSON().toString();
+		String expecting = "{'predict':99}";
+		String result = toTestString(tree);
 		assertEquals(expecting, result);
+	}
+
+	@Test public void testTwoRowsSameCat() {
+		List<int[]> data = new ArrayList<>();
+		data.add(new int[] {1,99}); // 1 row with 1 var of value 1 predicting category 99
+		data.add(new int[] {2,99}); // 2nd row with 1 var of value 2 predicting category 99
+		DecisionTree tree = DecisionTree.build(data);
+		String expecting = "{'predict':99}";
+		String result = toTestString(tree);
+		assertEquals(expecting, result);
+	}
+
+	@Test public void testTwoRowsSameCatMultipleIndepVars() {
+		List<int[]> data = new ArrayList<>();
+		data.add(new int[] {1,2,3,99});
+		data.add(new int[] {2,4,6,99});
+		DecisionTree tree = DecisionTree.build(data);
+		String expecting = "{'predict':99}";
+		String result = toTestString(tree);
+		assertEquals(expecting, result);
+	}
+
+	@Test public void testTwoRowsDiffCat() {
+		List<int[]> data = new ArrayList<>();
+		data.add(new int[] {1,99}); // 1 row with 1 var of value 1 predicting category 99
+		data.add(new int[] {2,100}); // 2nd row with 1 var of value 2 predicting category 50
+		DecisionTree tree = DecisionTree.build(data);
+		String expecting = "{'var':0,'val':2,'left':{'predict':99},'right':{'predict':100}}";
+		String result = toTestString(tree);
+		assertEquals(expecting, result);
+	}
+
+	@Test public void testTwoRowsDiffCatMultipleIndepVars() {
+		List<int[]> data = new ArrayList<>();
+		data.add(new int[] {1,2,3,99});
+		data.add(new int[] {2,4,6,100});
+		DecisionTree tree = DecisionTree.build(data);
+		String expecting = "{'var':0,'val':2,'left':{'predict':99},'right':{'predict':100}}";
+		String result = toTestString(tree);
+		assertEquals(expecting, result);
+	}
+
+	public static String toTestString(DecisionTree tree) {
+		return tree.toJSON().toString().replaceAll("\"", "'");
 	}
 
 //

@@ -64,8 +64,8 @@ public class DecisionTree {
 	public static DecisionTree build(List<int[]> data) {
 		if ( data==null || data.size()==0 ) return null;
 		int N = data.size();
-		int M = data.get(0).length;
-		int yi = M-1; // last index is the target variable
+		int M = data.get(0).length - 1; // last column is the predicted var
+		int yi = M; // last index is the target variable
 		// if all predict same category or only one row of data,
 		// create leaf predicting that
 		int pureCategory = RFUtils.uniqueValue(data, yi);
@@ -104,6 +104,7 @@ public class DecisionTree {
 			DecisionTree t = new DecisionTree(best_var, best_val);
 			t.left = build(best_split.region1);
 			t.right = build(best_split.region2);
+			return t;
 		}
 		return null;
 	}
