@@ -9,9 +9,11 @@ import java.util.function.Predicate;
 
 import static us.parr.rf.RandomForest.INVALID_CATEGORY;
 
-/** A classic CART decision tree meant only for classification, not regression. */
+/** A classic CART decision tree but this implementation is suitable just for
+ *  classification, not regression.
+ */
 public class DecisionTree {
-	public static final double MIN_GINI_IMPURITY_TO_BE_LEAF = 0.0001;
+//	public static final double MIN_GINI_IMPURITY_TO_BE_LEAF = 0.0001;
 
 	/** This node is split on which variable? */
 	protected int splitVariable;
@@ -27,6 +29,10 @@ public class DecisionTree {
 	protected int category = INVALID_CATEGORY;
 
 	public DecisionTree() {
+	}
+
+	public DecisionTree(int predictedCategory) {
+		makeLeaf(predictedCategory);
 	}
 
 	public DecisionTree(int splitVariable, int splitValue) {
@@ -57,10 +63,14 @@ public class DecisionTree {
 		int N = data.size();
 		int M = data.get(0).length;
 		int yi = M-1; // last index is the target variable
-		double complete_gini = gini(values(data, yi), N);
-		if ( complete_gini < MIN_GINI_IMPURITY_TO_BE_LEAF ) { // already pure enough
-			DecisionTree t = new DecisionTree(
+		// if all predict same category or only one row of data,
+		// create leaf predicting that
+		int pureCategory = uniqueValue(data, yi);
+		if ( pureCategory!=INVALID_CATEGORY ) {
+			return new DecisionTree(pureCategory);
 		}
+
+		double complete_gini = gini(values(data, yi), N);
 		double best_gain = 0.0;
 		int best_var = -1;
 		int best_val = 0;
@@ -95,9 +105,9 @@ public class DecisionTree {
 		return null;
 	}
 
-	public boolean isLeaf() { return left==null || right==null || category==INVALID_CATEGORY; }
+	public boolean isLeaf() { return left==null && right==null && category!=INVALID_CATEGORY; }
 
-	public void makeLeaf() { left=null; right=null; category=INVALID_CATEGORY; }
+	public void makeLeaf(int predictedCategory) { left=null; right=null; category=predictedCategory; }
 
 	/** Compute the gini impurity */
 	public static double gini(FrequencySet<Integer> categoryCounts, int n) {
@@ -124,6 +134,20 @@ public class DecisionTree {
 		List<int[]> a = filter(X, x -> x[splitVariable] < splitValue);
 		List<int[]> b = filter(X, x -> x[splitVariable] >= splitValue);
 		return new DataPair(a,b);
+	}
+
+	public static int uniqueValue(List<int[]> data, int varIndex) {
+		if ( data==null ) {
+			return INVALID_CATEGORY;
+		}
+		int[] firstRow = data.get(0);
+		int v = firstRow[varIndex];
+		for (int[] row : data) {
+			if ( row[varIndex]!=v ) {
+				return INVALID_CATEGORY;
+			}
+		}
+		return v;
 	}
 
 	public static <T> List<T> filter(List<T> data, Predicate<T> pred) {
