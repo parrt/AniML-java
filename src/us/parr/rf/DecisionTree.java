@@ -1,7 +1,12 @@
 package us.parr.rf;
 
+import us.parr.rf.misc.DataPair;
+import us.parr.rf.misc.FrequencySet;
+import us.parr.rf.misc.MutableInt;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import static us.parr.rf.RandomForest.INVALID_CATEGORY;
 
@@ -27,7 +32,87 @@ public class DecisionTree {
 		this.children = new ArrayList<>();
 	}
 
+	public static DecisionTree build(List<int[]> X, List<Integer> Y) {
+		List<int[]> data = new ArrayList<>(X.size());
+		for (int i = 0; i<X.size(); i++) {
+			int[] row = X.get(i);
+			int[] augmented = new int[row.length+1];
+			System.arraycopy(row, 0, augmented, 0, row.length);
+			augmented[row.length] = Y.get(i);
+			data.add(augmented);
+		}
+		return build(data);
+	}
+
+	/** Build a decision tree starting with arg data and recursively
+	 *  build up children. data_i is the ith observation and the last column of
+	 *  data is the predicted (dependent) variable.  Keeping the data together
+	 *  makes it easier to implement since splitting a set splits both
+	 *  features and predicted variables.
+	 */
+	public static DecisionTree build(List<int[]> data) {
+		if ( data==null || data.size()==0 ) return null;
+		int N = data.size();
+		int M = data.get(0).length;
+		int yi = M-1; // last index is the target variable
+		double complete_gini = gini(values(data, yi), N);
+		for (int i = 0; i<M; i++) { // for each variable
+			FrequencySet<Integer> values = values(data, i);
+			for (Integer uniqueValue : values.keySet()) { // for each value that variable takes on
+				DataPair s = split(data, i, uniqueValue);
+				FrequencySet<Integer> r1_categoryCounts = values(s.region1, yi);
+				FrequencySet<Integer> r2_categoryCounts = values(s.region2, yi);
+				int n1 = s.region1.size();
+				int n2 = s.region2.size();
+				double r1_gini = gini(r1_categoryCounts, n1);
+				double r2_gini = gini(r2_categoryCounts, n2);
+
+				double p1 = ((double)n1)/(n1+n2);
+				double p2 = ((double)n2)/(n1+n2);
+				double gain = complete_gini - (p1 * r1_gini + p2 * r2_gini);
+			}
+		}
+		return null;
+	}
+
 	public boolean isLeaf() { return children==null || category==INVALID_CATEGORY; }
 
 	public void makeLeaf() { children=null; category=INVALID_CATEGORY; }
+
+	/** Compute the gini impurity */
+	public static double gini(FrequencySet<Integer> categoryCounts, int n) {
+		double impurity = 0.0;
+		for (Integer cat : categoryCounts.keySet()) {
+			int count = categoryCounts.count(cat);
+			double freq = ((double)count) / n;
+			impurity += freq * (1-freq);
+		}
+		return impurity;
+	}
+
+	public static FrequencySet<Integer> values(List<int[]> X, int splitVariable) {
+		FrequencySet<Integer> valueCounts = new FrequencySet<>();
+		for (int i = 0; i<X.size(); i++) { // for each row, count different values for col splitVariable
+			int[] row = X.get(i);
+			int col = row[splitVariable];
+			valueCounts.add(col);
+		}
+		return valueCounts;
+	}
+
+	public static DataPair split(List<int[]> X, int splitVariable, int splitValue) {
+		List<int[]> a = filter(X, x -> x[splitVariable] < splitValue);
+		List<int[]> b = filter(X, x -> x[splitVariable] >= splitValue);
+		return new DataPair(a,b);
+	}
+
+	public static <T> List<T> filter(List<T> data, Predicate<T> pred) {
+		List<T> output = new ArrayList<>();
+		if ( data!=null ) for (T x : data) {
+			if ( pred.test(x) ) {
+				output.add(x);
+			}
+		}
+		return output;
+	}
 }
