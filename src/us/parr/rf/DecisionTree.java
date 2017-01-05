@@ -131,15 +131,29 @@ public class DecisionTree {
 	}
 
 	public JsonObject toJSON() {
+		return toJSON(null, null);
+	}
+
+	public JsonObject toJSON(String[] varnames, String[] catnames) {
 		JsonObjectBuilder builder =  Json.createObjectBuilder();
 		if ( isLeaf() ) {
-			builder.add("predict", category);
+			if ( catnames!=null ) {
+				builder.add("predict", catnames[category]);
+			}
+			else {
+				builder.add("predict", category);
+			}
 		}
 		else {
-			builder.add("var", splitVariable);
+			if ( varnames!=null ) {
+				builder.add("var", varnames[splitVariable]);
+			}
+			else {
+				builder.add("var", splitVariable);
+			}
 			builder.add("val", splitValue);
-			builder.add("left", left.toJSON());
-			builder.add("right", right.toJSON());
+			builder.add("left", left.toJSON(varnames, catnames));
+			builder.add("right", right.toJSON(varnames, catnames));
 		}
 		return builder.build();
 	}

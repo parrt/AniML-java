@@ -23,8 +23,10 @@ public class TestBasics {
 	public static final int delay_10_30 = 1;
 	public static final int delay_30_60 = 2;
 	public static final int delay_gt_60 = 3;
+	public static final String[] restaurant_varnames =
+		{"Alternate", "Bar", "Fri&Sat", "Hungry", "Patrons", "Price", "Raining", "MadeRez", "Type", "WaitEstimate", "WillWait"};
+	public static final String[] restaurant_catnames = {"no", "yes"};
 	public static int[][] restaurant = {
-		// Alternate Bar Fri&Sat Hungry Patrons Price Raining MadeRez Type WaitEstimate WillWait
 		{1, 0, 0, 1, Some, $$$, 0, 1, French,   delay_0_10,  1},
 		{1, 0, 0, 1, Full, $,   0, 0, Thai,     delay_30_60, 0},
 		{0, 1, 0, 0, Some, $,   0, 0, Burger,   delay_0_10,  1},
@@ -126,10 +128,6 @@ public class TestBasics {
 		assertEquals(expecting, result);
 	}
 
-	public static String toTestString(DecisionTree tree) {
-		return tree.toJSON().toString().replaceAll("\"", "'");
-	}
-
 	@Test public void testTwoVarsOneGoodOneBadSplitVar() {
 		List<int[]> data = new ArrayList<>(); // 1st var is perfect splitter, 2nd is bad
 		data.add(new int[] {1,4,99});
@@ -152,6 +150,25 @@ public class TestBasics {
 		String expecting = "{'var':1,'val':2,'left':{'predict':99},'right':{'predict':100}}";
 		String result = toTestString(tree);
 		assertEquals(expecting, result);
+	}
+
+	@Test public void testRestaurant() {
+		List<int[]> data = new ArrayList<>();
+		for (int[] row : restaurant) {
+			data.add(row);
+		}
+		DecisionTree tree = DecisionTree.build(data);
+		String expecting = "{'var':'Hungry','val':1,'left':{'var':'Bar','val':1,'left':{'predict':'no'},'right':{'var':'Raining','val':1,'left':{'predict':'yes'},'right':{'predict':'no'}}},'right':{'var':'Patrons','val':2,'left':{'predict':'yes'},'right':{'var':'Fri&Sat','val':1,'left':{'predict':'no'},'right':{'var':'Price','val':3,'left':{'predict':'yes'},'right':{'predict':'no'}}}}}";
+		String result = toTestString(tree, restaurant_varnames, restaurant_catnames);
+		assertEquals(expecting, result);
+	}
+
+	public static String toTestString(DecisionTree tree) {
+		return tree.toJSON().toString().replaceAll("\"", "'");
+	}
+
+	public static String toTestString(DecisionTree tree, String[] varnames, String[] catnames) {
+		return tree.toJSON(varnames,catnames).toString().replaceAll("\"", "'");
 	}
 
 //
