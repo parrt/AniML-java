@@ -1,13 +1,15 @@
 package us.parr.rf.misc;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 
 import static us.parr.rf.RandomForest.INVALID_CATEGORY;
 
 public class RFUtils {
-	public static FrequencySet<Integer> values(List<int[]> X, int splitVariable) {
+	public static FrequencySet<Integer> valueCountsInColumn(List<int[]> X, int splitVariable) {
 		FrequencySet<Integer> valueCounts = new FrequencySet<>();
 		for (int i = 0; i<X.size(); i++) { // for each row, count different values for col splitVariable
 			int[] row = X.get(i);
@@ -39,5 +41,16 @@ public class RFUtils {
 			}
 		}
 		return output;
+	}
+
+	public static int max(Collection<Integer> data) {
+		if ( data==null ) {
+			return Integer.MIN_VALUE;
+		}
+		int m = Integer.MIN_VALUE;
+		for (int d : data) {
+			if ( d>m ) m = d;
+		}
+		return m;
 	}
 }

@@ -8,6 +8,7 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static us.parr.rf.RandomForest.INVALID_CATEGORY;
@@ -73,17 +74,20 @@ public class DecisionTree {
 			return new DecisionTree(pureCategory);
 		}
 
-		double complete_gini = gini(RFUtils.values(data, yi), N);
+		double complete_gini = gini(RFUtils.valueCountsInColumn(data, yi), N);
 		double best_gain = 0.0;
 		int best_var = -1;
 		int best_val = 0;
 		DataPair best_split = null;
 		for (int i = 0; i<M; i++) { // for each variable
-			FrequencySet<Integer> values = RFUtils.values(data, i);
-			for (Integer uniqueValue : values.keySet()) { // for each value that variable takes on
+			FrequencySet<Integer> valuesAndCounts = RFUtils.valueCountsInColumn(data, i);
+			List<Integer> uniqueValues = valuesAndCounts.keys();
+			Collections.sort(uniqueValues);
+			uniqueValues.remove(0); // don't use first as nothing is to the left
+			for (Integer uniqueValue : uniqueValues) { // for each value that variable takes on
 				DataPair s = split(data, i, uniqueValue);
-				FrequencySet<Integer> r1_categoryCounts = RFUtils.values(s.region1, yi);
-				FrequencySet<Integer> r2_categoryCounts = RFUtils.values(s.region2, yi);
+				FrequencySet<Integer> r1_categoryCounts = RFUtils.valueCountsInColumn(s.region1, yi);
+				FrequencySet<Integer> r2_categoryCounts = RFUtils.valueCountsInColumn(s.region2, yi);
 				int n1 = s.region1.size();
 				int n2 = s.region2.size();
 				double r1_gini = gini(r1_categoryCounts, n1);

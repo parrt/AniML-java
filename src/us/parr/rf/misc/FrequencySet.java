@@ -6,7 +6,9 @@
 
 package us.parr.rf.misc;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /** Count how many of each key we have; not thread safe */
 public class FrequencySet<T> extends HashMap<T, MutableInt> {
@@ -25,5 +27,32 @@ public class FrequencySet<T> extends HashMap<T, MutableInt> {
 		else {
 			value.v++;
 		}
+	}
+
+	public List<Integer> counts() {
+		List<Integer> counts = new ArrayList<>();
+		for (MutableInt i : values()) {
+			counts.add(i.v);
+		}
+		return counts;
+	}
+
+	public List<T> keys() {
+		List<T> keys = new ArrayList<>();
+		keys.addAll(keySet());
+		return keys;
+	}
+
+	/** Return the key with the max count */
+	public T argmax() {
+		T keyOfMax = null;
+		for (T key : keySet()) {
+			if ( keyOfMax==null ) {
+				keyOfMax = key;
+				continue;
+			}
+			if ( count(key)>count(keyOfMax) ) keyOfMax = key;
+		}
+		return keyOfMax;
 	}
 }
