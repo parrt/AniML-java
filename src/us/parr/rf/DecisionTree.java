@@ -2,7 +2,6 @@ package us.parr.rf;
 
 import us.parr.rf.misc.DataPair;
 import us.parr.rf.misc.FrequencySet;
-import us.parr.rf.misc.MutableInt;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +9,10 @@ import java.util.function.Predicate;
 
 import static us.parr.rf.RandomForest.INVALID_CATEGORY;
 
+/** A classic CART decision tree meant only for classification, not regression. */
 public class DecisionTree {
+	public static final double MIN_GINI_IMPURITY_TO_BE_LEAF = 0.0001;
+
 	/** This node is split on which variable? */
 	protected int splitVariable;
 
@@ -56,6 +58,9 @@ public class DecisionTree {
 		int M = data.get(0).length;
 		int yi = M-1; // last index is the target variable
 		double complete_gini = gini(values(data, yi), N);
+		if ( complete_gini < MIN_GINI_IMPURITY_TO_BE_LEAF ) { // already pure enough
+			DecisionTree t = new DecisionTree(
+		}
 		double best_gain = 0.0;
 		int best_var = -1;
 		int best_val = 0;
