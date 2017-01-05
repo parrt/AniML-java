@@ -17,8 +17,9 @@ public class DecisionTree {
 	/** Split at what variable value? */
 	protected int splitValue;
 
-	/** List of child nodes if not a leaf node; non-null implies not a leaf node. */
-	protected List<DecisionTree> children;
+	/** Left child if not a leaf node; non-null implies not a leaf node. */
+	protected DecisionTree left;
+	protected DecisionTree right;
 
 	/** The predicted category if this is a leaf node; non-leaf by default */
 	protected int category = INVALID_CATEGORY;
@@ -29,7 +30,6 @@ public class DecisionTree {
 	public DecisionTree(int splitVariable, int splitValue) {
 		this.splitVariable = splitVariable;
 		this.splitValue = splitValue;
-		this.children = new ArrayList<>();
 	}
 
 	public static DecisionTree build(List<int[]> X, List<Integer> Y) {
@@ -56,6 +56,10 @@ public class DecisionTree {
 		int M = data.get(0).length;
 		int yi = M-1; // last index is the target variable
 		double complete_gini = gini(values(data, yi), N);
+		double best_gain = 0.0;
+		int best_var = -1;
+		int best_val = 0;
+		DataPair best_split = null;
 		for (int i = 0; i<M; i++) { // for each variable
 			FrequencySet<Integer> values = values(data, i);
 			for (Integer uniqueValue : values.keySet()) { // for each value that variable takes on
@@ -70,14 +74,25 @@ public class DecisionTree {
 				double p1 = ((double)n1)/(n1+n2);
 				double p2 = ((double)n2)/(n1+n2);
 				double gain = complete_gini - (p1 * r1_gini + p2 * r2_gini);
+				if ( gain > best_gain && n1>0 && n2>0 ) {
+					best_gain = gain;
+					best_var = i;
+					best_val = uniqueValue;
+					best_split = s;
+				}
 			}
+		}
+		if ( best_gain>0.0 ) {
+			DecisionTree t = new DecisionTree(best_var, best_val);
+			t.left = build(best_split.region1);
+			t.right = build(best_split.region2);
 		}
 		return null;
 	}
 
-	public boolean isLeaf() { return children==null || category==INVALID_CATEGORY; }
+	public boolean isLeaf() { return left==null || right==null || category==INVALID_CATEGORY; }
 
-	public void makeLeaf() { children=null; category=INVALID_CATEGORY; }
+	public void makeLeaf() { left=null; right=null; category=INVALID_CATEGORY; }
 
 	/** Compute the gini impurity */
 	public static double gini(FrequencySet<Integer> categoryCounts, int n) {
