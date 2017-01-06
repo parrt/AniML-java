@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import static us.parr.rf.RandomForest.INVALID_CATEGORY;
@@ -38,17 +39,23 @@ public abstract class DecisionTree {
 		return build(data);
 	}
 
+	public static DecisionTree build(List<int[]> data) {
+		return build(data, null, 0);
+	}
+
+	public static DecisionTree build(List<int[]> data, String[] varnames) {
+		return build(data, varnames, 0);
+	}
+
 	/** Build a decision tree starting with arg data and recursively
 	 *  build up children. data_i is the ith observation and the last column of
 	 *  data is the predicted (dependent) variable.  Keeping the data together
 	 *  makes it easier to implement since splitting a set splits both
 	 *  features and predicted variables.
+	 *
+	 *  If m>0, select split var from random subset of size m from all variable set.
 	 */
-	public static DecisionTree build(List<int[]> data) {
-		return build(data, (String[])null);
-	}
-
-	public static DecisionTree build(List<int[]> data, String[] varnames) {
+	public static DecisionTree build(List<int[]> data, String[] varnames, int m) {
 		if ( data==null || data.size()==0 ) return null;
 		int N = data.size();
 		int M = data.get(0).length - 1; // last column is the predicted var
@@ -69,12 +76,12 @@ public abstract class DecisionTree {
 		int best_var = -1;
 		int best_val = 0;
 		DataPair best_split = null;
-		for (int i = 0; i<M; i++) { // for each variable i
-//			FrequencySet<Integer> valuesAndCounts = RFUtils.valueCountsInColumn(data, i);
-//			List<Integer> uniqueValues = valuesAndCounts.keys();
+		List<Integer> indexes = getVarIndexes(m, M); // consider all or a subset of M variables
+		for (Integer i : indexes) { // for each variable i
 			// Sort data set on independent var i
 			final int varIndex = i;
 			Collections.sort(data, (ra,rb)-> {return Integer.compare(ra[varIndex],rb[varIndex]);});
+
 			// look for discontinuities (transitions) in dependent var, record row index
 			Set<Integer> splitValues = new HashSet<>();
 			for (int j=1;j<N;j++){ // walk all records
@@ -114,8 +121,8 @@ public abstract class DecisionTree {
 			DecisionSplitNode t = new DecisionSplitNode(best_var, best_val);
 			t.numRecords = N;
 			t.entropy = complete_entropy;
-			t.left = build(best_split.region1, varnames);
-			t.right = build(best_split.region2, varnames);
+			t.left = build(best_split.region1, varnames, m);
+			t.right = build(best_split.region2, varnames, m);
 			return t;
 		}
 		// we would gain nothing by splitting, make a leaf predicting majority vote
@@ -124,6 +131,18 @@ public abstract class DecisionTree {
 		t.numRecords = N;
 		t.entropy = complete_entropy;
 		return t;
+	}
+
+	public static List<Integer> getVarIndexes(int m, int M) {
+		if ( m<=0 ) m = M;
+		List<Integer> indexes = new ArrayList<>(M);
+		for (int i = 0; i<M; i++) {
+			indexes.add(i);
+		}
+		Collections.shuffle(indexes, new Random(666));
+		indexes = indexes.subList(0, m);
+		Collections.sort(indexes);
+		return indexes;
 	}
 
 	public boolean isLeaf() { return this instanceof DecisionLeafNode; }
