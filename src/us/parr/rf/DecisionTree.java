@@ -9,7 +9,9 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static us.parr.rf.RandomForest.INVALID_CATEGORY;
 
@@ -35,7 +37,7 @@ public class DecisionTree {
 	// for debugging, fields below
 
 	protected int numRecords;
-	protected double gini;
+	protected double entropy;
 
 	public DecisionTree() {
 	}
@@ -78,28 +80,28 @@ public class DecisionTree {
 		int yi = M; // last index is the target variable
 		// if all predict same category or only one row of data,
 		// create leaf predicting that
-		double complete_gini = RFUtils.gini(RFUtils.valueCountsInColumn(data, yi).counts());
+		double complete_entropy = RFUtils.entropy(RFUtils.valueCountsInColumn(data, yi).counts());
 		int pureCategory = RFUtils.uniqueValue(data, yi);
 		if ( pureCategory!=INVALID_CATEGORY ) {
 			DecisionTree t = new DecisionTree(pureCategory);
 			t.numRecords = N;
-			t.gini = complete_gini;
+			t.entropy = complete_entropy;
 			return t;
 		}
 
-		System.out.printf("gini of all %d values = %.2f\n", N, complete_gini);
+		System.out.printf("entropy of all %d values = %.2f\n", N, complete_entropy);
 		double best_gain = 0.0;
 		int best_var = -1;
 		int best_val = 0;
 		DataPair best_split = null;
 		for (int i = 0; i<M; i++) { // for each variable i
-			FrequencySet<Integer> valuesAndCounts = RFUtils.valueCountsInColumn(data, i);
-			List<Integer> uniqueValues = valuesAndCounts.keys();
+//			FrequencySet<Integer> valuesAndCounts = RFUtils.valueCountsInColumn(data, i);
+//			List<Integer> uniqueValues = valuesAndCounts.keys();
 			// Sort data set on independent var i
 			final int varIndex = i;
 			Collections.sort(data, (ra,rb)-> {return Integer.compare(ra[varIndex],rb[varIndex]);});
 			// look for discontinuities (transitions) in dependent var, record row index
-			List<Integer> splitValues = new ArrayList<>();
+			Set<Integer> splitValues = new HashSet<>();
 			for (int j=1;j<N;j++){ // walk all records
 				if (data.get(j-1)[yi] != data.get(j)[yi]) { // discontinuity in predicted var (not var i)
 					int splitValue = data.get(j)[i];
@@ -112,13 +114,13 @@ public class DecisionTree {
 				FrequencySet<Integer> r2_categoryCounts = RFUtils.valueCountsInColumn(s.region2, yi);
 				int n1 = s.region1.size();
 				int n2 = s.region2.size();
-				double r1_gini = RFUtils.gini(r1_categoryCounts.counts());
-				double r2_gini = RFUtils.gini(r2_categoryCounts.counts());
+				double r1_entropy = RFUtils.entropy(r1_categoryCounts.counts());
+				double r2_entropy = RFUtils.entropy(r2_categoryCounts.counts());
 
 				double p1 = ((double)n1)/(n1+n2);
 				double p2 = ((double)n2)/(n1+n2);
-				double expectedGiniValue = p1*r1_gini+p2*r2_gini;
-				double gain = complete_gini - expectedGiniValue;
+				double expectedEntropyValue = p1*r1_entropy+p2*r2_entropy;
+				double gain = complete_entropy - expectedEntropyValue;
 
 				String newbest = "";
 				if ( gain > best_gain && n1>0 && n2>0 ) {
@@ -129,14 +131,14 @@ public class DecisionTree {
 					newbest=" (new best)";
 				}
 				String var = varnames!=null ? varnames[i] : String.valueOf(i);
-				System.out.printf("Ginis var=%13s val=%d r1=%.2f r2=%.2f, egini=%.2f gain=%.2f%s\n",
-				                  var, splitValue, r1_gini, r2_gini, expectedGiniValue, gain, newbest);
+				System.out.printf("Entropies var=%13s val=%d r1=%d/%d*%.2f r2=%d/%d*%.2f, ExpEntropy=%.2f gain=%.2f%s\n",
+				                  var, splitValue, n1, n1+n2, r1_entropy, n2, n1+n2,r2_entropy, expectedEntropyValue, gain, newbest);
 			}
 		}
 		if ( best_gain>0.0 ) {
 			DecisionTree t = new DecisionTree(best_var, best_val);
 			t.numRecords = N;
-			t.gini = complete_gini;
+			t.entropy = complete_entropy;
 			t.left = build(best_split.region1, varnames);
 			t.right = build(best_split.region2, varnames);
 			return t;
@@ -212,22 +214,22 @@ public class DecisionTree {
 		int id = System.identityHashCode(t);
 		if ( t.isLeaf() ) {
 			if ( catnames!=null ) {
-				nodes.add(String.format("n%d [shape=box, label=\"%s\\nn=%d\\ngini=%.2f\"];",
-				                        id, catnames[t.category], t.numRecords, t.gini));
+				nodes.add(String.format("n%d [shape=box, label=\"%s\\nn=%d\\nE=%.2f\"];",
+				                        id, catnames[t.category], t.numRecords, t.entropy));
 			}
 			else {
-				nodes.add(String.format("n%d [shape=box, label=\"%d\\nn=%d\\ngini=%.2f\"];",
-				                        id, t.category, t.numRecords, t.gini));
+				nodes.add(String.format("n%d [shape=box, label=\"%d\\nn=%d\\nE=%.2f\"];",
+				                        id, t.category, t.numRecords, t.entropy));
 			}
 		}
 		else {
 			if ( varnames!=null ) {
-				nodes.add(String.format("n%d [label=\"%s\\nn=%d\\ngini=%.2f\"];",
-				                        id, varnames[t.splitVariable], t.numRecords, t.gini));
+				nodes.add(String.format("n%d [label=\"%s\\nn=%d\\nE=%.2f\"];",
+				                        id, varnames[t.splitVariable], t.numRecords, t.entropy));
 			}
 			else {
-				nodes.add(String.format("n%d [label=\"x%d\\nn=%d\\ngini=%.2f\"];",
-				                        id, t.splitVariable, t.numRecords, t.gini));
+				nodes.add(String.format("n%d [label=\"x%d\\nn=%d\\nE=%.2f\"];",
+				                        id, t.splitVariable, t.numRecords, t.entropy));
 			}
 			getDOTNodeNames(nodes, t.left, varnames, catnames);
 			getDOTNodeNames(nodes, t.right, varnames, catnames);
