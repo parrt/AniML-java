@@ -169,4 +169,17 @@ public class TestBasics extends BaseTest {
 //		System.out.println(tree.toDOT(null,null));
 		assertEquals(expecting, result);
 	}
+
+	@Test public void testTimestampAndGoodPredictorIgnoresTimestamp() {
+		List<int[]> data = new ArrayList<>();
+		data.add(new int[] {1,9,2}); // x0 is crappy but x1 is perfect predictor of y
+		data.add(new int[] {2,12,1});
+		data.add(new int[] {3,7,2});
+		data.add(new int[] {4,11,1});
+		DecisionTree tree = DecisionTree.build(data);
+		String expecting = "{'var':'x1','val':9,'n':8,'E':'1.00','left':{'predict':2,'n':2},'right':{'var':'x1','val':11,'n':6,'E':'0.92','left':{'predict':1,'n':2},'right':{'var':'x1','val':12,'n':4,'E':'1.00','left':{'predict':2,'n':2},'right':{'predict':1,'n':2}}}}";
+		String result = toTestString(tree);
+		System.out.println(tree.toDOT(null,null));
+		assertEquals(expecting, result);
+	}
 }
