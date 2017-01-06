@@ -92,13 +92,22 @@ public class DecisionTree {
 		int best_var = -1;
 		int best_val = 0;
 		DataPair best_split = null;
-		for (int i = 0; i<M; i++) { // for each variable
+		for (int i = 0; i<M; i++) { // for each variable i
 			FrequencySet<Integer> valuesAndCounts = RFUtils.valueCountsInColumn(data, i);
 			List<Integer> uniqueValues = valuesAndCounts.keys();
-			Collections.sort(uniqueValues);
-			uniqueValues.remove(0); // don't use first as nothing is to the left
-			for (Integer uniqueValue : uniqueValues) { // for each value that variable takes on
-				DataPair s = split(data, i, uniqueValue);
+			// Sort data set on independent var i
+			final int varIndex = i;
+			Collections.sort(data, (ra,rb)-> {return Integer.compare(ra[varIndex],rb[varIndex]);});
+			// look for discontinuities (transitions) in dependent var, record row index
+			List<Integer> splitValues = new ArrayList<>();
+			for (int j=1;j<N;j++){ // walk all records
+				if (data.get(j-1)[yi] != data.get(j)[yi]) { // discontinuity in predicted var (not var i)
+					int splitValue = data.get(j)[i];
+					splitValues.add(splitValue);
+				}
+			}
+			for (Integer splitValue : splitValues) {
+				DataPair s = split(data, i, splitValue);
 				FrequencySet<Integer> r1_categoryCounts = RFUtils.valueCountsInColumn(s.region1, yi);
 				FrequencySet<Integer> r2_categoryCounts = RFUtils.valueCountsInColumn(s.region2, yi);
 				int n1 = s.region1.size();
@@ -115,13 +124,13 @@ public class DecisionTree {
 				if ( gain > best_gain && n1>0 && n2>0 ) {
 					best_gain = gain;
 					best_var = i;
-					best_val = uniqueValue;
+					best_val = splitValue;
 					best_split = s;
 					newbest=" (new best)";
 				}
 				String var = varnames!=null ? varnames[i] : String.valueOf(i);
 				System.out.printf("Ginis var=%13s val=%d r1=%.2f r2=%.2f, egini=%.2f gain=%.2f%s\n",
-				                  var, uniqueValue, r1_gini, r2_gini, expectedGiniValue, gain, newbest);
+				                  var, splitValue, r1_gini, r2_gini, expectedGiniValue, gain, newbest);
 			}
 		}
 		if ( best_gain>0.0 ) {
