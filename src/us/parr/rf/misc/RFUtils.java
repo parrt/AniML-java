@@ -3,12 +3,19 @@ package us.parr.rf.misc;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Random;
 import java.util.function.Predicate;
 
 import static java.lang.Math.log;
 import static us.parr.rf.RandomForest.INVALID_CATEGORY;
 
 public class RFUtils {
+	public static final int SEED = 777111333; // need randomness but use same seed to get reproducibility
+	final public static Random random = new Random();
+	static {
+		random.setSeed(SEED);
+	}
+
 	public static FrequencySet<Integer> valueCountsInColumn(List<int[]> X, int splitVariable) {
 		FrequencySet<Integer> valueCounts = new FrequencySet<>();
 		for (int i = 0; i<X.size(); i++) { // for each row, count different values for col splitVariable
@@ -93,5 +100,14 @@ public class RFUtils {
 
 	public static double log2(double p) {
 		return log(p) / log(2.0); // log2(x) = log(x)/log(2)
+	}
+
+	/** Produce an array of n random integers in [0..highvalue) */
+	public static int[] randint(int n, int highvalue) {
+		int[] values = new int[n];
+		for (int i = 0; i<n; i++) {
+			values[i] = random.nextInt(highvalue);
+		}
+		return values;
 	}
 }
