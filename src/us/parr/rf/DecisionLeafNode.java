@@ -40,7 +40,7 @@ public class DecisionLeafNode extends DecisionTree {
 			                        id, catnames[category], numRecords, entropy));
 		}
 		else {
-			nodes.add(String.format("n%d [shape=box, label=\"%d\\nn=%d\\nE=%.2f\"];",
+			nodes.add(String.format("n%d [shape=box, label=\"y%d\\nn=%d\\nE=%.2f\"];",
 			                        id, category, numRecords, entropy));
 		}
 	}
