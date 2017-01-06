@@ -32,6 +32,11 @@ public class DecisionTree {
 	/** The predicted category if this is a leaf node; non-leaf by default */
 	protected int category = INVALID_CATEGORY;
 
+	// for debugging, fields below
+
+	protected int numRecords;
+	protected double gini;
+
 	public DecisionTree() {
 	}
 
@@ -73,12 +78,15 @@ public class DecisionTree {
 		int yi = M; // last index is the target variable
 		// if all predict same category or only one row of data,
 		// create leaf predicting that
+		double complete_gini = gini(RFUtils.valueCountsInColumn(data, yi), N);
 		int pureCategory = RFUtils.uniqueValue(data, yi);
 		if ( pureCategory!=INVALID_CATEGORY ) {
-			return new DecisionTree(pureCategory);
+			DecisionTree t = new DecisionTree(pureCategory);
+			t.numRecords = N;
+			t.gini = complete_gini;
+			return t;
 		}
 
-		double complete_gini = gini(RFUtils.valueCountsInColumn(data, yi), N);
 		System.out.printf("gini of all %d values = %.2f\n", N, complete_gini);
 		double best_gain = 0.0;
 		int best_var = -1;
@@ -118,6 +126,8 @@ public class DecisionTree {
 		}
 		if ( best_gain>0.0 ) {
 			DecisionTree t = new DecisionTree(best_var, best_val);
+			t.numRecords = N;
+			t.gini = complete_gini;
 			t.left = build(best_split.region1, varnames);
 			t.right = build(best_split.region2, varnames);
 			return t;
@@ -204,20 +214,22 @@ public class DecisionTree {
 		int id = System.identityHashCode(t);
 		if ( t.isLeaf() ) {
 			if ( catnames!=null ) {
-				nodes.add(String.format("n%d [label=\"%s\"];", id, catnames[t.category]));
+				nodes.add(String.format("n%d [label=\"%s\\nn=%d\\ngini=%.2f\"];",
+				                        id, catnames[t.category], t.numRecords, t.gini));
 			}
 			else {
-				nodes.add(String.format("n%d [label=\"%d\"];", id, t.category));
+				nodes.add(String.format("n%d [label=\"%d\\nn=%d\\ngini=%.2f\"];",
+				                        id, t.category, t.numRecords, t.gini));
 			}
 		}
 		else {
 			if ( varnames!=null ) {
-				nodes.add(String.format("n%d [label=\"%s@%d\"];",
-				                        id, varnames[t.splitVariable], t.splitValue));
+				nodes.add(String.format("n%d [label=\"%s@%d\\nn=%d\\ngini=%.2f\"];",
+				                        id, varnames[t.splitVariable], t.splitValue, t.numRecords, t.gini));
 			}
 			else {
-				nodes.add(String.format("n%d [label=\"x%d@%d\"];",
-				                        id, t.splitVariable, t.splitValue));
+				nodes.add(String.format("n%d [label=\"x%d@%d\\nn=%d\\ngini=%.2f\"];",
+				                        id, t.splitVariable, t.splitValue, t.numRecords, t.gini));
 			}
 			getDOTNodeNames(nodes, t.left, varnames, catnames);
 			getDOTNodeNames(nodes, t.right, varnames, catnames);
