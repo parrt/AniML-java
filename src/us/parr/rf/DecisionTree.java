@@ -24,6 +24,8 @@ public abstract class DecisionTree {
 	public DecisionTree() {
 	}
 
+	public abstract int classify(int[] X);
+
 	public static DecisionTree build(List<int[]> X, List<Integer> Y) {
 		List<int[]> data = new ArrayList<>(X.size());
 		for (int i = 0; i<X.size(); i++) {

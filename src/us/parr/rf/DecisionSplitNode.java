@@ -23,6 +23,15 @@ public class DecisionSplitNode extends DecisionTree {
 		this.splitValue = splitValue;
 	}
 
+	public int classify(int[] X) {
+		if ( X[splitVariable] < splitValue ) {
+			return left.classify(X);
+		}
+		else {
+			return right.classify(X);
+		}
+	}
+
 	@Override
 	public JsonObject toJSON(String[] varnames, String[] catnames) {
 		JsonObjectBuilder builder =  Json.createObjectBuilder();

@@ -16,6 +16,10 @@ public class DecisionLeafNode extends DecisionTree {
 		this.category = predictedCategory;
 	}
 
+	public int classify(int[] X) {
+		return category;
+	}
+
 	@Override
 	public JsonObject toJSON(String[] varnames, String[] catnames) {
 		JsonObjectBuilder builder =  Json.createObjectBuilder();

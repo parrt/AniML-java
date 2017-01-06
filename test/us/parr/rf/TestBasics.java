@@ -12,6 +12,7 @@ public class TestBasics extends BaseTest {
 		List<int[]> data = new ArrayList<>();
 		DecisionTree tree = DecisionTree.build(data);
 		assertEquals(null, tree);
+		checkPredictions(data, tree);
 	}
 
 	@Test public void testOneRow() {
@@ -21,6 +22,7 @@ public class TestBasics extends BaseTest {
 		String expecting = "{'predict':99,'n':1}";
 		String result = toTestString(tree);
 		assertEquals(expecting, result);
+		checkPredictions(data, tree);
 	}
 
 	@Test public void testTwoRowsSameCat() {
@@ -31,6 +33,7 @@ public class TestBasics extends BaseTest {
 		String expecting = "{'predict':99,'n':2}";
 		String result = toTestString(tree);
 		assertEquals(expecting, result);
+		checkPredictions(data, tree);
 	}
 
 	@Test public void testCannotPredict() {
@@ -43,6 +46,7 @@ public class TestBasics extends BaseTest {
 		String expecting = "{'predict':99,'n':4,'E':'1.00'}";
 		String result = toTestString(tree);
 		assertEquals(expecting, result);
+		// cannot test prediction as it's noise
 	}
 
 	@Test public void testTwoRowsSameCatMultipleIndepVars() {
@@ -53,6 +57,7 @@ public class TestBasics extends BaseTest {
 		String expecting = "{'predict':99,'n':2}";
 		String result = toTestString(tree);
 		assertEquals(expecting, result);
+		checkPredictions(data, tree);
 	}
 
 	@Test public void testTwoRowsDiffCat() {
@@ -63,6 +68,7 @@ public class TestBasics extends BaseTest {
 		String expecting = "{'var':'x0','val':2,'n':2,'E':'1.00','left':{'predict':99,'n':1},'right':{'predict':100,'n':1}}";
 		String result = toTestString(tree);
 		assertEquals(expecting, result);
+		checkPredictions(data, tree);
 	}
 
 	@Test public void testTwoRowsDiffCatMultipleIndepVars() {
@@ -73,6 +79,7 @@ public class TestBasics extends BaseTest {
 		String expecting = "{'var':'x0','val':2,'n':2,'E':'1.00','left':{'predict':99,'n':1},'right':{'predict':100,'n':1}}";
 		String result = toTestString(tree);
 		assertEquals(expecting, result);
+		checkPredictions(data, tree);
 	}
 
 	@Test public void testTwoVarsOneGoodOneBadSplitVar() {
@@ -85,6 +92,7 @@ public class TestBasics extends BaseTest {
 		String expecting = "{'var':'x0','val':2,'n':4,'E':'1.00','left':{'predict':99,'n':2},'right':{'predict':100,'n':2}}";
 		String result = toTestString(tree);
 		assertEquals(expecting, result);
+		checkPredictions(data, tree);
 	}
 
 	@Test public void testTwoVarsOneGoodOneBadSplitVarFlippedOrder() {
@@ -97,6 +105,7 @@ public class TestBasics extends BaseTest {
 		String expecting = "{'var':'x1','val':2,'n':4,'E':'1.00','left':{'predict':99,'n':2},'right':{'predict':100,'n':2}}";
 		String result = toTestString(tree);
 		assertEquals(expecting, result);
+		checkPredictions(data, tree);
 	}
 
 	@Test public void testNoisePredictions() {
@@ -134,6 +143,7 @@ public class TestBasics extends BaseTest {
 		String result = toTestString(tree);
 //		System.out.println(tree.toDOT(null,null));
 		assertEquals(expecting, result);
+		// cannot test prediction as it's noise
 	}
 
 	@Test public void testNoiseAndGoodPredictor() {
@@ -151,6 +161,7 @@ public class TestBasics extends BaseTest {
 		String result = toTestString(tree);
 //		System.out.println(tree.toDOT(null,null));
 		assertEquals(expecting, result);
+		checkPredictions(data, tree);
 	}
 
 	@Test public void testFixedAndGoodPredictorWith4PredictorValues() {
@@ -168,6 +179,7 @@ public class TestBasics extends BaseTest {
 		String result = toTestString(tree);
 //		System.out.println(tree.toDOT(null,null));
 		assertEquals(expecting, result);
+		checkPredictions(data, tree);
 	}
 
 	@Test public void testTimestampAndGoodPredictorIgnoresTimestamp() {
@@ -177,9 +189,10 @@ public class TestBasics extends BaseTest {
 		data.add(new int[] {3,7,2});
 		data.add(new int[] {4,11,1});
 		DecisionTree tree = DecisionTree.build(data);
-		String expecting = "{'var':'x1','val':9,'n':8,'E':'1.00','left':{'predict':2,'n':2},'right':{'var':'x1','val':11,'n':6,'E':'0.92','left':{'predict':1,'n':2},'right':{'var':'x1','val':12,'n':4,'E':'1.00','left':{'predict':2,'n':2},'right':{'predict':1,'n':2}}}}";
+		String expecting = "{'var':'x1','val':11,'n':4,'E':'1.00','left':{'predict':2,'n':2},'right':{'predict':1,'n':2}}";
 		String result = toTestString(tree);
-		System.out.println(tree.toDOT(null,null));
+//		System.out.println(tree.toDOT(null,null));
 		assertEquals(expecting, result);
+		checkPredictions(data, tree);
 	}
 }

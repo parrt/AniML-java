@@ -92,6 +92,7 @@ public class TestDataSets extends BaseTest {
 		String result = toTestString(tree, restaurant_varnames, restaurant_catnames);
 		System.out.println(tree.toDOT(restaurant_varnames, restaurant_catnames));
 		assertEquals(expecting, result);
+		checkPredictions(data, tree);
 	}
 
 	@Test public void testWebsiteSignups() {
@@ -105,5 +106,6 @@ public class TestDataSets extends BaseTest {
 		String result = toTestString(tree, signups_varnames, signups_catnames);
 //		System.out.println(tree.toDOT(signups_varnames, signups_catnames));
 		assertEquals(expecting, result);
+		checkPredictions(data, tree);
 	}
 }
