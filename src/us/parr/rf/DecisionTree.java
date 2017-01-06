@@ -4,9 +4,7 @@ import us.parr.rf.misc.DataPair;
 import us.parr.rf.misc.FrequencySet;
 import us.parr.rf.misc.RFUtils;
 
-import javax.json.Json;
 import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -14,42 +12,16 @@ import java.util.List;
 import java.util.Set;
 
 import static us.parr.rf.RandomForest.INVALID_CATEGORY;
-import static us.parr.rf.misc.RFUtils.isClose;
 
 /** A classic CART decision tree but this implementation is suitable just for
  *  classification, not regression.
  */
-public class DecisionTree {
-//	public static final double MIN_GINI_IMPURITY_TO_BE_LEAF = 0.0001;
-
-	/** This node is split on which variable? */
-	protected int splitVariable;
-
-	/** Split at what variable value? */
-	protected int splitValue;
-
-	/** Left child if not a leaf node; non-null implies not a leaf node. */
-	protected DecisionTree left;
-	protected DecisionTree right;
-
-	/** The predicted category if this is a leaf node; non-leaf by default */
-	protected int category = INVALID_CATEGORY;
-
+public abstract class DecisionTree {
 	// for debugging, fields below
-
 	protected int numRecords;
 	protected double entropy;
 
 	public DecisionTree() {
-	}
-
-	public DecisionTree(int predictedCategory) {
-		makeLeaf(predictedCategory);
-	}
-
-	public DecisionTree(int splitVariable, int splitValue) {
-		this.splitVariable = splitVariable;
-		this.splitValue = splitValue;
 	}
 
 	public static DecisionTree build(List<int[]> X, List<Integer> Y) {
@@ -84,7 +56,7 @@ public class DecisionTree {
 		double complete_entropy = RFUtils.entropy(RFUtils.valueCountsInColumn(data, yi).counts());
 		int pureCategory = RFUtils.uniqueValue(data, yi);
 		if ( pureCategory!=INVALID_CATEGORY ) {
-			DecisionTree t = new DecisionTree(pureCategory);
+			DecisionTree t = new DecisionLeafNode(pureCategory);
 			t.numRecords = N;
 			t.entropy = complete_entropy;
 			return t;
@@ -137,7 +109,7 @@ public class DecisionTree {
 			}
 		}
 		if ( best_gain>0.0 ) {
-			DecisionTree t = new DecisionTree(best_var, best_val);
+			DecisionSplitNode t = new DecisionSplitNode(best_var, best_val);
 			t.numRecords = N;
 			t.entropy = complete_entropy;
 			t.left = build(best_split.region1, varnames);
@@ -146,15 +118,13 @@ public class DecisionTree {
 		}
 		// we would gain nothing by splitting, make a leaf predicting majority vote
 		int majorityVote = RFUtils.valueCountsInColumn(data, yi).argmax();
-		DecisionTree t = new DecisionTree(majorityVote);
+		DecisionTree t = new DecisionLeafNode(majorityVote);
 		t.numRecords = N;
 		t.entropy = complete_entropy;
 		return t;
 	}
 
-	public boolean isLeaf() { return left==null && right==null && category!=INVALID_CATEGORY; }
-
-	public void makeLeaf(int predictedCategory) { left=null; right=null; category=predictedCategory; }
+	public boolean isLeaf() { return this instanceof DecisionLeafNode; }
 
 	public static DataPair split(List<int[]> X, int splitVariable, int splitValue) {
 		List<int[]> a = RFUtils.filter(X, x -> x[splitVariable] < splitValue);
@@ -166,48 +136,18 @@ public class DecisionTree {
 		return toJSON(null, null);
 	}
 
-	public JsonObject toJSON(String[] varnames, String[] catnames) {
-		JsonObjectBuilder builder =  Json.createObjectBuilder();
-		if ( isLeaf() ) {
-			if ( catnames!=null ) {
-				builder.add("predict", catnames[category]);
-			}
-			else {
-				builder.add("predict", category);
-			}
-			builder.add("n", numRecords);
-			if ( !isClose(entropy,0.0) ) {
-				builder.add("E", String.format("%.2f",entropy));
-			}
-		}
-		else {
-			if ( varnames!=null ) {
-				builder.add("var", varnames[splitVariable]);
-			}
-			else {
-				builder.add("var", "x"+splitVariable);
-			}
-			builder.add("val", splitValue);
-			builder.add("n", numRecords);
-			if ( !isClose(entropy,0.0) ) {
-				builder.add("E", String.format("%.2f",entropy));
-			}
-			builder.add("left", left.toJSON(varnames, catnames));
-			builder.add("right", right.toJSON(varnames, catnames));
-		}
-		return builder.build();
-	}
+	public abstract JsonObject toJSON(String[] varnames, String[] catnames);
 
 	public String toDOT(String[] varnames, String[] catnames) {
 		StringBuilder buf = new StringBuilder();
 		buf.append("digraph dtree {\n");
 		List<String> nodes = new ArrayList<>();
-		getDOTNodeNames(nodes, this, varnames, catnames);
+		getDOTNodeNames(nodes, varnames, catnames);
 		for (String node : nodes) {
 			buf.append("\t"+node+"\n");
 		}
 		List<String> edges = new ArrayList<>();
-		getDOTEdges(edges, this);
+		getDOTEdges(edges);
 		for (String edge : edges) {
 			buf.append("\t"+edge+"\n");
 		}
@@ -215,38 +155,7 @@ public class DecisionTree {
 		return buf.toString();
 	}
 
-	protected static void getDOTEdges(List<String> edges, DecisionTree t) {
-		if ( !t.isLeaf() ) {
-			edges.add(String.format("n%s -> n%s [label=\"<%d\"];", System.identityHashCode(t), System.identityHashCode(t.left), t.splitValue));
-			edges.add(String.format("n%s -> n%s [label=\">=%d\"];", System.identityHashCode(t), System.identityHashCode(t.right), t.splitValue));
-			getDOTEdges(edges, t.left);
-			getDOTEdges(edges, t.right);
-		}
-	}
+	protected abstract void getDOTEdges(List<String> edges);
 
-	protected static void getDOTNodeNames(List<String> nodes, DecisionTree t, String[] varnames, String[] catnames) {
-		int id = System.identityHashCode(t);
-		if ( t.isLeaf() ) {
-			if ( catnames!=null ) {
-				nodes.add(String.format("n%d [shape=box, label=\"%s\\nn=%d\\nE=%.2f\"];",
-				                        id, catnames[t.category], t.numRecords, t.entropy));
-			}
-			else {
-				nodes.add(String.format("n%d [shape=box, label=\"%d\\nn=%d\\nE=%.2f\"];",
-				                        id, t.category, t.numRecords, t.entropy));
-			}
-		}
-		else {
-			if ( varnames!=null ) {
-				nodes.add(String.format("n%d [label=\"%s\\nn=%d\\nE=%.2f\"];",
-				                        id, varnames[t.splitVariable], t.numRecords, t.entropy));
-			}
-			else {
-				nodes.add(String.format("n%d [label=\"x%d\\nn=%d\\nE=%.2f\"];",
-				                        id, t.splitVariable, t.numRecords, t.entropy));
-			}
-			getDOTNodeNames(nodes, t.left, varnames, catnames);
-			getDOTNodeNames(nodes, t.right, varnames, catnames);
-		}
-	}
+	protected abstract void getDOTNodeNames(List<String> nodes, String[] varnames, String[] catnames);
 }
