@@ -55,7 +55,7 @@ of the attribute, and then consider only split points that are between two examp
 sorted order that have different classifications, while keeping track of the running totals
 of positive and negative examples on each side of the split point.
 
-From Introduction to Statistical Learning
+From *An Introduction to Statistical Learning* (Gareth James, Daniela Witten, Trevor Hastie, Robert Tibshirani)
 
 1st RF tweak to decision trees. The following explains why we bootstrap a new data set for each tree in forest (*bagging*): 
 
