@@ -158,9 +158,9 @@ public class TestBasics {
 			data.add(row);
 		}
 		DecisionTree tree = DecisionTree.build(data, restaurant_varnames);
+		// I verified this string by looking at DOT output
 		String expecting = "{'var':'Hungry','val':1,'left':{'var':'Bar','val':1,'left':{'predict':'no'},'right':{'var':'Raining','val':1,'left':{'predict':'yes'},'right':{'predict':'no'}}},'right':{'var':'Patrons','val':2,'left':{'predict':'yes'},'right':{'var':'Fri&Sat','val':1,'left':{'predict':'no'},'right':{'var':'Price','val':3,'left':{'predict':'yes'},'right':{'predict':'no'}}}}}";
 		String result = toTestString(tree, restaurant_varnames, restaurant_catnames);
-		System.out.println(tree.toDOT(restaurant_varnames, restaurant_catnames));
 		assertEquals(expecting, result);
 	}
 

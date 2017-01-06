@@ -203,8 +203,8 @@ public class DecisionTree {
 
 	protected static void getDOTEdges(List<String> edges, DecisionTree t) {
 		if ( !t.isLeaf() ) {
-			edges.add(String.format("n%s -> n%s;", System.identityHashCode(t), System.identityHashCode(t.left)));
-			edges.add(String.format("n%s -> n%s;", System.identityHashCode(t), System.identityHashCode(t.right)));
+			edges.add(String.format("n%s -> n%s [label=\"<%d\"];", System.identityHashCode(t), System.identityHashCode(t.left), t.splitValue));
+			edges.add(String.format("n%s -> n%s [label=\">=%d\"];", System.identityHashCode(t), System.identityHashCode(t.right), t.splitValue));
 			getDOTEdges(edges, t.left);
 			getDOTEdges(edges, t.right);
 		}
@@ -214,22 +214,22 @@ public class DecisionTree {
 		int id = System.identityHashCode(t);
 		if ( t.isLeaf() ) {
 			if ( catnames!=null ) {
-				nodes.add(String.format("n%d [label=\"%s\\nn=%d\\ngini=%.2f\"];",
+				nodes.add(String.format("n%d [shape=box, label=\"%s\\nn=%d\\ngini=%.2f\"];",
 				                        id, catnames[t.category], t.numRecords, t.gini));
 			}
 			else {
-				nodes.add(String.format("n%d [label=\"%d\\nn=%d\\ngini=%.2f\"];",
+				nodes.add(String.format("n%d [shape=box, label=\"%d\\nn=%d\\ngini=%.2f\"];",
 				                        id, t.category, t.numRecords, t.gini));
 			}
 		}
 		else {
 			if ( varnames!=null ) {
-				nodes.add(String.format("n%d [label=\"%s@%d\\nn=%d\\ngini=%.2f\"];",
-				                        id, varnames[t.splitVariable], t.splitValue, t.numRecords, t.gini));
+				nodes.add(String.format("n%d [label=\"%s\\nn=%d\\ngini=%.2f\"];",
+				                        id, varnames[t.splitVariable], t.numRecords, t.gini));
 			}
 			else {
-				nodes.add(String.format("n%d [label=\"x%d@%d\\nn=%d\\ngini=%.2f\"];",
-				                        id, t.splitVariable, t.splitValue, t.numRecords, t.gini));
+				nodes.add(String.format("n%d [label=\"x%d\\nn=%d\\ngini=%.2f\"];",
+				                        id, t.splitVariable, t.numRecords, t.gini));
 			}
 			getDOTNodeNames(nodes, t.left, varnames, catnames);
 			getDOTNodeNames(nodes, t.right, varnames, catnames);
