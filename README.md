@@ -54,3 +54,22 @@ Also:
 of the attribute, and then consider only split points that are between two examples in
 sorted order that have different classifications, while keeping track of the running totals
 of positive and negative examples on each side of the split point.
+
+From Introduction to Statistical Learning
+
+1st RF tweak to decision trees. The following explains why we bootstrap a new data set for each tree in forest (*bagging*): 
+
+> Hence a natural way to reduce the variance and hence increase the prediction
+accuracy of a statistical learning method is to take many training sets
+from the population, build a separate prediction model using each training
+set, and average the resulting predictions.
+
+The 2nd RF tweak over decision trees is to use a subset of the possible variables when trying to find a split variable at each node.
+
+> ... each time a split in a tree is considered, a random sample of
+m predictors is chosen as split candidates from the full set of p predictors.
+The split is allowed to use only one of those m predictors. ... Suppose
+that there is one very strong predictor in the data set, along with a number
+of other moderately strong predictors. Then in the collection of bagged 
+trees, most or all of the trees will use this strong predictor in the top split.
+Consequently, all of the bagged trees will look quite similar to each other.

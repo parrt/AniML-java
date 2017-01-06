@@ -111,4 +111,35 @@ public class RFUtils {
 		}
 		return values;
 	}
+
+	/** From data, grab n records at random with replacement */
+	public static List<int[]> bootstrapWithRepl(List<int[]> data) {
+		return bootstrapWithRepl(data, null);
+	}
+
+	/** From data, grab n records at random with replacement, fill in oob with
+	 *  data NOT in returned bootstrap (if non-null).
+	 */
+	public static List<int[]> bootstrapWithRepl(List<int[]> data, List<int[]> oob) {
+		int[] indexes = randint(data.size(), data.size(), 999);
+		if ( oob!=null ) {
+			oob.addAll(data);
+		}
+		List<int[]> bootstrap = new ArrayList<>(indexes.length);
+		for (int i : indexes) {
+			bootstrap.add(data.get(i));
+			if ( oob!=null ) {
+				oob.remove(i); // make sure bootstrap records are not in oob
+			}
+		}
+		return bootstrap;
+	}
+
+	public static int majorityVote(Collection<Integer> data) {
+		FrequencySet<Integer> valueCounts = new FrequencySet<>();
+		for (Integer d : data) {
+			valueCounts.add(d);
+		}
+		return valueCounts.argmax();
+	}
 }
