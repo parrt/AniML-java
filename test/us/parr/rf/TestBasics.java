@@ -42,21 +42,25 @@ public class TestBasics {
 	};
 
 	// data from chap 7: http://shop.oreilly.com/product/9780596529321.do
-	public static final int slashdot = 0;
-	public static final int google = 0;
-	public static final int digg = 0;
-	public static final int kiwitobes = 0;
-	public static final int direct = 0;
-	public static final int USA = 0;
-	public static final int France = 0;
-	public static final int UK = 0;
-	public static final int NewZealand = 0;
-	public static final int NoSignUp = 0;
-	public static final int Basic = 0;
-	public static final int Premium = 0;
+	public static final int slashdot = 1;
+	public static final int google = 2;
+	public static final int digg = 3;
+	public static final int kiwitobes = 4;
+	public static final int direct = 5;
+	public static final int USA = 1;
+	public static final int France = 2;
+	public static final int UK = 3;
+	public static final int NewZealand = 4;
+	public static final int NoSignUp = 1;
+	public static final int Basic = 2;
+	public static final int Premium = 3;
+	public static final String[] signups_varnames =
+		{"referrer", "country", "readfaq", "pageviews", "subscription"};
+	public static final String[] signups_catnames =
+		{"", "none","basic","premium"};
 	public static int[][] signups = {
 		{slashdot,  USA,        1, 18,NoSignUp},
-		{google,    France,     1, 23,NoSignUp},
+		{google,    France,     1, 23,Premium},
 		{digg,      USA,        1, 24,Basic},
 		{kiwitobes, France,     1, 23,Basic},
 		{google,    UK,         0, 21,Premium},
@@ -153,15 +157,31 @@ public class TestBasics {
 	}
 
 	@Test public void testRestaurant() {
+		List<Integer> pred = new ArrayList<>();
 		List<int[]> data = new ArrayList<>();
 		for (int[] row : restaurant) {
 			data.add(row);
+			pred.add(row[row.length-1]);
 		}
+		System.out.println(pred);
 		DecisionTree tree = DecisionTree.build(data, restaurant_varnames);
 		// I verified this string by looking at DOT output
 		String expecting = "{'var':'Hungry','val':1,'left':{'var':'Bar','val':1,'left':{'predict':'no'},'right':{'var':'Raining','val':1,'left':{'predict':'yes'},'right':{'predict':'no'}}},'right':{'var':'Patrons','val':2,'left':{'predict':'yes'},'right':{'var':'Fri&Sat','val':1,'left':{'predict':'no'},'right':{'var':'Price','val':3,'left':{'predict':'yes'},'right':{'predict':'no'}}}}}";
 		String result = toTestString(tree, restaurant_varnames, restaurant_catnames);
 //		System.out.println(tree.toDOT(restaurant_varnames, restaurant_catnames));
+		assertEquals(expecting, result);
+	}
+
+	@Test public void testWebsiteSignups() {
+		List<int[]> data = new ArrayList<>();
+		for (int[] row : signups) {
+			data.add(row);
+		}
+		DecisionTree tree = DecisionTree.build(data, signups_varnames);
+		// I verified this string by looking at DOT output
+		String expecting = "{'var':'pageviews','val':21,'left':{'var':'readfaq','val':1,'left':{'predict':'none'},'right':{'var':'referrer','val':2,'left':{'predict':'none'},'right':{'predict':'basic'}}},'right':{'var':'referrer','val':3,'left':{'var':'referrer','val':2,'left':{'predict':'none'},'right':{'predict':'premium'}},'right':{'predict':'basic'}}}";
+		String result = toTestString(tree, signups_varnames, signups_catnames);
+//		System.out.println(tree.toDOT(signups_varnames, signups_catnames));
 		assertEquals(expecting, result);
 	}
 

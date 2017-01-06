@@ -63,7 +63,8 @@ public class RFUtils {
 	}
 
 	public static boolean isClose(double a, double b) {
-		return (a-b)<0.000000001;
+		boolean result = Math.abs(a-b)<0.000000001;
+		return result;
 	}
 
 	/** Compute the gini impurity from a collection of counts */
@@ -84,9 +85,13 @@ public class RFUtils {
 		for (Integer v : counts) {
 			if ( v==0 ) continue; // avoid log(0), which is undefined
 			double p = ((double)v) / n;
-			entropy += p * (log(p) / log(2.0)); // log2(x) = log(x)/log(2)
+			entropy += p *log2(p);
 		}
 		entropy = -entropy;
 		return entropy;
+	}
+
+	public static double log2(double p) {
+		return log(p) / log(2.0); // log2(x) = log(x)/log(2)
 	}
 }

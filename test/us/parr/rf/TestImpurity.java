@@ -1,6 +1,7 @@
 package us.parr.rf;
 
 import org.junit.Test;
+import us.parr.rf.misc.FrequencySet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +11,7 @@ import static junit.framework.TestCase.assertTrue;
 import static us.parr.rf.misc.RFUtils.entropy;
 import static us.parr.rf.misc.RFUtils.gini;
 import static us.parr.rf.misc.RFUtils.isClose;
+import static us.parr.rf.misc.RFUtils.log2;
 
 public class TestImpurity {
 	public static final int HEADS = 0;
@@ -33,7 +35,8 @@ public class TestImpurity {
 		List<Integer> valueCounts = new ArrayList<>();
 		valueCounts.add(99); // 99 heads
 		valueCounts.add(1);  // 1 tail
-		assertTrue(isClose(0.08, entropy(valueCounts)));
+		double expected = -(.99*log2(.99) + .01*log2(.01)); // ~0.081
+		assertTrue(isClose(expected, entropy(valueCounts)));
 	}
 
 	@Test public void testEntropyZeroProbability() {
@@ -43,13 +46,37 @@ public class TestImpurity {
 		assertTrue(isClose(0.0, entropy(valueCounts)));
 	}
 
-	@Test public void testPatronEntropyFromRestaurant() {
-		List<Integer> valueCounts = new ArrayList<>();
-		valueCounts.add(0);
-		valueCounts.add(1);
-		assertEquals(1.0, entropy(valueCounts));
+	@Test public void testCategoriesFromRestaurant() {
+		int[] willwait = new int[] {1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1};
+		FrequencySet<Object> valueToCounts = new FrequencySet<>();
+		for (int wait : willwait) {
+			valueToCounts.add(wait);
+		}
+		float n = willwait.length;
+		double p1 = 6/n; // {0=6, 1=6}
+		double p2 = 6/n;
+
+		double expected = -(p1 * log2(p1) + p2 * log2(p2)); // 1.0
+		double result = entropy(valueToCounts.counts());
+		assertTrue(isClose(expected, result));
 	}
 
+	@Test public void testCategoriesFromSignups() {
+		int[] signups = new int[] {1, 3, 2, 2, 3, 1, 2, 3, 1, 1, 1, 1, 2, 1, 2, 2};
+		FrequencySet<Object> valueToCounts = new FrequencySet<>();
+		for (int signup : signups) {
+			valueToCounts.add(signup);
+		}
+		System.out.println(valueToCounts);
+		float n = signups.length;
+		double p1 = 7/n; // {1=7, 2=6, 3=3}
+		double p2 = 6/n;
+		double p3 = 3/n;
+
+		double expected = -(p1 * log2(p1) + p2 * log2(p2) + p3 * log2(p3)); // ~1.51
+		double result = entropy(valueToCounts.counts());
+		assertTrue(isClose(expected, result));
+	}
 
 
 	@Test public void testGiniFairCoinOneEach() {
