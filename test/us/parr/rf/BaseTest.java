@@ -20,4 +20,12 @@ public class BaseTest {
 			assertEquals(expectedCat, resultCat);
 		}
 	}
+
+	public void checkPredictions(List<int[]> data, RandomForest forest) {
+		for (int[] X : data) {
+			int resultCat = forest.classify(X);
+			int expectedCat = X[X.length-1];
+			assertEquals(expectedCat, resultCat);
+		}
+	}
 }

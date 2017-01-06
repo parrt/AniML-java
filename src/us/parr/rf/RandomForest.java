@@ -45,7 +45,7 @@ public class RandomForest {
 		int m = (int)Math.sqrt(forest.M);
 		for (int i = 1; i<=numEstimators; i++) {
 			List<int[]> bootstrap = RFUtils.bootstrapWithRepl(data);
-			DecisionTree tree = DecisionTree.build(bootstrap);
+			DecisionTree tree = DecisionTree.build(bootstrap, null, m);
 			forest.trees.add(tree);
 		}
 		return forest;
@@ -56,7 +56,7 @@ public class RandomForest {
 			return INVALID_CATEGORY;
 		}
 		List<Integer> predictions = new ArrayList<>();
-		for (int i = 1; i<=numEstimators; i++) {
+		for (int i = 0; i<numEstimators; i++) {
 			predictions.add( trees.get(i).classify(unknown) );
 		}
 		return majorityVote(predictions);

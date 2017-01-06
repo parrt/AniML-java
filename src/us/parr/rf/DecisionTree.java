@@ -18,6 +18,9 @@ import static us.parr.rf.RandomForest.INVALID_CATEGORY;
  *  classification, not regression.
  */
 public abstract class DecisionTree {
+	public static final int SEED = 777111333; // need randomness but use same seed to get reproducibility
+	public static final Random random = new Random(SEED);
+
 	// for debugging, fields below
 	protected int numRecords;
 	protected double entropy;
@@ -139,7 +142,7 @@ public abstract class DecisionTree {
 		for (int i = 0; i<M; i++) {
 			indexes.add(i);
 		}
-		Collections.shuffle(indexes, new Random(666));
+		Collections.shuffle(indexes, random);
 		indexes = indexes.subList(0, m);
 		Collections.sort(indexes);
 		return indexes;

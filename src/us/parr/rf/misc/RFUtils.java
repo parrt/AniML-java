@@ -3,19 +3,13 @@ package us.parr.rf.misc;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Random;
 import java.util.function.Predicate;
 
 import static java.lang.Math.log;
+import static us.parr.rf.DecisionTree.random;
 import static us.parr.rf.RandomForest.INVALID_CATEGORY;
 
 public class RFUtils {
-//	public static final int SEED = 777111333; // need randomness but use same seed to get reproducibility
-//	final public static Random random = new Random();
-//	static {
-//		random.setSeed(SEED);
-//	}
-
 	public static FrequencySet<Integer> valueCountsInColumn(List<int[]> X, int splitVariable) {
 		FrequencySet<Integer> valueCounts = new FrequencySet<>();
 		for (int i = 0; i<X.size(); i++) { // for each row, count different values for col splitVariable
@@ -103,8 +97,7 @@ public class RFUtils {
 	}
 
 	/** Produce an array of n random integers in [0..highvalue) */
-	public static int[] randint(int n, int highvalue, int seed) {
-		Random random = new Random(seed);
+	public static int[] randint(int n, int highvalue) {
 		int[] values = new int[n];
 		for (int i = 0; i<n; i++) {
 			values[i] = random.nextInt(highvalue);
@@ -121,7 +114,7 @@ public class RFUtils {
 	 *  data NOT in returned bootstrap (if non-null).
 	 */
 	public static List<int[]> bootstrapWithRepl(List<int[]> data, List<int[]> oob) {
-		int[] indexes = randint(data.size(), data.size(), 999);
+		int[] indexes = randint(data.size(), data.size());
 		if ( oob!=null ) {
 			oob.addAll(data);
 		}

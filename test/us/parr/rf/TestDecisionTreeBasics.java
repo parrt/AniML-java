@@ -7,7 +7,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-public class TestBasics extends BaseTest {
+public class TestDecisionTreeBasics extends BaseTest {
 	@Test public void testEmptyData() {
 		List<int[]> data = new ArrayList<>();
 		DecisionTree tree = DecisionTree.build(data);
