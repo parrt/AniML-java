@@ -63,6 +63,10 @@ public class DecisionTree {
 	 *  features and predicted variables.
 	 */
 	public static DecisionTree build(List<int[]> data) {
+		return build(data, (String[])null);
+	}
+
+	public static DecisionTree build(List<int[]> data, String[] varnames) {
 		if ( data==null || data.size()==0 ) return null;
 		int N = data.size();
 		int M = data.get(0).length - 1; // last column is the predicted var
@@ -75,6 +79,7 @@ public class DecisionTree {
 		}
 
 		double complete_gini = gini(RFUtils.valueCountsInColumn(data, yi), N);
+		System.out.printf("gini of all %d values = %.2f\n", N, complete_gini);
 		double best_gain = 0.0;
 		int best_var = -1;
 		int best_val = 0;
@@ -95,19 +100,26 @@ public class DecisionTree {
 
 				double p1 = ((double)n1)/(n1+n2);
 				double p2 = ((double)n2)/(n1+n2);
-				double gain = complete_gini - (p1 * r1_gini + p2 * r2_gini);
+				double expectedGiniValue = p1*r1_gini+p2*r2_gini;
+				double gain = complete_gini - expectedGiniValue;
+
+				String newbest = "";
 				if ( gain > best_gain && n1>0 && n2>0 ) {
 					best_gain = gain;
 					best_var = i;
 					best_val = uniqueValue;
 					best_split = s;
+					newbest=" (new best)";
 				}
+				String var = varnames!=null ? varnames[i] : String.valueOf(i);
+				System.out.printf("Ginis var=%13s val=%d r1=%.2f r2=%.2f, egini=%.2f gain=%.2f%s\n",
+				                  var, uniqueValue, r1_gini, r2_gini, expectedGiniValue, gain, newbest);
 			}
 		}
 		if ( best_gain>0.0 ) {
 			DecisionTree t = new DecisionTree(best_var, best_val);
-			t.left = build(best_split.region1);
-			t.right = build(best_split.region2);
+			t.left = build(best_split.region1, varnames);
+			t.right = build(best_split.region2, varnames);
 			return t;
 		}
 		return null;
@@ -160,5 +172,55 @@ public class DecisionTree {
 			builder.add("right", right.toJSON(varnames, catnames));
 		}
 		return builder.build();
+	}
+
+	public String toDOT(String[] varnames, String[] catnames) {
+		StringBuilder buf = new StringBuilder();
+		buf.append("digraph dtree {\n");
+		List<String> nodes = new ArrayList<>();
+		getDOTNodeNames(nodes, this, varnames, catnames);
+		for (String node : nodes) {
+			buf.append("\t"+node+"\n");
+		}
+		List<String> edges = new ArrayList<>();
+		getDOTEdges(edges, this);
+		for (String edge : edges) {
+			buf.append("\t"+edge+"\n");
+		}
+		buf.append("}\n");
+		return buf.toString();
+	}
+
+	protected static void getDOTEdges(List<String> edges, DecisionTree t) {
+		if ( !t.isLeaf() ) {
+			edges.add(String.format("n%s -> n%s;", System.identityHashCode(t), System.identityHashCode(t.left)));
+			edges.add(String.format("n%s -> n%s;", System.identityHashCode(t), System.identityHashCode(t.right)));
+			getDOTEdges(edges, t.left);
+			getDOTEdges(edges, t.right);
+		}
+	}
+
+	protected static void getDOTNodeNames(List<String> nodes, DecisionTree t, String[] varnames, String[] catnames) {
+		int id = System.identityHashCode(t);
+		if ( t.isLeaf() ) {
+			if ( catnames!=null ) {
+				nodes.add(String.format("n%d [label=\"%s\"];", id, catnames[t.category]));
+			}
+			else {
+				nodes.add(String.format("n%d [label=\"%d\"];", id, t.category));
+			}
+		}
+		else {
+			if ( varnames!=null ) {
+				nodes.add(String.format("n%d [label=\"%s@%d\"];",
+				                        id, varnames[t.splitVariable], t.splitValue));
+			}
+			else {
+				nodes.add(String.format("n%d [label=\"x%d@%d\"];",
+				                        id, t.splitVariable, t.splitValue));
+			}
+			getDOTNodeNames(nodes, t.left, varnames, catnames);
+			getDOTNodeNames(nodes, t.right, varnames, catnames);
+		}
 	}
 }
