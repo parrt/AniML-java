@@ -78,7 +78,7 @@ public class DecisionTree {
 		int yi = M; // last index is the target variable
 		// if all predict same category or only one row of data,
 		// create leaf predicting that
-		double complete_gini = gini(RFUtils.valueCountsInColumn(data, yi), N);
+		double complete_gini = RFUtils.gini(RFUtils.valueCountsInColumn(data, yi).counts());
 		int pureCategory = RFUtils.uniqueValue(data, yi);
 		if ( pureCategory!=INVALID_CATEGORY ) {
 			DecisionTree t = new DecisionTree(pureCategory);
@@ -112,8 +112,8 @@ public class DecisionTree {
 				FrequencySet<Integer> r2_categoryCounts = RFUtils.valueCountsInColumn(s.region2, yi);
 				int n1 = s.region1.size();
 				int n2 = s.region2.size();
-				double r1_gini = gini(r1_categoryCounts, n1);
-				double r2_gini = gini(r2_categoryCounts, n2);
+				double r1_gini = RFUtils.gini(r1_categoryCounts.counts());
+				double r2_gini = RFUtils.gini(r2_categoryCounts.counts());
 
 				double p1 = ((double)n1)/(n1+n2);
 				double p2 = ((double)n2)/(n1+n2);
@@ -147,17 +147,6 @@ public class DecisionTree {
 	public boolean isLeaf() { return left==null && right==null && category!=INVALID_CATEGORY; }
 
 	public void makeLeaf(int predictedCategory) { left=null; right=null; category=predictedCategory; }
-
-	/** Compute the gini impurity */
-	public static double gini(FrequencySet<Integer> categoryCounts, int n) {
-		double impurity = 0.0;
-		for (Integer cat : categoryCounts.keySet()) {
-			int count = categoryCounts.count(cat);
-			double freq = ((double)count) / n;
-			impurity += freq * (1-freq);
-		}
-		return impurity;
-	}
 
 	public static DataPair split(List<int[]> X, int splitVariable, int splitValue) {
 		List<int[]> a = RFUtils.filter(X, x -> x[splitVariable] < splitValue);

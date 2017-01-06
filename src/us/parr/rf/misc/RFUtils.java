@@ -2,10 +2,10 @@ package us.parr.rf.misc;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 
+import static java.lang.Math.log;
 import static us.parr.rf.RandomForest.INVALID_CATEGORY;
 
 public class RFUtils {
@@ -52,5 +52,41 @@ public class RFUtils {
 			if ( d>m ) m = d;
 		}
 		return m;
+	}
+
+	public static int sum(Collection<Integer> data) {
+		int sum = 0;
+		for (int d : data) {
+			sum += d;
+		}
+		return sum;
+	}
+
+	public static boolean isClose(double a, double b) {
+		return (a-b)<0.000000001;
+	}
+
+	/** Compute the gini impurity from a collection of counts */
+	public static double gini(Collection<Integer> counts) {
+		double impurity = 0.0;
+		int n = sum(counts);
+		for (Integer v : counts) {
+			double p = ((double)v) / n;
+			impurity += p * (1-p);
+		}
+		return impurity;
+	}
+
+	/** Compute the entropy from a collection of counts */
+	public static double entropy(Collection<Integer> counts) {
+		double entropy = 0.0;
+		int n = sum(counts);
+		for (Integer v : counts) {
+			if ( v==0 ) continue; // avoid log(0), which is undefined
+			double p = ((double)v) / n;
+			entropy += p * (log(p) / log(2.0)); // log2(x) = log(x)/log(2)
+		}
+		entropy = -entropy;
+		return entropy;
 	}
 }
