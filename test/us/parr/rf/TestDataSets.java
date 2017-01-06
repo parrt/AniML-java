@@ -88,9 +88,9 @@ public class TestDataSets extends BaseTest {
 		System.out.println(pred);
 		DecisionTree tree = DecisionTree.build(data, restaurant_varnames);
 		// I verified this string by looking at DOT output
-		String expecting = "{'var':'Hungry','val':1,'left':{'var':'Bar','val':1,'left':{'predict':'no'},'right':{'var':'Raining','val':1,'left':{'predict':'yes'},'right':{'predict':'no'}}},'right':{'var':'Patrons','val':2,'left':{'predict':'yes'},'right':{'var':'Fri&Sat','val':1,'left':{'predict':'no'},'right':{'var':'Price','val':3,'left':{'predict':'yes'},'right':{'predict':'no'}}}}}";
+		String expecting = "{'var':'Hungry','val':1,'n':12,'E':'1.00','left':{'var':'Bar','val':1,'n':5,'E':'0.72','left':{'predict':'no','n':2},'right':{'var':'Raining','val':1,'n':3,'E':'0.92','left':{'predict':'yes','n':1},'right':{'predict':'no','n':2}}},'right':{'var':'Patrons','val':2,'n':7,'E':'0.86','left':{'predict':'yes','n':3},'right':{'var':'Fri&Sat','val':1,'n':4,'E':'1.00','left':{'predict':'no','n':1},'right':{'var':'Price','val':3,'n':3,'E':'0.92','left':{'predict':'yes','n':2},'right':{'predict':'no','n':1}}}}}";
 		String result = toTestString(tree, restaurant_varnames, restaurant_catnames);
-//		System.out.println(tree.toDOT(restaurant_varnames, restaurant_catnames));
+		System.out.println(tree.toDOT(restaurant_varnames, restaurant_catnames));
 		assertEquals(expecting, result);
 	}
 
@@ -101,7 +101,7 @@ public class TestDataSets extends BaseTest {
 		}
 		DecisionTree tree = DecisionTree.build(data, signups_varnames);
 		// I verified this string by looking at DOT output
-		String expecting = "{'var':'pageviews','val':21,'left':{'var':'readfaq','val':1,'left':{'predict':'none'},'right':{'var':'referrer','val':2,'left':{'predict':'none'},'right':{'predict':'basic'}}},'right':{'var':'referrer','val':3,'left':{'var':'referrer','val':2,'left':{'predict':'none'},'right':{'predict':'premium'}},'right':{'predict':'basic'}}}";
+		String expecting = "{'var':'pageviews','val':21,'n':16,'E':'1.51','left':{'var':'readfaq','val':1,'n':9,'E':'0.92','left':{'predict':'none','n':4},'right':{'var':'referrer','val':2,'n':5,'E':'0.97','left':{'predict':'none','n':2},'right':{'predict':'basic','n':3}}},'right':{'var':'referrer','val':3,'n':7,'E':'1.45','left':{'var':'referrer','val':2,'n':4,'E':'0.81','left':{'predict':'none','n':1},'right':{'predict':'premium','n':3}},'right':{'predict':'basic','n':3}}}";
 		String result = toTestString(tree, signups_varnames, signups_catnames);
 //		System.out.println(tree.toDOT(signups_varnames, signups_catnames));
 		assertEquals(expecting, result);

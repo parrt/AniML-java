@@ -43,11 +43,11 @@ public class FrequencySet<T> extends HashMap<T, MutableInt> {
 		return keys;
 	}
 
-	/** Return the key with the max count */
+	/** Return the key with the max count; tie goes to first cat at max found. */
 	public T argmax() {
 		T keyOfMax = null;
 		for (T key : keySet()) {
-			if ( keyOfMax==null ) {
+			if ( keyOfMax==null ) { // initial condition
 				keyOfMax = key;
 				continue;
 			}

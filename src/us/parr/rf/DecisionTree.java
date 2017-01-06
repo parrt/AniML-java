@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Set;
 
 import static us.parr.rf.RandomForest.INVALID_CATEGORY;
+import static us.parr.rf.misc.RFUtils.isClose;
 
 /** A classic CART decision tree but this implementation is suitable just for
  *  classification, not regression.
@@ -143,7 +144,12 @@ public class DecisionTree {
 			t.right = build(best_split.region2, varnames);
 			return t;
 		}
-		return null;
+		// we would gain nothing by splitting, make a leaf predicting majority vote
+		int majorityVote = RFUtils.valueCountsInColumn(data, yi).argmax();
+		DecisionTree t = new DecisionTree(majorityVote);
+		t.numRecords = N;
+		t.entropy = complete_entropy;
+		return t;
 	}
 
 	public boolean isLeaf() { return left==null && right==null && category!=INVALID_CATEGORY; }
@@ -169,15 +175,23 @@ public class DecisionTree {
 			else {
 				builder.add("predict", category);
 			}
+			builder.add("n", numRecords);
+			if ( !isClose(entropy,0.0) ) {
+				builder.add("E", String.format("%.2f",entropy));
+			}
 		}
 		else {
 			if ( varnames!=null ) {
 				builder.add("var", varnames[splitVariable]);
 			}
 			else {
-				builder.add("var", splitVariable);
+				builder.add("var", "x"+splitVariable);
 			}
 			builder.add("val", splitValue);
+			builder.add("n", numRecords);
+			if ( !isClose(entropy,0.0) ) {
+				builder.add("E", String.format("%.2f",entropy));
+			}
 			builder.add("left", left.toJSON(varnames, catnames));
 			builder.add("right", right.toJSON(varnames, catnames));
 		}
