@@ -49,9 +49,9 @@ Russell and Norvig's AI book says:
 gain measure gives an inappropriate indication of the attribute’s usefulness. In the extreme
 case, an attribute such as ExactTime has a different value for every example,
 which means each subset of examples is a singleton with a unique classification, and
-the information gain measure would have its highest value for this attribute. But choosGAIN
-RATIO ing this split first is unlikely to yield the best tree. One solution is to use the gain ratio
-(Exercise 18.10). Another possibility is to allow a Boolean test of the form A = vk, that
+the information gain measure would have its highest value for this attribute. But choosing
+this split first is unlikely to yield the best tree. One solution is to use the gain ratio
+(Exercise 18.10). Another possibility is to allow a Boolean test of the form A = v_k, that
 is, picking out just one of the possible values for an attribute, leaving the remaining
 values to possibly be tested later in the tree.  
 
