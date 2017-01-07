@@ -19,9 +19,6 @@ import static us.parr.rf.RandomForest.INVALID_CATEGORY;
  *  variables at each node to support random forest construction.
  */
 public abstract class DecisionTree {
-	enum VariableType { CATEGORICAL, NUMERICAL, UNUSED }
-	enum NumericType { INT, FLOAT }
-
 	public static final int SEED = 777111333; // need randomness but use same seed to get reproducibility
 	public static final Random random = new Random(SEED);
 
@@ -34,6 +31,7 @@ public abstract class DecisionTree {
 
 	public abstract int classify(int[] X);
 
+	/** Conversion routine from separate X -> Y vectors to single augmented data vector */
 	public static DecisionTree build(List<int[]> X, List<Integer> Y) {
 		List<int[]> data = new ArrayList<>(X.size());
 		for (int i = 0; i<X.size(); i++) {
