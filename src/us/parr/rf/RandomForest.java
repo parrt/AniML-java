@@ -12,8 +12,6 @@ import static us.parr.rf.misc.RFUtils.majorityVote;
  *  category value.
  */
 public class RandomForest {
-	enum VariableType { CATEGORICAL, NUMERICAL }
-
 	public static final int INVALID_CATEGORY = -1;
 
 	/** Number of samples */

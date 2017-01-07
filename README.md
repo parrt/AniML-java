@@ -17,7 +17,7 @@ grouping cat vars: easiest thing is to sort them. Or, like
 binary search looking for a specific value. The int comparison
 relationship is arbitrary but useful nonetheless for searching,
 which is what the random forest is doing. sweet.
- 
+
 log likelihood or p(1-p) per category
 
 each node as predicted var, cutoff val

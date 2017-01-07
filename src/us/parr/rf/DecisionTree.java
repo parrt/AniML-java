@@ -15,9 +15,13 @@ import java.util.Set;
 import static us.parr.rf.RandomForest.INVALID_CATEGORY;
 
 /** A classic CART decision tree but this implementation is suitable just for
- *  classification, not regression.
+ *  classification, not regression. I extended it to handle a subset of predictor
+ *  variables at each node to support random forest construction.
  */
 public abstract class DecisionTree {
+	enum VariableType { CATEGORICAL, NUMERICAL, UNUSED }
+	enum NumericType { INT, FLOAT }
+
 	public static final int SEED = 777111333; // need randomness but use same seed to get reproducibility
 	public static final Random random = new Random(SEED);
 
@@ -79,6 +83,9 @@ public abstract class DecisionTree {
 		int best_var = -1;
 		int best_val = 0;
 		DataPair best_split = null;
+		// Non-random forest decision trees do just: for (int i=0; i<M; i++) {
+		// but RF must use a subset m << M of predictor variables so this is
+		// a generalization
 		List<Integer> indexes = getVarIndexes(m, M); // consider all or a subset of M variables
 		for (Integer i : indexes) { // for each variable i
 			// Sort data set on independent var i
