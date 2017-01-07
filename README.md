@@ -11,6 +11,12 @@ All `int` values but supports categorical and numerical values.
 select m = sqrt(M) vars at each node
 
 for discrete/categorical vars, split in even sizes, as pure as possible.
+I ended up treating cat vars like continuous. We're separating hyperplanes not
+relying on two cat vars being less than or greater. It's like
+grouping cat vars: easiest thing is to sort them. Or, like
+binary search looking for a specific value. The int comparison
+relationship is arbitrary but useful nonetheless for searching,
+which is what the random forest is doing. sweet.
  
 log likelihood or p(1-p) per category
 
@@ -23,6 +29,9 @@ find optimal split point exhaustively.
 for discrete, try all (or treat as continuous)
 
 for continuous variables, sort by that variable and choose those split points at each unique value. each split has low variance of dependent variable
+
+I'm going to try encoding floats as int so int[] can always
+be the data type of a row.
 
 <img src="whiteboard.jpg" width=300>
 
