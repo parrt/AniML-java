@@ -2,8 +2,8 @@ package us.parr.rf.data;
 
 import java.util.Iterator;
 
-class DataFrameIterator implements Iterator<int[]> {
-	protected final DataFrame table;
+class DataTableIterator implements Iterator<int[]> {
+	protected final DataTable table;
 	protected int i = 0; // next element to return
 
 	@Override
@@ -12,5 +12,5 @@ class DataFrameIterator implements Iterator<int[]> {
 	@Override
 	public int[] next() { return table.get(i++); }
 
-	public DataFrameIterator(DataFrame table) {	this.table = table;	}
+	public DataTableIterator(DataTable table) {this.table = table;	}
 }

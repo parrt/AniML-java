@@ -1,6 +1,10 @@
 package us.parr.rf.data;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 /** A unique set of strings mapped to a monotonically increasing index.
  *  These indexes often useful to bytecode interpreters that have instructions
@@ -14,14 +18,49 @@ import java.util.LinkedHashMap;
  *  Copied from https://github.com/antlr/symtab
  */
 public class StringTable {
-	protected LinkedHashMap<String, Integer> table = new LinkedHashMap<String, Integer>();
+	protected LinkedHashMap<String,Integer> table = new LinkedHashMap<String,Integer>();
 	protected int index = -1; // index we have just written
+	protected List<String> strings = new ArrayList<>();
 
 	public int add(String s) {
 		Integer I = table.get(s);
-		if (I != null) return I;
+		if ( I!=null ) return I;
 		index++;
 		table.put(s, index);
+		strings.add(s);
 		return index;
+	}
+
+	/** Get the ith string or null if out of range */
+	public String get(int i) {
+		if ( i<size() && i>0 ) {
+			return strings.get(i);
+		}
+		return null;
+	}
+
+	public int size() { return table.size(); }
+
+	/** Return an array, possibly of length zero, with all strings
+	 *  sitting at their appropriate index within the array.
+	 */
+	public String[] toArray() {
+		return strings.toArray(new String[strings.size()]);
+	}
+
+	/** Return a List, possibly of length zero, with all strings
+	 *  sitting at their appropriate index within the array.
+	 */
+	public List<String> toList() {
+		return strings;
+	}
+
+	public int getNumberOfStrings() {
+		return index + 1;
+	}
+
+	@Override
+	public String toString() {
+		return table.toString();
 	}
 }
