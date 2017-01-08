@@ -5,9 +5,11 @@ import us.parr.animl.data.DataTable;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static us.parr.animl.AniUtils.join;
 import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_INT;
 import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_STRING;
 import static us.parr.animl.data.DataTable.VariableType.NUMERICAL_FLOAT;
@@ -182,7 +184,7 @@ public class TestTable extends BaseTest {
 		assertEquals(expected, t.toString());
 	}
 
-	@Test public void testPrint2Rows() {
+	@Test public void testPrintMultiRows() {
 		URL url = this.getClass().getClassLoader().getResource("quoted-values.csv");
 		final DataTable.VariableType[] colTypes = {
 			CATEGORICAL_INT,
@@ -200,4 +202,32 @@ public class TestTable extends BaseTest {
 		assertEquals(expected, t.toString());
 	}
 
+	@Test public void testHeartDataSenseTypes() {
+		URL url = this.getClass().getClassLoader().getResource("Heart.csv");
+		DataTable t = DataTable.loadCSV(url.getFile().toString(), "excel", null, null, true);
+		String expected = // first 20 records
+			"    Age Sex  ChestPain   RestBP Chol Fbs RestECG MaxHR ExAng Oldpeak Slope Ca    Thal    AHD\n"+
+			" 1  63   1    typical     145   233   1     2     150    0     2.3     3   0    fixed    No \n"+
+			" 2  67   1  asymptomatic  160   286   0     2     108    1     1.5     2   3    normal   Yes\n"+
+			" 3  67   1  asymptomatic  120   229   0     2     129    1     2.6     2   2  reversable Yes\n"+
+			" 4  37   1   nonanginal   130   250   0     0     187    0     3.5     3   0    normal   No \n"+
+			" 5  41   0   nontypical   130   204   0     2     172    0     1.4     1   0    normal   No \n"+
+			" 6  56   1   nontypical   120   236   0     0     178    0     0.8     1   0    normal   No \n"+
+			" 7  62   0  asymptomatic  140   268   0     2     160    0     3.6     3   2    normal   Yes\n"+
+			" 8  57   0  asymptomatic  120   354   0     0     163    1     0.6     1   0    normal   No \n"+
+			" 9  63   1  asymptomatic  130   254   0     2     147    0     1.4     2   1  reversable Yes\n"+
+			"10  53   1  asymptomatic  140   203   1     2     155    1     3.1     3   0  reversable Yes\n"+
+			"11  57   1  asymptomatic  140   192   0     0     148    0     0.4     2   0    fixed    No \n"+
+			"12  56   0   nontypical   140   294   0     2     153    0     1.3     2   0    normal   No \n"+
+			"13  56   1   nonanginal   130   256   1     2     142    1     0.6     2   1    fixed    Yes\n"+
+			"14  44   1   nontypical   120   263   0     0     173    0      0      1   0  reversable No \n"+
+			"15  52   1   nonanginal   172   199   1     0     162    0     0.5     1   0  reversable No \n"+
+			"16  57   1   nonanginal   150   168   0     0     174    0     1.6     1   0    normal   No \n"+
+			"17  48   1   nontypical   110   229   0     0     168    0      1      3   0  reversable Yes\n"+
+			"18  54   1  asymptomatic  140   239   0     0     160    0     1.2     1   0    normal   No \n"+
+			"19  48   0   nonanginal   130   275   0     0     139    0     0.2     1   0    normal   No \n"+
+			"20  49   1   nontypical   130   266   0     0     171    0     0.6     1   0    normal   No \n";
+		String result = join(Arrays.asList(t.toString().split("\n")).subList(0,21), "\n")+"\n";
+		assertEquals(expected, result);
+	}
 }

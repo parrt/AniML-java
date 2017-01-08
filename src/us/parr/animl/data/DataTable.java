@@ -157,7 +157,7 @@ public class DataTable implements Iterable<int[]> {
 		return t;
 	}
 
-	public static DataTable loadCSV(String fileName, String formatType, VariableType[] colTypes, String[] colNamesOverride, boolean hasHeaderRow) {
+	public static DataTable loadCSV(String fileName, String formatType, VariableType[] colTypesOverride, String[] colNamesOverride, boolean hasHeaderRow) {
 		try {
 			// use apache commons io + csv to load but convert to list of String[]
 			// byte-order markers are handled if present at start of file.
@@ -181,11 +181,27 @@ public class DataTable implements Iterable<int[]> {
 			}
 			final CSVParser parser = new CSVParser(reader, format);
 			List<String[]> rows = new ArrayList<>();
+			int numHeaderNames = parser.getHeaderMap().size();
+			VariableType[] actualTypes = new VariableType[numHeaderNames];
+			for (int j = 0; j<numHeaderNames; j++) {
+				actualTypes[j] = NUMERICAL_INT; // assume all types are int at first
+			}
 			try {
 			    for (final CSVRecord record : parser) {
 			    	String[] row = new String[record.size()];
 				    for (int j = 0; j<record.size(); j++) {
 					    row[j] = record.get(j);
+					    if ( StringUtils.isNumeric(row[j]) && row[j].contains(".") ) {
+					    	actualTypes[j] = NUMERICAL_FLOAT;
+					    }
+					    else if ( StringUtils.isAlphanumericSpace(row[j]) ) {
+					    	if ( j==record.size()-1 ) {
+							    actualTypes[j] = PREDICTED_CATEGORICAL_STRING;
+						    }
+						    else {
+							    actualTypes[j] = CATEGORICAL_STRING;
+						    }
+					    }
 				    }
 				    rows.add(row);
 			    }
@@ -200,7 +216,10 @@ public class DataTable implements Iterable<int[]> {
 			if ( colNamesOverride!=null ) {
 				colNames = colNamesOverride;
 			}
-			return fromStrings(rows, colTypes, colNames, false);
+			if ( colTypesOverride!=null ) {
+				actualTypes = colTypesOverride;
+			}
+			return fromStrings(rows, actualTypes, colNames, false);
 		}
 		catch (Exception e) {
 			throw new IllegalArgumentException("Can't open and/or read "+fileName, e);
