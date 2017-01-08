@@ -36,13 +36,13 @@ public class TestTable {
 
 	@Test public void testEmptyWithNamesAndTypes() {
 		DataTable t = DataTable.empty(colTypes3, colNames3);
-		assertEquals("a, b, y\n", t.toTestString());
+		assertEquals("a(cat), b(int), y(predicted)\n", t.toTestString());
 	}
 
 	@Test public void test1x3Row() {
 		DataTable t = DataTable.fromInts(rawData1x3, null, null);
 		String expected =
-			"x0, x1, y\n"+
+			"x0(int), x1(int), y(predicted)\n"+
 			"1, 2, 3\n";
 		assertEquals(expected, t.toTestString());
 	}
@@ -50,7 +50,7 @@ public class TestTable {
 	@Test public void test1x3RowWithTypes() {
 		DataTable t = DataTable.fromInts(rawData1x3, colTypes3, null);
 		String expected =
-			"x0, x1, y\n"+
+			"x0(cat), x1(int), y(predicted)\n"+
 			"1, 2, 3\n";
 		assertEquals(expected, t.toTestString());
 	}
@@ -58,7 +58,7 @@ public class TestTable {
 	@Test public void test1x3RowWithNames() {
 		DataTable t = DataTable.fromInts(rawData1x3, null, colNames3);
 		String expected =
-			"a, b, y\n"+
+			"a(int), b(int), y(predicted)\n"+
 			"1, 2, 3\n";
 		assertEquals(expected, t.toTestString());
 	}
@@ -71,4 +71,56 @@ public class TestTable {
 		assertEquals(expected, t.toTestString());
 	}
 
+	@Test public void testFloatAsInt() {
+		final DataTable.VariableType[] colTypes = {
+			DataTable.VariableType.NUMERICAL_FLOAT,
+			DataTable.VariableType.NUMERICAL_FLOAT,
+		};
+		final List<int[]> rawData = new ArrayList<int[]>() {{
+			add(new int[] {Float.floatToIntBits(0.0f),Float.floatToIntBits(1234.560f)});
+		}};
+		DataTable t = DataTable.fromInts(rawData, colTypes, null);
+		String expected =
+			"x0(float), x1(float)\n"+
+			"0.0, 1234.56\n";
+		assertEquals(expected, t.toTestString());
+	}
+
+	@Test public void testEmptyRowFromString() {
+		List<String[]> data = new ArrayList<>();
+		DataTable t = DataTable.fromStrings(data, null, null, false);
+		assertEquals("", t.toTestString());
+	}
+
+	@Test public void test1RowFromString() {
+		List<String[]> data = new ArrayList<>();
+		data.add(new String[]{"1", "9", "2"});
+		DataTable t = DataTable.fromStrings(data, null, null, false);
+		String expected =
+			"x0(int), x1(int), y(predicted)\n"+
+			"1, 9, 2\n";
+		assertEquals(expected, t.toTestString());
+	}
+
+	@Test public void test1RowFromStringWithHeader() {
+		List<String[]> data = new ArrayList<>();
+		data.add(new String[]{"A", "B", "Y"});
+		data.add(new String[]{"1", "9", "2"});
+		DataTable t = DataTable.fromStrings(data, null, null, true);
+		String expected =
+			"A(int), B(int), Y(predicted)\n"+
+			"1, 9, 2\n";
+		assertEquals(expected, t.toTestString());
+	}
+
+	@Test public void test1RowFromStringWithHeaderAndNamesOverride() {
+		List<String[]> data = new ArrayList<>();
+		data.add(new String[]{"A", "B", "Y"});
+		data.add(new String[]{"1", "9", "2"});
+		DataTable t = DataTable.fromStrings(data, null, colNames3, true);
+		String expected =
+			"a(int), b(int), y(predicted)\n"+
+			"1, 9, 2\n";
+		assertEquals(expected, t.toTestString());
+	}
 }

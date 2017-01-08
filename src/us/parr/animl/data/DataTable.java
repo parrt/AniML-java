@@ -123,7 +123,7 @@ public class DataTable implements Iterable<int[]> {
 						col = Float.floatToIntBits(Float.valueOf(colValue));
 						break;
 				}
-				rowAsInts[i] = col;
+				rowAsInts[j] = col;
 			}
 			rows2.add(rowAsInts);
 		}
