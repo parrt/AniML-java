@@ -23,12 +23,23 @@ import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_STRING;
 import static us.parr.animl.data.DataTable.VariableType.NUMERICAL_FLOAT;
 import static us.parr.animl.data.DataTable.VariableType.NUMERICAL_INT;
 import static us.parr.animl.data.DataTable.VariableType.PREDICTED_CATEGORICAL_INT;
+import static us.parr.animl.data.DataTable.VariableType.UNUSED_INT;
 
 public class DataTable implements Iterable<int[]> {
 	public enum VariableType {
 		CATEGORICAL_INT, CATEGORICAL_STRING, NUMERICAL_INT, NUMERICAL_FLOAT,
 		PREDICTED_CATEGORICAL_INT,
 		UNUSED_INT
+	}
+
+	public static final String[] varTypeShortNames = new String[VariableType.values().length];
+	static {
+		varTypeShortNames[CATEGORICAL_INT.ordinal()] = "cat";
+		varTypeShortNames[CATEGORICAL_STRING.ordinal()] = "string";
+		varTypeShortNames[NUMERICAL_INT.ordinal()] = "int";
+		varTypeShortNames[NUMERICAL_FLOAT.ordinal()] = "float";
+		varTypeShortNames[PREDICTED_CATEGORICAL_INT.ordinal()] = "predicted";
+		varTypeShortNames[UNUSED_INT.ordinal()] = "unused";
 	}
 
 	protected List<int[]> rows;
@@ -102,6 +113,7 @@ public class DataTable implements Iterable<int[]> {
 					case CATEGORICAL_INT :
 					case NUMERICAL_INT :
 					case UNUSED_INT :
+					case PREDICTED_CATEGORICAL_INT :
 						col = Integer.valueOf(colValue);
 						break;
 					case CATEGORICAL_STRING :
@@ -140,7 +152,7 @@ public class DataTable implements Iterable<int[]> {
 			   colTypes[colIndex]==CATEGORICAL_STRING ||
 		       colTypes[colIndex]==PREDICTED_CATEGORICAL_INT) )
 		{
-			throw new IllegalArgumentException(colNames[colIndex]+" is not an int-based column");
+			throw new IllegalArgumentException(colNames[colIndex]+" is not an int-based column; type is "+colTypes[colIndex]);
 		}
 		for (int i = 0; i<size(); i++) { // for each row, count different values for col splitVariable
 			int[] row = get(i);
@@ -186,13 +198,14 @@ public class DataTable implements Iterable<int[]> {
 			case CATEGORICAL_INT :
 			case NUMERICAL_INT :
 			case UNUSED_INT :
+			case PREDICTED_CATEGORICAL_INT :
 				return row[colj];
 			case CATEGORICAL_STRING :
 				return colStringToIntMap[colj].get(row[colj]);
 			case NUMERICAL_FLOAT :
 				return Float.intBitsToFloat(row[colj]);
 			default :
-				throw new IllegalArgumentException(colNames[colj]+" has invalid type");
+				throw new IllegalArgumentException(colNames[colj]+" has invalid type: "+colTypes[colj]);
 		}
 	}
 
@@ -224,7 +237,7 @@ public class DataTable implements Iterable<int[]> {
 			case NUMERICAL_FLOAT:
 				return Float.compare(getAsFloat(rowi, colIndex), getAsFloat(rowj, colIndex));
 			default :
-				throw new IllegalArgumentException(colNames[colIndex]+" has invalid type");
+				throw new IllegalArgumentException(colNames[colIndex]+" has invalid type: "+colTypes[colIndex]);
 		}
 	}
 
@@ -261,7 +274,7 @@ public class DataTable implements Iterable<int[]> {
 		VariableType[] colTypes;
 		colTypes = new VariableType[dim];
 		for (int i = 0; i<dim-1; i++) {
-			colTypes[i] = NUMERICAL_FLOAT;
+			colTypes[i] = NUMERICAL_INT;
 		}
 		colTypes[dim-1] = PREDICTED_CATEGORICAL_INT;
 		return colTypes;
@@ -270,12 +283,17 @@ public class DataTable implements Iterable<int[]> {
 	public String toTestString() {
 		StringBuilder buf = new StringBuilder();
 		if ( colNames!=null ) {
-			buf.append(AniUtils.join(colNames, ", "));
+			List<String> strings = map(colNames, Object::toString);
+			if ( colTypes!=null ) {
+				for (int j = 0; j<strings.size(); j++) {
+					strings.set(j, strings.get(j)+"("+varTypeShortNames[colTypes[j].ordinal()]+")");
+				}
+			}
+			buf.append(AniUtils.join(strings, ", "));
 			buf.append("\n");
 		}
 		for (int i = 0; i<rows.size(); i++) {
 			Object[] values = getValues(i);
-			List<String> strings = map(values, o -> o.toString());
 			buf.append(AniUtils.join(values, ", "));
 			buf.append("\n");
 		}

@@ -87,7 +87,7 @@ public class AniUtils {
 		return output;
 	}
 
-	public static String join(Collection<Object> a, String separator) {
+	public static String join(Collection<?> a, String separator) {
 		StringBuilder buf = new StringBuilder();
 		int i = 0;
 		for (Object o : a) {
@@ -95,6 +95,7 @@ public class AniUtils {
 			if ( (i+1)<a.size() ) {
 				buf.append(separator);
 			}
+			i++;
 		}
 		return buf.toString();
 	}
