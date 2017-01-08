@@ -7,9 +7,9 @@
 package us.parr.animl.data;
 
 import us.parr.animl.AniStats;
+import us.parr.animl.AniUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 
+import static us.parr.animl.AniUtils.map;
 import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_INT;
 import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_STRING;
 import static us.parr.animl.data.DataTable.VariableType.NUMERICAL_FLOAT;
@@ -24,7 +25,7 @@ import static us.parr.animl.data.DataTable.VariableType.NUMERICAL_INT;
 import static us.parr.animl.data.DataTable.VariableType.PREDICTED_CATEGORICAL_INT;
 
 public class DataTable implements Iterable<int[]> {
-	enum VariableType {
+	public enum VariableType {
 		CATEGORICAL_INT, CATEGORICAL_STRING, NUMERICAL_INT, NUMERICAL_FLOAT,
 		PREDICTED_CATEGORICAL_INT,
 		UNUSED_INT
@@ -268,11 +269,14 @@ public class DataTable implements Iterable<int[]> {
 
 	public String toTestString() {
 		StringBuilder buf = new StringBuilder();
-		buf.append(Arrays.toString(colNames));
-		buf.append("\n");
+		if ( colNames!=null ) {
+			buf.append(AniUtils.join(colNames, ", "));
+			buf.append("\n");
+		}
 		for (int i = 0; i<rows.size(); i++) {
 			Object[] values = getValues(i);
-			buf.append(Arrays.toString(values));
+			List<String> strings = map(values, o -> o.toString());
+			buf.append(AniUtils.join(values, ", "));
 			buf.append("\n");
 		}
 		return buf.toString();

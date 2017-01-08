@@ -14,7 +14,7 @@ import java.util.function.Predicate;
 
 import static us.parr.animl.classifiers.RandomForest.INVALID_CATEGORY;
 
-public class AniUtil {
+public class AniUtils {
 	public static int uniqueValue(List<int[]> data, int varIndex) {
 		if ( data==null ) {
 			return INVALID_CATEGORY;
@@ -39,13 +39,36 @@ public class AniUtil {
 		return output;
 	}
 
-	public static <T> T findFirst(List<T> data, Predicate<T> pred) {
-		if ( data!=null ) for (T x : data) {
-			if ( pred.test(x) ) {
-				return x;
+	public static <T> T findFirst(Collection<T> data, Predicate<T> pred) {
+		if ( data!=null ) {
+			for (T x : data) {
+				if ( pred.test(x) ) {
+					return x;
+				}
 			}
 		}
 		return null;
+	}
+
+	public static <T> int indexOf(Collection<? extends T> elems, Predicate<T> pred) {
+		if ( elems!=null ) {
+			int i = 0;
+			for (T elem : elems) {
+				if ( pred.test(elem) ) return i;
+				i++;
+			}
+		}
+		return -1;
+	}
+
+	public static <T> int lastIndexOf(Collection<? extends T> elems, Predicate<T> pred) {
+		if ( elems!=null ) {
+			int i = elems.size()-1;
+			for (T elem : elems) {
+				if ( pred.test(elem) ) return i;
+			}
+		}
+		return -1;
 	}
 
 	public static <T, R> List<R> map(Collection<T> data, Function<T, R> getter) {
@@ -62,5 +85,29 @@ public class AniUtil {
 			output.add(getter.apply(x));
 		}
 		return output;
+	}
+
+	public static String join(Collection<Object> a, String separator) {
+		StringBuilder buf = new StringBuilder();
+		int i = 0;
+		for (Object o : a) {
+			buf.append(o.toString());
+			if ( (i+1)<a.size() ) {
+				buf.append(separator);
+			}
+		}
+		return buf.toString();
+	}
+
+	public static String join(Object[] a, String separator) {
+		StringBuilder buf = new StringBuilder();
+		for (int i=0; i<a.length; i++) {
+			Object o = a[i];
+			buf.append(o.toString());
+			if ( (i+1)<a.length ) {
+				buf.append(separator);
+			}
+		}
+		return buf.toString();
 	}
 }
