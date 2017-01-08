@@ -8,6 +8,8 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 public class BaseTest {
+	public static final String tmpdir = System.getProperty("java.io.tmpdir")+"/animl";
+
 	public static String toTestString(DecisionTree tree) {
 		return tree.toJSON().toString().replaceAll("\"", "'");
 	}

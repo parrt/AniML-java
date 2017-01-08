@@ -6,9 +6,16 @@
 
 package us.parr.animl.data;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
 import us.parr.animl.AniStats;
 
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -148,6 +155,56 @@ public class DataTable implements Iterable<int[]> {
 		DataTable t = new DataTable(rows2, colTypes, colNames);
 		t.colStringToIntMap = colStringToIntMap;
 		return t;
+	}
+
+	public static DataTable loadCSV(String fileName, String formatType, VariableType[] colTypes, String[] colNamesOverride, boolean hasHeaderRow) {
+		try {
+			// use apache commons io + csv to load but convert to list of String[]
+			// byte-order markers are handled if present at start of file.
+			FileInputStream fis = new FileInputStream(fileName);
+			final Reader reader = new InputStreamReader(new BOMInputStream(fis), "UTF-8");
+			CSVFormat format;
+			switch ( formatType.toLowerCase() ) {
+				case "tsv" :
+					format = hasHeaderRow ? CSVFormat.TDF.withHeader() : CSVFormat.TDF;
+					break;
+				case "mysql" :
+					format = hasHeaderRow ? CSVFormat.MYSQL.withHeader() : CSVFormat.MYSQL;
+					break;
+				case "excel" :
+					format = hasHeaderRow ? CSVFormat.EXCEL.withHeader() : CSVFormat.EXCEL;
+					break;
+				case "rfc4180" :
+				default :
+					format = hasHeaderRow ? CSVFormat.RFC4180.withHeader() : CSVFormat.RFC4180;
+					break;
+			}
+			final CSVParser parser = new CSVParser(reader, format);
+			List<String[]> rows = new ArrayList<>();
+			try {
+			    for (final CSVRecord record : parser) {
+			    	String[] row = new String[record.size()];
+				    for (int j = 0; j<record.size(); j++) {
+					    row[j] = record.get(j);
+				    }
+				    rows.add(row);
+			    }
+			}
+			finally {
+			    parser.close();
+			    reader.close();
+			}
+
+			Set<String> colNameSet = parser.getHeaderMap().keySet();
+			String[] colNames = colNameSet.toArray(new String[colNameSet.size()]);
+			if ( colNamesOverride!=null ) {
+				colNames = colNamesOverride;
+			}
+			return fromStrings(rows, colTypes, colNames, false);
+		}
+		catch (Exception e) {
+			throw new IllegalArgumentException("Can't open and/or read "+fileName, e);
+		}
 	}
 
 	public Set<Integer> uniqueValues(int colIndex) {
@@ -330,12 +387,15 @@ public class DataTable implements Iterable<int[]> {
 	public String toString(VariableFormat[] colFormats) {
 		StringBuilder buf = new StringBuilder();
 		List<Integer> colWidths = map(colNames, n -> n.length());
+		// compute column widths as max of col name or widest value in column
 		for (int j = 0; j<colWidths.size(); j++) {
-			String name = String.format("%"+colWidths.get(j)+"s", colNames[j]);
-			buf.append(name);
-			if ( (j+1)<colWidths.size() ) {
+			int w = Math.max(colWidths.get(j), getColumnMaxWidth(j));
+			colWidths.set(j, w);
+			String name = StringUtils.center(colNames[j], w);
+			if ( j>0 ) {
 				buf.append(" ");
 			}
+			buf.append(name);
 		}
 		buf.append("\n");
 		for (int i = 0; i<rows.size(); i++) {
@@ -354,13 +414,25 @@ public class DataTable implements Iterable<int[]> {
 						colValue = String.format("%"+colWidth+"s", colValue);
 						break;
 				}
-				buf.append(colValue);
-				if ( (j+1)<colWidths.size() ) {
+				if ( j>0 ) {
 					buf.append(" ");
 				}
+				buf.append(colValue);
 			}
 			buf.append("\n");
 		}
 		return buf.toString();
+	}
+
+	public int getColumnMaxWidth(int colIndex) {
+		int w = 0;
+		// scan column, find max width
+		for (int i = 0; i<rows.size(); i++) {
+			String v = getValue(i, colIndex).toString();
+			if ( v.length()>w ) {
+				w = v.length();
+			}
+		}
+		return w;
 	}
 }

@@ -3,6 +3,7 @@ package us.parr.animl;
 import org.junit.Test;
 import us.parr.animl.data.DataTable;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,7 +15,7 @@ import static us.parr.animl.data.DataTable.VariableType.NUMERICAL_INT;
 import static us.parr.animl.data.DataTable.VariableType.PREDICTED_CATEGORICAL_INT;
 import static us.parr.animl.data.DataTable.VariableType.PREDICTED_CATEGORICAL_STRING;
 
-public class TestTable {
+public class TestTable extends BaseTest {
 	public static final String[] colNames3 = {"a", "b", "y"};
 	public static final DataTable.VariableType[] colTypes3 = {
 		CATEGORICAL_INT,
@@ -182,20 +183,20 @@ public class TestTable {
 	}
 
 	@Test public void testPrint2Rows() {
-		List<String[]> data = new ArrayList<>();
-		data.add(new String[]{"First", "Second", "Dependent Variable"});
-		data.add(new String[]{"100", "123.45", "go"});
-		data.add(new String[]{"10",  "23.45", "stay"});
+		URL url = this.getClass().getClassLoader().getResource("quoted-values.csv");
 		final DataTable.VariableType[] colTypes = {
 			CATEGORICAL_INT,
 			NUMERICAL_FLOAT,
 			PREDICTED_CATEGORICAL_STRING
 		};
-		DataTable t = DataTable.fromStrings(data, colTypes, null, true);
+		DataTable t = DataTable.loadCSV(url.getFile().toString(), "excel", colTypes, null, true);
 		String expected =
-			"First Second Dependent Variable\n"+
-			"  100 123.45         go        \n"+
-			"   10  23.45        stay       \n";
+			"  Age  Sex\n"+
+			"1 63.0  1 \n"+
+			"2 67.0  1 \n"+
+			"3 67.0  1 \n"+
+			"4 37.0  1 \n"+
+			"5 41.0  0 \n";
 		assertEquals(expected, t.toString());
 	}
 
