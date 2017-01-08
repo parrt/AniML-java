@@ -12,6 +12,7 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
 import us.parr.animl.AniStats;
+import us.parr.animl.AniUtils;
 
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import static us.parr.animl.AniUtils.join;
 import static us.parr.animl.AniUtils.map;
@@ -231,6 +233,11 @@ public class DataTable implements Iterable<int[]> {
 		return valueCounts.keySet();
 	}
 
+	public DataTable filter(Predicate<int[]> pred) {
+		List<int[]> filtered = AniUtils.filter(rows, pred);
+		return DataTable.fromInts(filtered, colTypes, colNames);
+	}
+
 	public double entropy(int colIndex) {
 		FrequencySet<Integer> valueCounts = valueCountsInColumn(colIndex);
 		return AniStats.entropy(valueCounts.counts());
@@ -286,6 +293,16 @@ public class DataTable implements Iterable<int[]> {
 
 	public int get(int i, int j) {
 		return getAsInt(i,j);
+	}
+
+	public List<int[]> getRows() { return rows; }
+
+	public String[] getColNames() {
+		return colNames;
+	}
+
+	public VariableType[] getColTypes() {
+		return colTypes;
 	}
 
 	public Object getValue(int rowi, int colj) {

@@ -7,6 +7,7 @@
 package us.parr.animl.classifiers;
 
 import us.parr.animl.AniStats;
+import us.parr.animl.data.DataTable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +41,7 @@ public class RandomForest {
 	/** Train numEstimators trees using 2D matrix data as training
 	 *  where last column in data is the category of the ith feature vector data_i.
 	 */
-	public static RandomForest train(List<int[]> data, int numEstimators) {
+	public static RandomForest train(DataTable data, int numEstimators) {
 		if ( data==null || data.size()==0 ) return null;
 		RandomForest forest = new RandomForest(numEstimators);
 		forest.N = data.size();
@@ -48,8 +49,9 @@ public class RandomForest {
 		// Number of variables to select at random at each decision node to find best split
 		int m = (int)Math.sqrt(forest.M);
 		for (int i = 1; i<=numEstimators; i++) {
-			List<int[]> bootstrap = AniStats.bootstrapWithRepl(data);
-			DecisionTree tree = DecisionTree.build(bootstrap, null, m);
+			List<int[]> bootstrap = AniStats.bootstrapWithRepl(data.getRows());
+			DataTable table = DataTable.fromInts(bootstrap, data.getColTypes(), data.getColNames());
+			DecisionTree tree = DecisionTree.build(table, m);
 			forest.trees.add(tree);
 		}
 		return forest;

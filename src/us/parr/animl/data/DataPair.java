@@ -6,13 +6,11 @@
 
 package us.parr.animl.data;
 
-import java.util.List;
-
 public class DataPair {
-	public List<int[]> region1;
-	public List<int[]> region2;
+	public DataTable region1;
+	public DataTable region2;
 
-	public DataPair(List<int[]> region1, List<int[]> b) {
+	public DataPair(DataTable region1, DataTable b) {
 		this.region1 = region1;
 		this.region2 = b;
 	}

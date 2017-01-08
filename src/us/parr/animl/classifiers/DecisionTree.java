@@ -7,8 +7,8 @@
 package us.parr.animl.classifiers;
 
 import us.parr.animl.AniStats;
-import us.parr.animl.AniUtils;
 import us.parr.animl.data.DataPair;
+import us.parr.animl.data.DataTable;
 import us.parr.animl.data.FrequencySet;
 
 import javax.json.JsonObject;
@@ -37,24 +37,20 @@ public abstract class DecisionTree {
 	public abstract int classify(int[] X);
 
 	/** Conversion routine from separate X -> Y vectors to single augmented data vector */
-	public static DecisionTree build(List<int[]> X, List<Integer> Y) {
-		List<int[]> data = new ArrayList<>(X.size());
-		for (int i = 0; i<X.size(); i++) {
-			int[] row = X.get(i);
-			int[] augmented = new int[row.length+1];
-			System.arraycopy(row, 0, augmented, 0, row.length);
-			augmented[row.length] = Y.get(i);
-			data.add(augmented);
-		}
-		return build(data);
-	}
+//	public static DecisionTree build(List<int[]> X, List<Integer> Y) {
+//		List<int[]> data = new ArrayList<>(X.size());
+//		for (int i = 0; i<X.size(); i++) {
+//			int[] row = X.get(i);
+//			int[] augmented = new int[row.length+1];
+//			System.arraycopy(row, 0, augmented, 0, row.length);
+//			augmented[row.length] = Y.get(i);
+//			data.add(augmented);
+//		}
+//		return build(data);
+//	}
 
-	public static DecisionTree build(List<int[]> data) {
-		return build(data, null, 0);
-	}
-
-	public static DecisionTree build(List<int[]> data, String[] varnames) {
-		return build(data, varnames, 0);
+	public static DecisionTree build(DataTable data) {
+		return build(data, 0);
 	}
 
 	/** Build a decision tree starting with arg data and recursively
@@ -65,17 +61,17 @@ public abstract class DecisionTree {
 	 *
 	 *  If m>0, select split var from random subset of size m from all variable set.
 	 */
-	public static DecisionTree build(List<int[]> data, String[] varnames, int m) {
+	public static DecisionTree build(DataTable data, int m) {
 		if ( data==null || data.size()==0 ) return null;
 		int N = data.size();
 		int M = data.get(0).length - 1; // last column is the predicted var
 		int yi = M; // last index is the target variable
 		// if all predict same category or only one row of data,
 		// create leaf predicting that
-		double complete_entropy = AniStats.entropy(AniStats.valueCountsInColumn(data, yi).counts());
-		int pureCategory = AniUtils.uniqueValue(data, yi);
-		if ( pureCategory!=RandomForest.INVALID_CATEGORY ) {
-			DecisionTree t = new DecisionLeafNode(pureCategory);
+		double complete_entropy = AniStats.entropy(data.valueCountsInColumn(yi).counts());
+		Set<Integer> predictions = data.uniqueValues(yi);
+		if ( predictions.size()==1 ) {
+			DecisionTree t = new DecisionLeafNode(predictions.iterator().next());
 			t.numRecords = N;
 			t.entropy = complete_entropy;
 			return t;
@@ -93,7 +89,7 @@ public abstract class DecisionTree {
 		for (Integer i : indexes) { // for each variable i
 			// Sort data set on independent var i
 			final int varIndex = i;
-			Collections.sort(data, (ra,rb)-> {return Integer.compare(ra[varIndex],rb[varIndex]);});
+			data.sortBy(varIndex);
 
 			// look for discontinuities (transitions) in dependent var, record row index
 			Set<Integer> splitValues = new HashSet<>();
@@ -105,8 +101,8 @@ public abstract class DecisionTree {
 			}
 			for (Integer splitValue : splitValues) {
 				DataPair s = split(data, i, splitValue);
-				FrequencySet<Integer> r1_categoryCounts = AniStats.valueCountsInColumn(s.region1, yi);
-				FrequencySet<Integer> r2_categoryCounts = AniStats.valueCountsInColumn(s.region2, yi);
+				FrequencySet<Integer> r1_categoryCounts = s.region1.valueCountsInColumn(yi);
+				FrequencySet<Integer> r2_categoryCounts = s.region2.valueCountsInColumn(yi);
 				int n1 = s.region1.size();
 				int n2 = s.region2.size();
 				double r1_entropy = AniStats.entropy(r1_categoryCounts.counts());
@@ -125,7 +121,7 @@ public abstract class DecisionTree {
 					best_split = s;
 					newbest=" (new best)";
 				}
-				String var = varnames!=null ? varnames[i] : String.valueOf(i);
+				String var = data.getColNames()[i];
 				System.out.printf("Entropies var=%13s val=%d r1=%d/%d*%.2f r2=%d/%d*%.2f, ExpEntropy=%.2f gain=%.2f%s\n",
 				                  var, splitValue, n1, n1+n2, r1_entropy, n2, n1+n2,r2_entropy, expectedEntropyValue, gain, newbest);
 			}
@@ -134,12 +130,12 @@ public abstract class DecisionTree {
 			DecisionSplitNode t = new DecisionSplitNode(best_var, best_val);
 			t.numRecords = N;
 			t.entropy = complete_entropy;
-			t.left = build(best_split.region1, varnames, m);
-			t.right = build(best_split.region2, varnames, m);
+			t.left = build(best_split.region1, m);
+			t.right = build(best_split.region2, m);
 			return t;
 		}
 		// we would gain nothing by splitting, make a leaf predicting majority vote
-		int majorityVote = AniStats.valueCountsInColumn(data, yi).argmax();
+		int majorityVote = data.valueCountsInColumn(yi).argmax();
 		DecisionTree t = new DecisionLeafNode(majorityVote);
 		t.numRecords = N;
 		t.entropy = complete_entropy;
@@ -160,9 +156,9 @@ public abstract class DecisionTree {
 
 	public boolean isLeaf() { return this instanceof DecisionLeafNode; }
 
-	public static DataPair split(List<int[]> X, int splitVariable, int splitValue) {
-		List<int[]> a = AniUtils.filter(X, x -> x[splitVariable] < splitValue);
-		List<int[]> b = AniUtils.filter(X, x -> x[splitVariable] >= splitValue);
+	public static DataPair split(DataTable X, int splitVariable, int splitValue) {
+		DataTable a = X.filter(x -> x[splitVariable] < splitValue);
+		DataTable b = X.filter(x -> x[splitVariable] >= splitValue);
 		return new DataPair(a,b);
 	}
 

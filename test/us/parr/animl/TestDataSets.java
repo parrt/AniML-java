@@ -2,6 +2,7 @@ package us.parr.animl;
 
 import org.junit.Test;
 import us.parr.animl.classifiers.DecisionTree;
+import us.parr.animl.data.DataTable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,7 +88,7 @@ public class TestDataSets extends BaseTest {
 			pred.add(row[row.length-1]);
 		}
 		System.out.println(pred);
-		DecisionTree tree = DecisionTree.build(data, restaurant_varnames);
+		DecisionTree tree = DecisionTree.build(DataTable.fromInts(data,null,restaurant_varnames), 0);
 		// I verified this string by looking at DOT output
 		String expecting = "{'var':'Hungry','val':1,'n':12,'E':'1.00','left':{'var':'Bar','val':1,'n':5,'E':'0.72','left':{'predict':'no','n':2},'right':{'var':'Raining','val':1,'n':3,'E':'0.92','left':{'predict':'yes','n':1},'right':{'predict':'no','n':2}}},'right':{'var':'Patrons','val':2,'n':7,'E':'0.86','left':{'predict':'yes','n':3},'right':{'var':'Fri&Sat','val':1,'n':4,'E':'1.00','left':{'predict':'no','n':1},'right':{'var':'Price','val':3,'n':3,'E':'0.92','left':{'predict':'yes','n':2},'right':{'predict':'no','n':1}}}}}";
 		String result = toTestString(tree, restaurant_varnames, restaurant_catnames);
@@ -101,7 +102,7 @@ public class TestDataSets extends BaseTest {
 		for (int[] row : signups) {
 			data.add(row);
 		}
-		DecisionTree tree = DecisionTree.build(data, signups_varnames);
+		DecisionTree tree = DecisionTree.build(DataTable.fromInts(data,null,signups_varnames), 0);
 		// I verified this string by looking at DOT output
 		String expecting = "{'var':'pageviews','val':21,'n':16,'E':'1.51','left':{'var':'readfaq','val':1,'n':9,'E':'0.92','left':{'predict':'none','n':4},'right':{'var':'referrer','val':2,'n':5,'E':'0.97','left':{'predict':'none','n':2},'right':{'predict':'basic','n':3}}},'right':{'var':'referrer','val':3,'n':7,'E':'1.45','left':{'var':'referrer','val':2,'n':4,'E':'0.81','left':{'predict':'none','n':1},'right':{'predict':'premium','n':3}},'right':{'predict':'basic','n':3}}}";
 		String result = toTestString(tree, signups_varnames, signups_catnames);

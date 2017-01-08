@@ -15,16 +15,6 @@ import java.util.List;
 import static us.parr.animl.classifiers.DecisionTree.random;
 
 public class AniStats {
-	public static FrequencySet<Integer> valueCountsInColumn(List<int[]> X, int splitVariable) {
-		FrequencySet<Integer> valueCounts = new FrequencySet<>();
-		for (int i = 0; i<X.size(); i++) { // for each row, count different values for col splitVariable
-			int[] row = X.get(i);
-			int col = row[splitVariable];
-			valueCounts.add(col);
-		}
-		return valueCounts;
-	}
-
 	public static double variance(List<Integer> data) {
 		int n = data.size();
 		double sum = 0;

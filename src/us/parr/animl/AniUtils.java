@@ -6,6 +6,8 @@
 
 package us.parr.animl;
 
+import us.parr.animl.data.FrequencySet;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -15,6 +17,16 @@ import java.util.function.Predicate;
 import static us.parr.animl.classifiers.RandomForest.INVALID_CATEGORY;
 
 public class AniUtils {
+	public static FrequencySet<Integer> valueCountsInColumn(List<int[]> X, int splitVariable) {
+		FrequencySet<Integer> valueCounts = new FrequencySet<>();
+		for (int i = 0; i<X.size(); i++) { // for each row, count different values for col splitVariable
+			int[] row = X.get(i);
+			int col = row[splitVariable];
+			valueCounts.add(col);
+		}
+		return valueCounts;
+	}
+
 	public static int uniqueValue(List<int[]> data, int varIndex) {
 		if ( data==null ) {
 			return INVALID_CATEGORY;
