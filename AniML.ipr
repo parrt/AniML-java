@@ -23,7 +23,12 @@
       <module name="AniML" target="1.8" />
     </bytecodeTargetLevel>
   </component>
-  <component name="CopyrightManager" default="" />
+  <component name="CopyrightManager" default="bsd">
+    <copyright>
+      <option name="myName" value="bsd" />
+      <option name="notice" value="Copyright (c) 2017 Terence Parr. All rights reserved.&#10;Use of this file is governed by the BSD 3-clause license that&#10;can be found in the LICENSE file in the project root." />
+    </copyright>
+  </component>
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$" charset="UTF-8" />
     <file url="PROJECT" charset="UTF-8" />
