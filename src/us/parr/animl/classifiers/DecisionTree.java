@@ -1,6 +1,7 @@
 package us.parr.animl.classifiers;
 
 import us.parr.animl.AniStats;
+import us.parr.animl.AniUtil;
 import us.parr.animl.data.DataPair;
 import us.parr.animl.data.FrequencySet;
 
@@ -66,7 +67,7 @@ public abstract class DecisionTree {
 		// if all predict same category or only one row of data,
 		// create leaf predicting that
 		double complete_entropy = AniStats.entropy(AniStats.valueCountsInColumn(data, yi).counts());
-		int pureCategory = AniStats.uniqueValue(data, yi);
+		int pureCategory = AniUtil.uniqueValue(data, yi);
 		if ( pureCategory!=RandomForest.INVALID_CATEGORY ) {
 			DecisionTree t = new DecisionLeafNode(pureCategory);
 			t.numRecords = N;
@@ -154,8 +155,8 @@ public abstract class DecisionTree {
 	public boolean isLeaf() { return this instanceof DecisionLeafNode; }
 
 	public static DataPair split(List<int[]> X, int splitVariable, int splitValue) {
-		List<int[]> a = AniStats.filter(X, x -> x[splitVariable] < splitValue);
-		List<int[]> b = AniStats.filter(X, x -> x[splitVariable] >= splitValue);
+		List<int[]> a = AniUtil.filter(X, x -> x[splitVariable] < splitValue);
+		List<int[]> b = AniUtil.filter(X, x -> x[splitVariable] >= splitValue);
 		return new DataPair(a,b);
 	}
 

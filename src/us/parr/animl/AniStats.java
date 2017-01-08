@@ -21,28 +21,56 @@ public class AniStats {
 		return valueCounts;
 	}
 
-	public static int uniqueValue(List<int[]> data, int varIndex) {
-		if ( data==null ) {
-			return INVALID_CATEGORY;
+	public static double variance(List<Integer> data) {
+		int n = data.size();
+		double sum = 0;
+		double avg = sum(data)/((double) n);
+		for (int d : data) {
+			sum += (d-avg)*(d-avg);
 		}
-		int[] firstRow = data.get(0);
-		int v = firstRow[varIndex];
-		for (int[] row : data) {
-			if ( row[varIndex]!=v ) {
-				return INVALID_CATEGORY;
-			}
-		}
-		return v;
+		return sum/n;
 	}
 
-	public static <T> List<T> filter(List<T> data, Predicate<T> pred) {
-		List<T> output = new ArrayList<>();
-		if ( data!=null ) for (T x : data) {
-			if ( pred.test(x) ) {
-				output.add(x);
-			}
+	public static double varianceFloats(List<Float> data) {
+		int n = data.size();
+		double sum = 0;
+		double avg = sumFloats(data)/((double) n);
+		for (float d : data) {
+			sum += (d-avg)*(d-avg);
 		}
-		return output;
+		return sum/n;
+	}
+
+	public static int sum(Collection<Integer> data) {
+		int sum = 0;
+		for (int d : data) {
+			sum += d;
+		}
+		return sum;
+	}
+
+	public static float sumFloats(Collection<Float> data) {
+		float sum = 0;
+		for (float d : data) {
+			sum += d;
+		}
+		return sum;
+	}
+
+	public static float sumDoubles(Collection<Double> data) {
+		float sum = 0;
+		for (double d : data) {
+			sum += d;
+		}
+		return sum;
+	}
+
+	public static List<Double> diffFloats(List<Float> a, List<Float> b) {
+		List<Double> diffs = new ArrayList<>();
+		for (int i = 0; i<a.size(); i++) {
+			diffs.add((double) a.get(i)-b.get(i));
+		}
+		return diffs;
 	}
 
 	public static int max(Collection<Integer> data) {
@@ -56,12 +84,12 @@ public class AniStats {
 		return m;
 	}
 
-	public static int sum(Collection<Integer> data) {
-		int sum = 0;
-		for (int d : data) {
+	public static double mean(Collection<Double> data) {
+		double sum = 0.0;
+		for (Double d : data) {
 			sum += d;
 		}
-		return sum;
+		return sum / data.size();
 	}
 
 	/** Compute the gini impurity from a collection of counts */
