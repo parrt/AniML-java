@@ -1,4 +1,7 @@
-package us.parr.rf;
+package us.parr.animl;
+
+import us.parr.animl.classifiers.DecisionTree;
+import us.parr.animl.classifiers.RandomForest;
 
 import java.util.List;
 

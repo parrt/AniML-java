@@ -1,17 +1,17 @@
-package us.parr.rf;
+package us.parr.animl;
 
 import org.junit.Test;
-import us.parr.rf.misc.FrequencySet;
+import us.parr.animl.data.FrequencySet;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
-import static us.parr.rf.misc.RFUtils.entropy;
-import static us.parr.rf.misc.RFUtils.gini;
-import static us.parr.rf.misc.RFUtils.isClose;
-import static us.parr.rf.misc.RFUtils.log2;
+import static us.parr.animl.AniStats.entropy;
+import static us.parr.animl.AniStats.gini;
+import static us.parr.animl.AniMath.isClose;
+import static us.parr.animl.AniMath.log2;
 
 public class TestImpurity {
 	public static final int HEADS = 0;

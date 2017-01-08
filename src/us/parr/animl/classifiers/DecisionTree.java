@@ -1,8 +1,8 @@
-package us.parr.rf;
+package us.parr.animl.classifiers;
 
-import us.parr.rf.misc.DataPair;
-import us.parr.rf.misc.FrequencySet;
-import us.parr.rf.misc.RFUtils;
+import us.parr.animl.AniStats;
+import us.parr.animl.data.DataPair;
+import us.parr.animl.data.FrequencySet;
 
 import javax.json.JsonObject;
 import java.util.ArrayList;
@@ -11,8 +11,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-
-import static us.parr.rf.RandomForest.INVALID_CATEGORY;
 
 /** A classic CART decision tree but this implementation is suitable just for
  *  classification, not regression. I extended it to handle a subset of predictor
@@ -67,9 +65,9 @@ public abstract class DecisionTree {
 		int yi = M; // last index is the target variable
 		// if all predict same category or only one row of data,
 		// create leaf predicting that
-		double complete_entropy = RFUtils.entropy(RFUtils.valueCountsInColumn(data, yi).counts());
-		int pureCategory = RFUtils.uniqueValue(data, yi);
-		if ( pureCategory!=INVALID_CATEGORY ) {
+		double complete_entropy = AniStats.entropy(AniStats.valueCountsInColumn(data, yi).counts());
+		int pureCategory = AniStats.uniqueValue(data, yi);
+		if ( pureCategory!=RandomForest.INVALID_CATEGORY ) {
 			DecisionTree t = new DecisionLeafNode(pureCategory);
 			t.numRecords = N;
 			t.entropy = complete_entropy;
@@ -100,12 +98,12 @@ public abstract class DecisionTree {
 			}
 			for (Integer splitValue : splitValues) {
 				DataPair s = split(data, i, splitValue);
-				FrequencySet<Integer> r1_categoryCounts = RFUtils.valueCountsInColumn(s.region1, yi);
-				FrequencySet<Integer> r2_categoryCounts = RFUtils.valueCountsInColumn(s.region2, yi);
+				FrequencySet<Integer> r1_categoryCounts = AniStats.valueCountsInColumn(s.region1, yi);
+				FrequencySet<Integer> r2_categoryCounts = AniStats.valueCountsInColumn(s.region2, yi);
 				int n1 = s.region1.size();
 				int n2 = s.region2.size();
-				double r1_entropy = RFUtils.entropy(r1_categoryCounts.counts());
-				double r2_entropy = RFUtils.entropy(r2_categoryCounts.counts());
+				double r1_entropy = AniStats.entropy(r1_categoryCounts.counts());
+				double r2_entropy = AniStats.entropy(r2_categoryCounts.counts());
 
 				double p1 = ((double)n1)/(n1+n2);
 				double p2 = ((double)n2)/(n1+n2);
@@ -134,7 +132,7 @@ public abstract class DecisionTree {
 			return t;
 		}
 		// we would gain nothing by splitting, make a leaf predicting majority vote
-		int majorityVote = RFUtils.valueCountsInColumn(data, yi).argmax();
+		int majorityVote = AniStats.valueCountsInColumn(data, yi).argmax();
 		DecisionTree t = new DecisionLeafNode(majorityVote);
 		t.numRecords = N;
 		t.entropy = complete_entropy;
@@ -156,8 +154,8 @@ public abstract class DecisionTree {
 	public boolean isLeaf() { return this instanceof DecisionLeafNode; }
 
 	public static DataPair split(List<int[]> X, int splitVariable, int splitValue) {
-		List<int[]> a = RFUtils.filter(X, x -> x[splitVariable] < splitValue);
-		List<int[]> b = RFUtils.filter(X, x -> x[splitVariable] >= splitValue);
+		List<int[]> a = AniStats.filter(X, x -> x[splitVariable] < splitValue);
+		List<int[]> b = AniStats.filter(X, x -> x[splitVariable] >= splitValue);
 		return new DataPair(a,b);
 	}
 

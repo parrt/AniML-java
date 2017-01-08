@@ -1,7 +1,6 @@
-package us.parr.rf.data;
+package us.parr.animl.data;
 
-import us.parr.rf.misc.FrequencySet;
-import us.parr.rf.misc.RFUtils;
+import us.parr.animl.AniStats;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,11 +11,11 @@ import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 
-import static us.parr.rf.data.DataTable.VariableType.CATEGORICAL_INT;
-import static us.parr.rf.data.DataTable.VariableType.CATEGORICAL_STRING;
-import static us.parr.rf.data.DataTable.VariableType.NUMERICAL_FLOAT;
-import static us.parr.rf.data.DataTable.VariableType.NUMERICAL_INT;
-import static us.parr.rf.data.DataTable.VariableType.PREDICTED_CATEGORICAL_INT;
+import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_INT;
+import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_STRING;
+import static us.parr.animl.data.DataTable.VariableType.NUMERICAL_FLOAT;
+import static us.parr.animl.data.DataTable.VariableType.NUMERICAL_INT;
+import static us.parr.animl.data.DataTable.VariableType.PREDICTED_CATEGORICAL_INT;
 
 public class DataTable implements Iterable<int[]> {
 	enum VariableType {
@@ -121,7 +120,7 @@ public class DataTable implements Iterable<int[]> {
 
 	public double entropy(int colIndex) {
 		FrequencySet<Integer> valueCounts = valueCountsInColumn(colIndex);
-		return RFUtils.entropy(valueCounts.counts());
+		return AniStats.entropy(valueCounts.counts());
 	}
 
 	/** Create a set that counts how many of each value in colIndex there is. Only

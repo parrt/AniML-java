@@ -16,11 +16,11 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="random-forest" />
+        <module name="AniML" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="random-forest" target="1.8" />
+      <module name="AniML" target="1.8" />
     </bytecodeTargetLevel>
   </component>
   <component name="CopyrightManager" default="" />
@@ -164,7 +164,7 @@
   </component>
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/random-forest.iml" filepath="$PROJECT_DIR$/random-forest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/AniML.iml" filepath="$PROJECT_DIR$/AniML.iml" />
     </modules>
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">

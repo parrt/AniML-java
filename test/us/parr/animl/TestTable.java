@@ -1,7 +1,7 @@
-package us.parr.rf;
+package us.parr.animl;
 
 import org.junit.Test;
-import us.parr.rf.data.DataTable;
+import us.parr.animl.data.DataTable;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;

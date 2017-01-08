@@ -1,6 +1,7 @@
-package us.parr.rf;
+package us.parr.animl;
 
 import org.junit.Test;
+import us.parr.animl.classifiers.DecisionTree;
 
 import java.util.ArrayList;
 import java.util.List;

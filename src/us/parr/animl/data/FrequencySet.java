@@ -4,7 +4,7 @@
  * can be found in the LICENSE.txt file in the project root.
  */
 
-package us.parr.rf.misc;
+package us.parr.animl.data;
 
 import java.util.ArrayList;
 import java.util.HashMap;

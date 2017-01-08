@@ -1,16 +1,15 @@
-package us.parr.rf;
+package us.parr.animl.classifiers;
 
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import java.util.List;
 
-import static us.parr.rf.RandomForest.INVALID_CATEGORY;
-import static us.parr.rf.misc.RFUtils.isClose;
+import static us.parr.animl.AniMath.isClose;
 
 public class DecisionLeafNode extends DecisionTree {
 	/** The predicted category if this is a leaf node; non-leaf by default */
-	protected int category = INVALID_CATEGORY;
+	protected int category = RandomForest.INVALID_CATEGORY;
 
 	public DecisionLeafNode(int predictedCategory) {
 		this.category = predictedCategory;

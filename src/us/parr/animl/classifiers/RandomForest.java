@@ -1,11 +1,11 @@
-package us.parr.rf;
+package us.parr.animl.classifiers;
 
-import us.parr.rf.misc.RFUtils;
+import us.parr.animl.AniStats;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static us.parr.rf.misc.RFUtils.majorityVote;
+import static us.parr.animl.AniStats.majorityVote;
 
 /** A Random Forest classifier operating on categorical and numerical integer
  *  values only. Predicts integer categories only. -1 is an invalid predicted
@@ -42,7 +42,7 @@ public class RandomForest {
 		// Number of variables to select at random at each decision node to find best split
 		int m = (int)Math.sqrt(forest.M);
 		for (int i = 1; i<=numEstimators; i++) {
-			List<int[]> bootstrap = RFUtils.bootstrapWithRepl(data);
+			List<int[]> bootstrap = AniStats.bootstrapWithRepl(data);
 			DecisionTree tree = DecisionTree.build(bootstrap, null, m);
 			forest.trees.add(tree);
 		}
@@ -58,5 +58,9 @@ public class RandomForest {
 			predictions.add( trees.get(i).classify(unknown) );
 		}
 		return majorityVote(predictions);
+	}
+
+	public DecisionTree getTree(int i) {
+		return trees.get(i);
 	}
 }

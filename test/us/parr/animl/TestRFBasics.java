@@ -1,6 +1,7 @@
-package us.parr.rf;
+package us.parr.animl;
 
 import org.junit.Test;
+import us.parr.animl.classifiers.RandomForest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +20,7 @@ public class TestRFBasics extends BaseTest {
 		data.add(new int[] {1,99}); // 1 row with 1 var of value 1 predicting category 99
 		RandomForest rf = RandomForest.train(data, 1);
 		String expecting = "{'predict':99,'n':1}";
-		String result = toTestString(rf.trees.get(0));
+		String result = toTestString(rf.getTree(0));
 		assertEquals(expecting, result);
 		checkPredictions(data, rf);
 	}

@@ -1,4 +1,4 @@
-package us.parr.rf.misc;
+package us.parr.animl.data;
 
 import java.util.List;
 

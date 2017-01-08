@@ -1,11 +1,11 @@
-package us.parr.rf;
+package us.parr.animl.classifiers;
 
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import java.util.List;
 
-import static us.parr.rf.misc.RFUtils.isClose;
+import static us.parr.animl.AniMath.isClose;
 
 public class DecisionSplitNode extends DecisionTree {
 	/** This node is split on which variable? */
