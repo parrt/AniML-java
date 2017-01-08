@@ -6,8 +6,8 @@
 
 package us.parr.animl.data;
 
+import org.apache.commons.lang3.StringUtils;
 import us.parr.animl.AniStats;
-import us.parr.animl.AniUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,29 +17,46 @@ import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 
+import static us.parr.animl.AniUtils.join;
 import static us.parr.animl.AniUtils.map;
+import static us.parr.animl.data.DataTable.VariableFormat.CENTER;
+import static us.parr.animl.data.DataTable.VariableFormat.RIGHT;
 import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_INT;
 import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_STRING;
 import static us.parr.animl.data.DataTable.VariableType.NUMERICAL_FLOAT;
 import static us.parr.animl.data.DataTable.VariableType.NUMERICAL_INT;
 import static us.parr.animl.data.DataTable.VariableType.PREDICTED_CATEGORICAL_INT;
+import static us.parr.animl.data.DataTable.VariableType.PREDICTED_CATEGORICAL_STRING;
 import static us.parr.animl.data.DataTable.VariableType.UNUSED_INT;
 
 public class DataTable implements Iterable<int[]> {
 	public enum VariableType {
 		CATEGORICAL_INT, CATEGORICAL_STRING, NUMERICAL_INT, NUMERICAL_FLOAT,
-		PREDICTED_CATEGORICAL_INT,
+		PREDICTED_CATEGORICAL_INT, PREDICTED_CATEGORICAL_STRING,
 		UNUSED_INT
+	}
+	public enum VariableFormat {
+		LEFT, CENTER, RIGHT
 	}
 
 	public static final String[] varTypeShortNames = new String[VariableType.values().length];
+	public static final VariableFormat[] defaultVarFormats = new VariableFormat[VariableType.values().length];
 	static {
 		varTypeShortNames[CATEGORICAL_INT.ordinal()] = "cat";
 		varTypeShortNames[CATEGORICAL_STRING.ordinal()] = "string";
 		varTypeShortNames[NUMERICAL_INT.ordinal()] = "int";
 		varTypeShortNames[NUMERICAL_FLOAT.ordinal()] = "float";
 		varTypeShortNames[PREDICTED_CATEGORICAL_INT.ordinal()] = "predicted";
+		varTypeShortNames[PREDICTED_CATEGORICAL_STRING.ordinal()] = "predicted-string";
 		varTypeShortNames[UNUSED_INT.ordinal()] = "unused";
+
+		defaultVarFormats[CATEGORICAL_INT.ordinal()] = RIGHT;
+		defaultVarFormats[CATEGORICAL_STRING.ordinal()] = CENTER;
+		defaultVarFormats[NUMERICAL_INT.ordinal()] = RIGHT;
+		defaultVarFormats[NUMERICAL_FLOAT.ordinal()] = RIGHT;
+		defaultVarFormats[PREDICTED_CATEGORICAL_INT.ordinal()] = RIGHT;
+		defaultVarFormats[PREDICTED_CATEGORICAL_STRING.ordinal()] = CENTER;
+		defaultVarFormats[UNUSED_INT.ordinal()] = CENTER;
 	}
 
 	protected List<int[]> rows;
@@ -96,7 +113,7 @@ public class DataTable implements Iterable<int[]> {
 		StringTable[] colStringToIntMap = new StringTable[colTypes.length];
 		// don't waste space on string tables unless we need to
 		for (int j = 0; j < colTypes.length; j++) {
-			if ( colTypes[j]== CATEGORICAL_STRING ) {
+			if ( colTypes[j]==CATEGORICAL_STRING || colTypes[j]==PREDICTED_CATEGORICAL_STRING ) {
 				colStringToIntMap[j] = new StringTable();
 			}
 		}
@@ -117,6 +134,7 @@ public class DataTable implements Iterable<int[]> {
 						col = Integer.valueOf(colValue);
 						break;
 					case CATEGORICAL_STRING :
+					case PREDICTED_CATEGORICAL_STRING :
 						col = colStringToIntMap[j].add(colValue);
 						break;
 					case NUMERICAL_FLOAT :
@@ -150,7 +168,8 @@ public class DataTable implements Iterable<int[]> {
 		if ( !(colTypes[colIndex]==NUMERICAL_INT ||
 			   colTypes[colIndex]==CATEGORICAL_INT ||
 			   colTypes[colIndex]==CATEGORICAL_STRING ||
-		       colTypes[colIndex]==PREDICTED_CATEGORICAL_INT) )
+			   colTypes[colIndex]==PREDICTED_CATEGORICAL_INT ||
+			   colTypes[colIndex]==PREDICTED_CATEGORICAL_STRING) )
 		{
 			throw new IllegalArgumentException(colNames[colIndex]+" is not an int-based column; type is "+colTypes[colIndex]);
 		}
@@ -167,7 +186,8 @@ public class DataTable implements Iterable<int[]> {
 			case CATEGORICAL_INT :
 			case NUMERICAL_INT :
 			case UNUSED_INT :
-			case CATEGORICAL_STRING : // these are encoded as ints
+			case CATEGORICAL_STRING : // strings are encoded as ints
+			case PREDICTED_CATEGORICAL_STRING :
 			case PREDICTED_CATEGORICAL_INT :
 				Collections.sort(rows, (ra, rb) -> {
 					return Integer.compare(ra[colIndex], rb[colIndex]);
@@ -201,6 +221,7 @@ public class DataTable implements Iterable<int[]> {
 			case PREDICTED_CATEGORICAL_INT :
 				return row[colj];
 			case CATEGORICAL_STRING :
+			case PREDICTED_CATEGORICAL_STRING :
 				return colStringToIntMap[colj].get(row[colj]);
 			case NUMERICAL_FLOAT :
 				return Float.intBitsToFloat(row[colj]);
@@ -231,7 +252,8 @@ public class DataTable implements Iterable<int[]> {
 			case CATEGORICAL_INT:
 			case NUMERICAL_INT:
 			case UNUSED_INT:
-			case CATEGORICAL_STRING: // these are encoded as ints
+			case CATEGORICAL_STRING: // strings are encoded as ints
+			case PREDICTED_CATEGORICAL_STRING :
 			case PREDICTED_CATEGORICAL_INT :
 				return Integer.compare(get(rowi, colIndex), get(rowj, colIndex));
 			case NUMERICAL_FLOAT:
@@ -260,7 +282,7 @@ public class DataTable implements Iterable<int[]> {
 		String[] colNames;
 		colNames = new String[dim];
 		for (int i = 0; i < dim; i++) {
-			if ( colTypes[i]==PREDICTED_CATEGORICAL_INT ) {
+			if ( colTypes[i]==PREDICTED_CATEGORICAL_INT || colTypes[i]==PREDICTED_CATEGORICAL_STRING ) {
 				colNames[i] = "y";
 			}
 			else {
@@ -289,15 +311,56 @@ public class DataTable implements Iterable<int[]> {
 					strings.set(j, strings.get(j)+"("+varTypeShortNames[colTypes[j].ordinal()]+")");
 				}
 			}
-			buf.append(AniUtils.join(strings, ", "));
+			buf.append(join(strings, ", "));
 			buf.append("\n");
 		}
 		for (int i = 0; i<rows.size(); i++) {
 			Object[] values = getValues(i);
-			buf.append(AniUtils.join(values, ", "));
+			buf.append(join(values, ", "));
 			buf.append("\n");
 		}
 		return buf.toString();
 	}
 
+	@Override
+	public String toString() {
+		return toString(defaultVarFormats);
+	}
+
+	public String toString(VariableFormat[] colFormats) {
+		StringBuilder buf = new StringBuilder();
+		List<Integer> colWidths = map(colNames, n -> n.length());
+		for (int j = 0; j<colWidths.size(); j++) {
+			String name = String.format("%"+colWidths.get(j)+"s", colNames[j]);
+			buf.append(name);
+			if ( (j+1)<colWidths.size() ) {
+				buf.append(" ");
+			}
+		}
+		buf.append("\n");
+		for (int i = 0; i<rows.size(); i++) {
+			Object[] values = getValues(i);
+			for (int j = 0; j<colWidths.size(); j++) {
+				int colWidth = colWidths.get(j);
+				String colValue = values[j].toString();
+				switch ( colFormats[colTypes[j].ordinal()] ) {
+					case LEFT :
+						colValue = String.format("%-"+colWidth+"s", colValue);
+						break;
+					case CENTER :
+						colValue = StringUtils.center(colValue, colWidth);
+						break;
+					case RIGHT :
+						colValue = String.format("%"+colWidth+"s", colValue);
+						break;
+				}
+				buf.append(colValue);
+				if ( (j+1)<colWidths.size() ) {
+					buf.append(" ");
+				}
+			}
+			buf.append("\n");
+		}
+		return buf.toString();
+	}
 }

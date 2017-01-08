@@ -91,7 +91,9 @@ public class AniUtils {
 		StringBuilder buf = new StringBuilder();
 		int i = 0;
 		for (Object o : a) {
-			buf.append(o.toString());
+			if ( o!=null ) {
+				buf.append(o.toString());
+			}
 			if ( (i+1)<a.size() ) {
 				buf.append(separator);
 			}
@@ -104,7 +106,9 @@ public class AniUtils {
 		StringBuilder buf = new StringBuilder();
 		for (int i=0; i<a.length; i++) {
 			Object o = a[i];
-			buf.append(o.toString());
+			if ( o!=null ) {
+				buf.append(o.toString());
+			}
 			if ( (i+1)<a.length ) {
 				buf.append(separator);
 			}
