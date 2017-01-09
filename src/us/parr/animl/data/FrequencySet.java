@@ -12,6 +12,15 @@ import java.util.List;
 
 /** Count how many of each key we have; not thread safe */
 public class FrequencySet<T> extends HashMap<T, MutableInt> {
+	public FrequencySet() {
+	}
+
+	public FrequencySet(FrequencySet<T> old) {
+		for (T key : old.keySet()) {
+			put(key, new MutableInt(old.get(key).v)); // make sure MutableInts are copied deeply
+		}
+	}
+
 	public int count(T key) {
 		MutableInt value = get(key);
 		if (value == null) return 0;
@@ -27,6 +36,21 @@ public class FrequencySet<T> extends HashMap<T, MutableInt> {
 		else {
 			value.v++;
 		}
+	}
+
+	/** Return a new set containing a[i]-b[i] for all keys i. Values in b
+	 *  but not in a are ignored.  Values in a but not in b yield a's same value
+	 *  in the result.
+	 */
+	public static <T> FrequencySet<T> minus(FrequencySet<T> a, FrequencySet<T> b) {
+		FrequencySet<T> r = new FrequencySet<T>(a);
+		for (T key : r.keySet()) {
+			MutableInt bI = b.get(key);
+			if ( bI!=null ) {
+				r.put(key, new MutableInt(r.get(key).v - bI.v)); // can't alter any MutableInts
+			}
+		}
+		return r;
 	}
 
 	public List<Integer> counts() {

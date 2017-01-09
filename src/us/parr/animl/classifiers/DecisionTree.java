@@ -14,10 +14,12 @@ import us.parr.animl.data.FrequencySet;
 import javax.json.JsonObject;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+
+import static us.parr.animl.AniStats.sum;
 
 /** A classic CART decision tree but this implementation is suitable just for
  *  classification, not regression. I extended it to handle a subset of predictor
@@ -68,7 +70,8 @@ public abstract class DecisionTree {
 		int yi = M; // last index is the target variable
 		// if all predict same category or only one row of data,
 		// create leaf predicting that
-		double complete_entropy = AniStats.entropy(data.valueCountsInColumn(yi).counts());
+		FrequencySet<Integer> completePredictionCounts = data.valueCountsInColumn(yi);
+		double complete_entropy = AniStats.entropy(completePredictionCounts.counts());
 		Set<Integer> predictions = data.uniqueValues(yi);
 		if ( predictions.size()==1 ) {
 			DecisionTree t = new DecisionLeafNode(predictions.iterator().next());
@@ -86,28 +89,39 @@ public abstract class DecisionTree {
 		// but RF must use a subset m << M of predictor variables so this is
 		// a generalization
 		List<Integer> indexes = getVarIndexes(m, M); // consider all or a subset of M variables
-		for (Integer i : indexes) { // for each variable i
-			// Sort data set on independent var i
-			final int varIndex = i;
-			data.sortBy(varIndex);
-
-			// look for discontinuities (transitions) in dependent var, record row index
-			Set<Integer> splitValues = new HashSet<>();
-			for (int j=1;j<N;j++){ // walk all records
-				if (data.get(j-1)[yi] != data.get(j)[yi]) { // discontinuity in predicted var (not var i)
-					int splitValue = data.get(j)[i];
-					splitValues.add(splitValue);
+		for (Integer j : indexes) { // for each variable i
+			// The goal is to find the lowest expected entropy for all possible values of this predictor variable
+			// Rather than splitting the data table for each unique value of this variable
+			// (which would be O(n^2)), we sort on this variable and then
+			// walk the data records, keeping track of the predicted category counts.
+			// We keep a snapshot of the category counts every time the predictor variable
+			// changes in the sorted list.
+			data.sortBy(j);
+			// look for discontinuities (transitions) in predictor var values,
+			// recording prediction cat counts for each
+			LinkedHashMap<Integer,FrequencySet<Integer>> predictionCountSets = new LinkedHashMap<>(); // track key order of insertion
+			FrequencySet<Integer> currentPredictionCounts = new FrequencySet<>();
+			for (int i=0;i<N;i++){ // walk all records, updating currentPredictionCounts
+				if ( i>0 && data.compare(i-1, i, j)<0 ) { // if row i-1 < row i, discontinuity in predictor var
+					// Take snapshot of current predictor counts, associate with current/new value as split point
+					// Don't include new value in this snapshot
+					predictionCountSets.put(data.get(i,j), new FrequencySet<>(currentPredictionCounts));
 				}
+				currentPredictionCounts.add(data.get(i, yi));
 			}
-			for (Integer splitValue : splitValues) {
-				DataPair s = split(data, i, splitValue);
-				FrequencySet<Integer> r1_categoryCounts = s.region1.valueCountsInColumn(yi);
-				FrequencySet<Integer> r2_categoryCounts = s.region2.valueCountsInColumn(yi);
-				int n1 = s.region1.size();
-				int n2 = s.region2.size();
-				double r1_entropy = AniStats.entropy(r1_categoryCounts.counts());
-				double r2_entropy = AniStats.entropy(r2_categoryCounts.counts());
 
+			// Now, walk all possible prediction count sets to find the split
+			// with the minimum entropy. predictionCountSets keys are the
+			// unique set of values from column j. predictionCountSets[v] is
+			// the predictor count set for values of column j < v
+			for (Integer splitValue : predictionCountSets.keySet()) {
+				FrequencySet<Integer> region1 = predictionCountSets.get(splitValue);
+				FrequencySet<Integer> region2 = FrequencySet.minus(completePredictionCounts, region1);
+				double r1_entropy = AniStats.entropy(region1.counts());
+				double r2_entropy = AniStats.entropy(region2.counts());
+
+				int n1 = sum(region1.counts());
+				int n2 = sum(region2.counts());
 				double p1 = ((double)n1)/(n1+n2);
 				double p2 = ((double)n2)/(n1+n2);
 				double expectedEntropyValue = p1*r1_entropy+p2*r2_entropy;
@@ -116,12 +130,12 @@ public abstract class DecisionTree {
 				String newbest = "";
 				if ( gain > best_gain && n1>0 && n2>0 ) {
 					best_gain = gain;
-					best_var = i;
+					best_var = j;
 					best_val = splitValue;
-					best_split = s;
+					best_split = split(data, best_var, best_val);
 					newbest=" (new best)";
 				}
-				String var = data.getColNames()[i];
+				String var = data.getColNames()[j];
 				System.out.printf("Entropies var=%13s val=%d r1=%d/%d*%.2f r2=%d/%d*%.2f, ExpEntropy=%.2f gain=%.2f%s\n",
 				                  var, splitValue, n1, n1+n2, r1_entropy, n2, n1+n2,r2_entropy, expectedEntropyValue, gain, newbest);
 			}
