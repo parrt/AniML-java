@@ -19,30 +19,45 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import static us.parr.animl.AniUtils.indexOf;
 import static us.parr.animl.AniUtils.join;
 import static us.parr.animl.AniUtils.map;
 import static us.parr.animl.data.DataTable.VariableFormat.CENTER;
 import static us.parr.animl.data.DataTable.VariableFormat.RIGHT;
 import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_INT;
 import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_STRING;
+import static us.parr.animl.data.DataTable.VariableType.INVALID;
 import static us.parr.animl.data.DataTable.VariableType.NUMERICAL_FLOAT;
 import static us.parr.animl.data.DataTable.VariableType.NUMERICAL_INT;
 import static us.parr.animl.data.DataTable.VariableType.PREDICTED_CATEGORICAL_INT;
 import static us.parr.animl.data.DataTable.VariableType.PREDICTED_CATEGORICAL_STRING;
-import static us.parr.animl.data.DataTable.VariableType.UNUSED_INT;
+import static us.parr.animl.data.DataTable.VariableType.UNUSED;
 
 public class DataTable implements Iterable<int[]> {
+	public static final int SEED = 999222777; // need randomness but use same seed to get reproducibility
+	public static final Random random = new Random(SEED);
+
+	/** Input sometimes has NA or blanks for unknown values */
+	public static final Set<String> UNKNOWN_VALUE_STRINGS = new HashSet<String>() {{
+		add("");
+		add("NA");
+		add("N/A");
+	}};
+
 	public enum VariableType {
 		CATEGORICAL_INT, CATEGORICAL_STRING, NUMERICAL_INT, NUMERICAL_FLOAT,
 		PREDICTED_CATEGORICAL_INT, PREDICTED_CATEGORICAL_STRING,
-		UNUSED_INT
+		UNUSED,
+		INVALID
 	}
 	public enum VariableFormat {
 		LEFT, CENTER, RIGHT
@@ -57,7 +72,7 @@ public class DataTable implements Iterable<int[]> {
 		varTypeShortNames[NUMERICAL_FLOAT.ordinal()] = "float";
 		varTypeShortNames[PREDICTED_CATEGORICAL_INT.ordinal()] = "predicted";
 		varTypeShortNames[PREDICTED_CATEGORICAL_STRING.ordinal()] = "predicted-string";
-		varTypeShortNames[UNUSED_INT.ordinal()] = "unused";
+		varTypeShortNames[UNUSED.ordinal()] = "unused";
 
 		defaultVarFormats[CATEGORICAL_INT.ordinal()] = RIGHT;
 		defaultVarFormats[CATEGORICAL_STRING.ordinal()] = CENTER;
@@ -65,7 +80,7 @@ public class DataTable implements Iterable<int[]> {
 		defaultVarFormats[NUMERICAL_FLOAT.ordinal()] = RIGHT;
 		defaultVarFormats[PREDICTED_CATEGORICAL_INT.ordinal()] = RIGHT;
 		defaultVarFormats[PREDICTED_CATEGORICAL_STRING.ordinal()] = CENTER;
-		defaultVarFormats[UNUSED_INT.ordinal()] = CENTER;
+		defaultVarFormats[UNUSED.ordinal()] = CENTER;
 	}
 
 	protected List<int[]> rows;
@@ -77,13 +92,23 @@ public class DataTable implements Iterable<int[]> {
 	}
 
 	public DataTable(List<int[]> rows, VariableType[] colTypes, String[] colNames) {
+		this(rows, colTypes, colNames, null);
+	}
+
+	public DataTable(List<int[]> rows, VariableType[] colTypes, String[] colNames, StringTable[] colStringToIntMap) {
 		this.rows = rows;
 		this.colNames = colNames;
 		this.colTypes = colTypes;
+		this.colStringToIntMap = colStringToIntMap;
 	}
 
 	public static DataTable empty(VariableType[] colTypes, String[] colNames) {
 		return new DataTable(new ArrayList<>(), colTypes, colNames);
+	}
+
+	/** Make a new table from an old table with a subset of rows */
+	public DataTable(DataTable old, List<int[]> rows) {
+		this(rows, old.colTypes, old.colNames, old.colStringToIntMap);
 	}
 
 	public static DataTable fromInts(List<int[]> rows, VariableType[] colTypes, String[] colNames) {
@@ -138,16 +163,22 @@ public class DataTable implements Iterable<int[]> {
 				switch ( colType ) {
 					case CATEGORICAL_INT :
 					case NUMERICAL_INT :
-					case UNUSED_INT :
+					case UNUSED:
 					case PREDICTED_CATEGORICAL_INT :
-						col = Integer.valueOf(colValue);
+						if ( !UNKNOWN_VALUE_STRINGS.contains(row[j]) ) {
+							col = Integer.valueOf(colValue);
+						}
 						break;
 					case CATEGORICAL_STRING :
 					case PREDICTED_CATEGORICAL_STRING :
-						col = colStringToIntMap[j].add(colValue);
+						if ( !UNKNOWN_VALUE_STRINGS.contains(row[j]) ) {
+							col = colStringToIntMap[j].add(colValue);
+						}
 						break;
 					case NUMERICAL_FLOAT :
-						col = Float.floatToIntBits(Float.valueOf(colValue));
+						if ( !UNKNOWN_VALUE_STRINGS.contains(row[j]) ) {
+							col = Float.floatToIntBits(Float.valueOf(colValue));
+						}
 						break;
 				}
 				rowAsInts[j] = col;
@@ -186,31 +217,43 @@ public class DataTable implements Iterable<int[]> {
 			int numHeaderNames = parser.getHeaderMap().size();
 			VariableType[] actualTypes = new VariableType[numHeaderNames];
 			for (int j = 0; j<numHeaderNames; j++) {
-				actualTypes[j] = NUMERICAL_INT; // assume all types are int at first
+				actualTypes[j] = INVALID;
 			}
 			try {
-			    for (final CSVRecord record : parser) {
-			    	String[] row = new String[record.size()];
-				    for (int j = 0; j<record.size(); j++) {
-					    row[j] = record.get(j);
-					    if ( StringUtils.isNumeric(row[j]) && row[j].contains(".") ) {
-					    	actualTypes[j] = NUMERICAL_FLOAT;
-					    }
-					    else if ( StringUtils.isAlphanumericSpace(row[j]) ) {
-					    	if ( j==record.size()-1 ) {
-							    actualTypes[j] = PREDICTED_CATEGORICAL_STRING;
-						    }
-						    else {
-							    actualTypes[j] = CATEGORICAL_STRING;
-						    }
-					    }
-				    }
-				    rows.add(row);
-			    }
+				for (final CSVRecord record : parser) {
+					String[] row = new String[record.size()];
+					for (int j = 0; j<numHeaderNames; j++) {
+						row[j] = record.get(j);
+						if ( StringUtils.isNumeric(row[j]) ) {
+							if ( actualTypes[j]==INVALID ) { // only choose int if first type seen
+								actualTypes[j] = NUMERICAL_INT;
+							}
+						}
+						else if ( Character.isDigit(row[j].charAt(0)) || row[j].charAt(0)=='.' ) { // let int become float but not vice versa
+							if ( actualTypes[j]==INVALID || actualTypes[j]==NUMERICAL_INT ) {
+								actualTypes[j] = NUMERICAL_FLOAT;
+							}
+						}
+						else if ( StringUtils.isAlphanumericSpace(row[j]) ) {
+							if ( !UNKNOWN_VALUE_STRINGS.contains(row[j]) ) { // if NA, N/A don't know type
+								// if we ever see a string, convert and don't change back
+								if ( actualTypes[j]==INVALID || actualTypes[j]==NUMERICAL_INT ) {
+									if ( j==record.size()-1 ) { // assume last column is predicted var
+										actualTypes[j] = PREDICTED_CATEGORICAL_STRING;
+									}
+									else {
+										actualTypes[j] = CATEGORICAL_STRING;
+									}
+								}
+							}
+						}
+					}
+					rows.add(row);
+				}
 			}
 			finally {
-			    parser.close();
-			    reader.close();
+				parser.close();
+				reader.close();
 			}
 
 			Set<String> colNameSet = parser.getHeaderMap().keySet();
@@ -235,12 +278,34 @@ public class DataTable implements Iterable<int[]> {
 
 	public DataTable filter(Predicate<int[]> pred) {
 		List<int[]> filtered = AniUtils.filter(rows, pred);
-		return DataTable.fromInts(filtered, colTypes, colNames);
+		return new DataTable(this, filtered);
 	}
 
 	public double entropy(int colIndex) {
 		FrequencySet<Integer> valueCounts = valueCountsInColumn(colIndex);
 		return AniStats.entropy(valueCounts.counts());
+	}
+
+	public List<Integer> getSubsetOfVarIndexes(int m) {
+		// create set of all predictor vars
+		List<Integer> indexes = new ArrayList<>(colTypes.length);
+		for (int i = 0; i<colTypes.length; i++) {
+			if ( isPredictorVar(colTypes[i]) ) {
+				indexes.add(i);
+			}
+		}
+		int M = indexes.size(); // number of usable predictor variables M
+		if ( m<=0 ) m = M;
+		Collections.shuffle(indexes, random);
+		indexes = indexes.subList(0, m);
+		Collections.sort(indexes);
+		return indexes;
+	}
+
+	public boolean isPredictorVar(VariableType colType) {
+		return
+			!(colType==UNUSED || colType==PREDICTED_CATEGORICAL_INT ||
+			  colType==PREDICTED_CATEGORICAL_STRING);
 	}
 
 	/** Create a set that counts how many of each value in colIndex there is. Only
@@ -249,10 +314,10 @@ public class DataTable implements Iterable<int[]> {
 	public FrequencySet<Integer> valueCountsInColumn(int colIndex) {
 		FrequencySet<Integer> valueCounts = new FrequencySet<>();
 		if ( !(colTypes[colIndex]==NUMERICAL_INT ||
-			   colTypes[colIndex]==CATEGORICAL_INT ||
-			   colTypes[colIndex]==CATEGORICAL_STRING ||
-			   colTypes[colIndex]==PREDICTED_CATEGORICAL_INT ||
-			   colTypes[colIndex]==PREDICTED_CATEGORICAL_STRING) )
+			colTypes[colIndex]==CATEGORICAL_INT ||
+			colTypes[colIndex]==CATEGORICAL_STRING ||
+			colTypes[colIndex]==PREDICTED_CATEGORICAL_INT ||
+			colTypes[colIndex]==PREDICTED_CATEGORICAL_STRING) )
 		{
 			throw new IllegalArgumentException(colNames[colIndex]+" is not an int-based column; type is "+colTypes[colIndex]);
 		}
@@ -268,7 +333,7 @@ public class DataTable implements Iterable<int[]> {
 		switch ( colTypes[colIndex] ) {
 			case CATEGORICAL_INT :
 			case NUMERICAL_INT :
-			case UNUSED_INT :
+			case UNUSED:
 			case CATEGORICAL_STRING : // strings are encoded as ints
 			case PREDICTED_CATEGORICAL_STRING :
 			case PREDICTED_CATEGORICAL_INT :
@@ -279,7 +344,7 @@ public class DataTable implements Iterable<int[]> {
 			case NUMERICAL_FLOAT :
 				Collections.sort(rows, (ra, rb) -> {
 					return Float.compare(Float.intBitsToFloat(ra[colIndex]),
-										 Float.intBitsToFloat(rb[colIndex]));
+					                     Float.intBitsToFloat(rb[colIndex]));
 				});
 				break;
 		}
@@ -306,20 +371,27 @@ public class DataTable implements Iterable<int[]> {
 	}
 
 	public Object getValue(int rowi, int colj) {
-		int[] row = rows.get(rowi);
-		switch ( colTypes[colj] ) {
+		int[] row = this.rows.get(rowi);
+		return getValue(this, row[colj], colj);
+	}
+
+	/** Return an object representing the true value of 'value'
+	 *  relative to colj in table 'data'.
+	 */
+	public static Object getValue(DataTable data, int value, int colj) {
+		switch ( data.colTypes[colj] ) {
 			case CATEGORICAL_INT :
 			case NUMERICAL_INT :
-			case UNUSED_INT :
+			case UNUSED:
 			case PREDICTED_CATEGORICAL_INT :
-				return row[colj];
+				return value;
 			case CATEGORICAL_STRING :
 			case PREDICTED_CATEGORICAL_STRING :
-				return colStringToIntMap[colj].get(row[colj]);
+				return data.colStringToIntMap[colj].get(value);
 			case NUMERICAL_FLOAT :
-				return Float.intBitsToFloat(row[colj]);
+				return Float.intBitsToFloat(value);
 			default :
-				throw new IllegalArgumentException(colNames[colj]+" has invalid type: "+colTypes[colj]);
+				throw new IllegalArgumentException(data.colNames[colj]+" has invalid type: "+data.colTypes[colj]);
 		}
 	}
 
@@ -344,7 +416,7 @@ public class DataTable implements Iterable<int[]> {
 		switch (colTypes[colIndex]) {
 			case CATEGORICAL_INT:
 			case NUMERICAL_INT:
-			case UNUSED_INT:
+			case UNUSED:
 			case CATEGORICAL_STRING: // strings are encoded as ints
 			case PREDICTED_CATEGORICAL_STRING :
 			case PREDICTED_CATEGORICAL_INT :
@@ -354,6 +426,11 @@ public class DataTable implements Iterable<int[]> {
 			default :
 				throw new IllegalArgumentException(colNames[colIndex]+" has invalid type: "+colTypes[colIndex]);
 		}
+	}
+
+	public int getPredictedCol() {
+		Integer firstCol = indexOf(colTypes, t -> t==PREDICTED_CATEGORICAL_STRING || t==PREDICTED_CATEGORICAL_INT);
+		return firstCol!=null ? firstCol : -1;
 	}
 
 	@Override

@@ -13,7 +13,6 @@ import us.parr.animl.data.FrequencySet;
 
 import javax.json.JsonObject;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Random;
@@ -28,6 +27,9 @@ import static us.parr.animl.AniStats.sum;
 public abstract class DecisionTree {
 	public static final int SEED = 777111333; // need randomness but use same seed to get reproducibility
 	public static final Random random = new Random(SEED);
+
+	/** This tree was created from which data table? */
+	protected DataTable data;
 
 	// for debugging, fields below
 	protected int numRecords;
@@ -66,17 +68,17 @@ public abstract class DecisionTree {
 	public static DecisionTree build(DataTable data, int m) {
 		if ( data==null || data.size()==0 ) return null;
 		int N = data.size();
-		int M = data.get(0).length - 1; // last column is the predicted var
-		int yi = M; // last index is the target variable
+		int yi = data.getPredictedCol(); // last index is usually the target variable
 		// if all predict same category or only one row of data,
 		// create leaf predicting that
 		FrequencySet<Integer> completePredictionCounts = data.valueCountsInColumn(yi);
 		double complete_entropy = AniStats.entropy(completePredictionCounts.counts());
 		Set<Integer> predictions = data.uniqueValues(yi);
 		if ( predictions.size()==1 ) {
-			DecisionTree t = new DecisionLeafNode(predictions.iterator().next());
+			DecisionTree t = new DecisionLeafNode(predictions.iterator().next(), yi);
 			t.numRecords = N;
 			t.entropy = complete_entropy;
+			t.data = data;
 			return t;
 		}
 
@@ -88,7 +90,7 @@ public abstract class DecisionTree {
 		// Non-random forest decision trees do just: for (int i=0; i<M; i++) {
 		// but RF must use a subset m << M of predictor variables so this is
 		// a generalization
-		List<Integer> indexes = getVarIndexes(m, M); // consider all or a subset of M variables
+		List<Integer> indexes = data.getSubsetOfVarIndexes(m); // consider all or a subset of M variables
 		for (Integer j : indexes) { // for each variable i
 			// The goal is to find the lowest expected entropy for all possible values of this predictor variable
 			// Rather than splitting the data table for each unique value of this variable
@@ -144,31 +146,25 @@ public abstract class DecisionTree {
 			DecisionSplitNode t = new DecisionSplitNode(best_var, best_val);
 			t.numRecords = N;
 			t.entropy = complete_entropy;
+			t.data = data;
 			t.left = build(best_split.region1, m);
 			t.right = build(best_split.region2, m);
 			return t;
 		}
 		// we would gain nothing by splitting, make a leaf predicting majority vote
 		int majorityVote = data.valueCountsInColumn(yi).argmax();
-		DecisionTree t = new DecisionLeafNode(majorityVote);
+		DecisionTree t = new DecisionLeafNode(majorityVote, yi);
 		t.numRecords = N;
 		t.entropy = complete_entropy;
+		t.data = data;
 		return t;
 	}
 
-	public static List<Integer> getVarIndexes(int m, int M) {
-		if ( m<=0 ) m = M;
-		List<Integer> indexes = new ArrayList<>(M);
-		for (int i = 0; i<M; i++) {
-			indexes.add(i);
-		}
-		Collections.shuffle(indexes, random);
-		indexes = indexes.subList(0, m);
-		Collections.sort(indexes);
-		return indexes;
-	}
-
 	public boolean isLeaf() { return this instanceof DecisionLeafNode; }
+
+	public DataTable getData() {
+		return data;
+	}
 
 	public static DataPair split(DataTable X, int splitVariable, int splitValue) {
 		DataTable a = X.filter(x -> x[splitVariable] < splitValue);
@@ -176,17 +172,13 @@ public abstract class DecisionTree {
 		return new DataPair(a,b);
 	}
 
-	public JsonObject toJSON() {
-		return toJSON(null, null);
-	}
+	public abstract JsonObject toJSON();
 
-	public abstract JsonObject toJSON(String[] varnames, String[] catnames);
-
-	public String toDOT(String[] varnames, String[] catnames) {
+	public String toDOT() {
 		StringBuilder buf = new StringBuilder();
 		buf.append("digraph dtree {\n");
 		List<String> nodes = new ArrayList<>();
-		getDOTNodeNames(nodes, varnames, catnames);
+		getDOTNodeNames(nodes);
 		for (String node : nodes) {
 			buf.append("\t"+node+"\n");
 		}
@@ -201,5 +193,5 @@ public abstract class DecisionTree {
 
 	protected abstract void getDOTEdges(List<String> edges);
 
-	protected abstract void getDOTNodeNames(List<String> nodes, String[] varnames, String[] catnames);
+	protected abstract void getDOTNodeNames(List<String> nodes);
 }

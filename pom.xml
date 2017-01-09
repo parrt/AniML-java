@@ -36,9 +36,9 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-		    <groupId>commons-io</groupId>
-		    <artifactId>commons-io</artifactId>
-		    <version>2.5</version>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.5</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -84,21 +84,30 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.12.4</version>
 			</plugin>
-			<plugin>
+			<plugin> <!-- create src jar -->
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
 				<executions>
 					<execution>
-						<id>attach-sources</id>
-						<goals><goal>jar-no-fork</goal></goals>
+						<goals>
+							<goal>jar</goal>
+						</goals>
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
+			<plugin> <!-- create javadoc jar -->
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.10.4</version>
+				<configuration>
+					<javadocVersion>1.7</javadocVersion>
+					<failOnError>false</failOnError>
+				</configuration>
 				<executions>
 					<execution>
-						<id>attach-javadocs</id>
-						<goals><goal>jar</goal></goals>
+						<goals>
+							<goal>javadoc</goal>
+						</goals>
 					</execution>
 				</executions>
 			</plugin>

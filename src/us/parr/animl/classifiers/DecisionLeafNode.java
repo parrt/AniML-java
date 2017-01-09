@@ -6,6 +6,8 @@
 
 package us.parr.animl.classifiers;
 
+import us.parr.animl.data.DataTable;
+
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
@@ -15,25 +17,23 @@ import static us.parr.animl.AniMath.isClose;
 
 public class DecisionLeafNode extends DecisionTree {
 	/** The predicted category if this is a leaf node; non-leaf by default */
-	protected int category = RandomForest.INVALID_CATEGORY;
+	protected int prediction = RandomForest.INVALID_CATEGORY;
+	protected int predictionVariable;
 
-	public DecisionLeafNode(int predictedCategory) {
-		this.category = predictedCategory;
+	public DecisionLeafNode(int prediction, int predictionVariable) {
+		this.prediction = prediction;
+		this.predictionVariable = predictionVariable;
 	}
 
 	public int classify(int[] X) {
-		return category;
+		return prediction;
 	}
 
 	@Override
-	public JsonObject toJSON(String[] varnames, String[] catnames) {
+	public JsonObject toJSON() {
 		JsonObjectBuilder builder =  Json.createObjectBuilder();
-		if ( catnames!=null ) {
-			builder.add("predict", catnames[category]);
-		}
-		else {
-			builder.add("predict", category);
-		}
+		String p = DataTable.getValue(data, prediction, predictionVariable).toString();
+		builder.add("predict", p);
 		builder.add("n", numRecords);
 		if ( !isClose(entropy,0.0) ) {
 			builder.add("E", String.format("%.2f",entropy));
@@ -42,16 +42,11 @@ public class DecisionLeafNode extends DecisionTree {
 	}
 
 	@Override
-	protected void getDOTNodeNames(List<String> nodes, String[] varnames, String[] catnames) {
+	protected void getDOTNodeNames(List<String> nodes) {
 		int id = System.identityHashCode(this);
-		if ( catnames!=null ) {
-			nodes.add(String.format("n%d [shape=box, label=\"%s\\nn=%d\\nE=%.2f\"];",
-			                        id, catnames[category], numRecords, entropy));
-		}
-		else {
-			nodes.add(String.format("n%d [shape=box, label=\"y%d\\nn=%d\\nE=%.2f\"];",
-			                        id, category, numRecords, entropy));
-		}
+		String p = DataTable.getValue(data, prediction, predictionVariable).toString();
+		nodes.add(String.format("n%d [shape=box, label=\"%s\\nn=%d\\nE=%.2f\"];",
+		                        id, p, numRecords, entropy));
 	}
 
 	@Override

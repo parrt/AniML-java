@@ -14,10 +14,6 @@ public class BaseTest {
 		return tree.toJSON().toString().replaceAll("\"", "'");
 	}
 
-	public static String toTestString(DecisionTree tree, String[] varnames, String[] catnames) {
-		return tree.toJSON(varnames,catnames).toString().replaceAll("\"", "'");
-	}
-
 	public void checkPredictions(List<int[]> data, DecisionTree tree) {
 		for (int[] X : data) {
 			int resultCat = tree.classify(X);

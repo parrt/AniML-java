@@ -62,7 +62,29 @@ public class AniUtils {
 		return null;
 	}
 
+	public static <T> T findFirst(T[] data, Predicate<T> pred) {
+		if ( data!=null ) {
+			for (T x : data) {
+				if ( pred.test(x) ) {
+					return x;
+				}
+			}
+		}
+		return null;
+	}
+
 	public static <T> int indexOf(Collection<? extends T> elems, Predicate<T> pred) {
+		if ( elems!=null ) {
+			int i = 0;
+			for (T elem : elems) {
+				if ( pred.test(elem) ) return i;
+				i++;
+			}
+		}
+		return -1;
+	}
+
+	public static <T> int indexOf(T[] elems, Predicate<T> pred) {
 		if ( elems!=null ) {
 			int i = 0;
 			for (T elem : elems) {

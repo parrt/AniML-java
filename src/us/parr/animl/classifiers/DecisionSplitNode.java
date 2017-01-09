@@ -6,6 +6,8 @@
 
 package us.parr.animl.classifiers;
 
+import us.parr.animl.data.DataTable;
+
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
@@ -39,38 +41,28 @@ public class DecisionSplitNode extends DecisionTree {
 	}
 
 	@Override
-	public JsonObject toJSON(String[] varnames, String[] catnames) {
+	public JsonObject toJSON() {
 		JsonObjectBuilder builder =  Json.createObjectBuilder();
-		if ( varnames!=null ) {
-			builder.add("var", varnames[splitVariable]);
-		}
-		else {
-			builder.add("var", "x"+splitVariable);
-		}
-		builder.add("val", splitValue);
+		String p = DataTable.getValue(data, splitValue, splitVariable).toString();
+		builder.add("var", data.getColNames()[splitVariable]);
+		builder.add("val", p);
 		builder.add("n", numRecords);
 		if ( !isClose(entropy,0.0) ) {
 			builder.add("E", String.format("%.2f",entropy));
 		}
-		builder.add("left", left.toJSON(varnames, catnames));
-		builder.add("right", right.toJSON(varnames, catnames));
+		builder.add("left", left.toJSON());
+		builder.add("right", right.toJSON());
 		return builder.build();
 	}
 
 	@Override
-	protected void getDOTNodeNames(List<String> nodes, String[] varnames, String[] catnames) {
+	protected void getDOTNodeNames(List<String> nodes) {
 		DecisionSplitNode t = this;
 		int id = System.identityHashCode(t);
-		if ( varnames!=null ) {
-			nodes.add(String.format("n%d [label=\"%s\\nn=%d\\nE=%.2f\"];",
-			                        id, varnames[splitVariable], numRecords, entropy));
-		}
-		else {
-			nodes.add(String.format("n%d [label=\"x%d\\nn=%d\\nE=%.2f\"];",
-			                        id, splitVariable, numRecords, entropy));
-		}
-		left.getDOTNodeNames(nodes, varnames, catnames);
-		right.getDOTNodeNames(nodes, varnames, catnames);
+		nodes.add(String.format("n%d [label=\"%s\\nn=%d\\nE=%.2f\"];",
+		                        id, data.getColNames()[splitVariable], numRecords, entropy));
+		left.getDOTNodeNames(nodes);
+		right.getDOTNodeNames(nodes);
 	}
 
 	@Override

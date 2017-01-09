@@ -50,7 +50,7 @@ public class RandomForest {
 		int m = (int)Math.sqrt(forest.M);
 		for (int i = 1; i<=numEstimators; i++) {
 			List<int[]> bootstrap = AniStats.bootstrapWithRepl(data.getRows());
-			DataTable table = DataTable.fromInts(bootstrap, data.getColTypes(), data.getColNames());
+			DataTable table = new DataTable(data, bootstrap);
 			DecisionTree tree = DecisionTree.build(table, m);
 			forest.trees.add(tree);
 		}
