@@ -112,9 +112,9 @@ public class DataTable implements Iterable<int[]> {
 	}
 
 	public static DataTable fromInts(List<int[]> rows, VariableType[] colTypes, String[] colNames) {
-		if ( rows==null ) return null;
+		if ( rows==null ) return empty(colTypes, colNames);
 		if ( rows.size()==0 && colTypes==null ) {
-			return null;
+			return empty(colTypes, colNames);
 		}
 
 		int dim = rows.size()>0 ? rows.get(0).length : colTypes.length;
@@ -125,6 +125,27 @@ public class DataTable implements Iterable<int[]> {
 			colNames = getDefaultColNames(colTypes, dim);
 		}
 		return new DataTable(rows, colTypes, colNames);
+	}
+
+	public static DataTable fromStrings(List<String[]> rows) {
+		if ( rows==null ) return empty(null, null);
+		if ( rows.size()==0 ) {
+			return empty(null, null);
+		}
+		String[] headerRow = rows.get(0);
+		if ( headerRow==null ) {
+			return empty(null, null);
+		}
+		int numCols = headerRow.length;
+		if ( rows.size()==1 ) { // just header row?
+			return empty(null, headerRow);
+		}
+
+		rows = rows.subList(1, rows.size()); // don't use first row.
+
+		VariableType[] actualTypes = computeColTypes(rows, numCols);
+
+		return fromStrings(rows, actualTypes, headerRow, false);
 	}
 
 	public static DataTable fromStrings(List<String[]> rows, VariableType[] colTypes, String[] colNames, boolean hasHeaderRow) {
@@ -215,38 +236,11 @@ public class DataTable implements Iterable<int[]> {
 			final CSVParser parser = new CSVParser(reader, format);
 			List<String[]> rows = new ArrayList<>();
 			int numHeaderNames = parser.getHeaderMap().size();
-			VariableType[] actualTypes = new VariableType[numHeaderNames];
-			for (int j = 0; j<numHeaderNames; j++) {
-				actualTypes[j] = INVALID;
-			}
 			try {
 				for (final CSVRecord record : parser) {
 					String[] row = new String[record.size()];
-					for (int j = 0; j<numHeaderNames; j++) {
+					for (int j = 0; j<record.size(); j++) {
 						row[j] = record.get(j);
-						if ( StringUtils.isNumeric(row[j]) ) {
-							if ( actualTypes[j]==INVALID ) { // only choose int if first type seen
-								actualTypes[j] = NUMERICAL_INT;
-							}
-						}
-						else if ( Character.isDigit(row[j].charAt(0)) || row[j].charAt(0)=='.' ) { // let int become float but not vice versa
-							if ( actualTypes[j]==INVALID || actualTypes[j]==NUMERICAL_INT ) {
-								actualTypes[j] = NUMERICAL_FLOAT;
-							}
-						}
-						else if ( StringUtils.isAlphanumericSpace(row[j]) ) {
-							if ( !UNKNOWN_VALUE_STRINGS.contains(row[j]) ) { // if NA, N/A don't know type
-								// if we ever see a string, convert and don't change back
-								if ( actualTypes[j]==INVALID || actualTypes[j]==NUMERICAL_INT ) {
-									if ( j==record.size()-1 ) { // assume last column is predicted var
-										actualTypes[j] = PREDICTED_CATEGORICAL_STRING;
-									}
-									else {
-										actualTypes[j] = CATEGORICAL_STRING;
-									}
-								}
-							}
-						}
 					}
 					rows.add(row);
 				}
@@ -255,6 +249,8 @@ public class DataTable implements Iterable<int[]> {
 				parser.close();
 				reader.close();
 			}
+
+			VariableType[] actualTypes = computeColTypes(rows, numHeaderNames);
 
 			Set<String> colNameSet = parser.getHeaderMap().keySet();
 			String[] colNames = colNameSet.toArray(new String[colNameSet.size()]);
@@ -269,6 +265,41 @@ public class DataTable implements Iterable<int[]> {
 		catch (Exception e) {
 			throw new IllegalArgumentException("Can't open and/or read "+fileName, e);
 		}
+	}
+
+	private static VariableType[] computeColTypes(List<String[]> rows, int numCols) {
+		VariableType[] actualTypes = new VariableType[numCols];
+		for (int j = 0; j<numCols; j++) {
+			actualTypes[j] = INVALID;
+		}
+		for (String[] row : rows) {
+			for (int j = 0; j<numCols; j++) {
+				if ( StringUtils.isNumeric(row[j]) ) {
+					if ( actualTypes[j]==INVALID ) { // only choose int if first type seen
+						actualTypes[j] = NUMERICAL_INT;
+					}
+				}
+				else if ( row[j].matches("[0-9]+\\.[0-9]* | \\.[0-9]+") ) { // let int become float but not vice versa
+					if ( actualTypes[j]==INVALID || actualTypes[j]==NUMERICAL_INT ) {
+						actualTypes[j] = NUMERICAL_FLOAT;
+					}
+				}
+				else { // anything else is a string
+					if ( !UNKNOWN_VALUE_STRINGS.contains(row[j]) ) { // if NA, N/A don't know type
+						// if we ever see a string, convert and don't change back
+						if ( actualTypes[j]==INVALID || actualTypes[j]==NUMERICAL_INT ) {
+							if ( j==row.length-1 ) { // assume last column is predicted var
+								actualTypes[j] = PREDICTED_CATEGORICAL_STRING;
+							}
+							else {
+								actualTypes[j] = CATEGORICAL_STRING;
+							}
+						}
+					}
+				}
+			}
+		}
+		return actualTypes;
 	}
 
 	public Set<Integer> uniqueValues(int colIndex) {

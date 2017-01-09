@@ -43,9 +43,17 @@ public class DecisionSplitNode extends DecisionTree {
 	@Override
 	public JsonObject toJSON() {
 		JsonObjectBuilder builder =  Json.createObjectBuilder();
-		String p = DataTable.getValue(data, splitValue, splitVariable).toString();
 		builder.add("var", data.getColNames()[splitVariable]);
-		builder.add("val", p);
+		Object p = DataTable.getValue(data, splitValue, splitVariable);
+		if ( p instanceof Integer ) {
+			builder.add("val", ((Integer)p));
+		}
+		else if ( p instanceof Float ) {
+			builder.add("val", ((Float)p));
+		}
+		else {
+			builder.add("val", p.toString());
+		}
 		builder.add("n", numRecords);
 		if ( !isClose(entropy,0.0) ) {
 			builder.add("E", String.format("%.2f",entropy));

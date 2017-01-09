@@ -44,9 +44,9 @@ public class DecisionLeafNode extends DecisionTree {
 	@Override
 	protected void getDOTNodeNames(List<String> nodes) {
 		int id = System.identityHashCode(this);
-		String p = DataTable.getValue(data, prediction, predictionVariable).toString();
+		Object p = DataTable.getValue(data, prediction, predictionVariable);
 		nodes.add(String.format("n%d [shape=box, label=\"%s\\nn=%d\\nE=%.2f\"];",
-		                        id, p, numRecords, entropy));
+		                        id, p.toString(), numRecords, entropy));
 	}
 
 	@Override
