@@ -17,6 +17,7 @@ import static us.parr.animl.data.DataTable.VariableType.NUMERICAL_FLOAT;
 import static us.parr.animl.data.DataTable.VariableType.NUMERICAL_INT;
 import static us.parr.animl.data.DataTable.VariableType.PREDICTED_CATEGORICAL_INT;
 import static us.parr.animl.data.DataTable.VariableType.PREDICTED_CATEGORICAL_STRING;
+import static us.parr.animl.data.DataTable.VariableType.UNUSED_INT;
 
 public class TestTable extends BaseTest {
 	public static final String[] colNames3 = {"a", "b", "y"};
@@ -206,9 +207,9 @@ public class TestTable extends BaseTest {
 	@Test public void testHeartDataSenseTypes() {
 		URL url = this.getClass().getClassLoader().getResource("Heart.csv");
 		DataTable t = DataTable.loadCSV(url.getFile().toString(), "excel", null, null, true);
-
+		t.setColType(0, UNUSED_INT); // first column is ID
 		final DataTable.VariableType[] expectedColTypes = {
-			NUMERICAL_INT,
+			UNUSED_INT,
 			NUMERICAL_INT,
 			NUMERICAL_INT,
 			CATEGORICAL_STRING,

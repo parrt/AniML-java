@@ -421,6 +421,14 @@ public class DataTable implements Iterable<int[]> {
 		return colTypes;
 	}
 
+	public void setColTypes(VariableType[] colTypes) {
+		this.colTypes = colTypes;
+	}
+
+	public void setColType(int colIndex, VariableType colType) {
+		this.colTypes[colIndex] = colType;
+	}
+
 	public Object getValue(int rowi, int colj) {
 		int[] row = this.rows.get(rowi);
 		return getValue(this, row[colj], colj);
