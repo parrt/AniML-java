@@ -76,8 +76,9 @@ public class DecisionSplitNode extends DecisionTree {
 	@Override
 	protected void getDOTEdges(List<String> edges) {
 		int id = System.identityHashCode(this);
-		edges.add(String.format("n%s -> n%s [label=\"<%d\"];", id, System.identityHashCode(left), splitValue));
-		edges.add(String.format("n%s -> n%s [label=\">=%d\"];", id, System.identityHashCode(right), splitValue));
+		Object p = DataTable.getValue(data, splitValue, splitVariable);
+		edges.add(String.format("n%s -> n%s [label=\"<%s\"];", id, System.identityHashCode(left), p.toString()));
+		edges.add(String.format("n%s -> n%s [label=\">=%s\"];", id, System.identityHashCode(right), p.toString()));
 		left.getDOTEdges(edges);
 		right.getDOTEdges(edges);
 	}
