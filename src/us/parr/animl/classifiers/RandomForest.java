@@ -22,7 +22,6 @@ import static us.parr.animl.AniStats.majorityVote;
  *  category value.
  */
 public class RandomForest {
-
 	/** How many trees to create in the forest */
 	protected int numEstimators;
 
@@ -42,7 +41,7 @@ public class RandomForest {
 	 *  where last column in data is the category of the ith feature vector data_i.
 	 */
 	public static RandomForest train(DataTable data, int numEstimators) {
-		if ( data==null || data.size()==0 ) return null;
+		if ( data==null || data.size()==0 || numEstimators==0 ) return null;
 		RandomForest forest = new RandomForest(numEstimators);
 //		forest.outOfBagEstimators = new Set[data.size()];
 		int M = data.getNumberOfPredictorVar();
@@ -79,6 +78,7 @@ public class RandomForest {
 		int mismatches = 0;
 		Set<DecisionTree>[] outOfBagEstimators = getOutOfBagEstimatorSets(data);
 		for (int i = 0; i<data.size(); i++) {
+			if ( outOfBagEstimators[i]==null ) continue; // for small number of trees, some data rows might not appear in oob set
 			int oobPrediction = classify(outOfBagEstimators[i], data.get(i));
 			int actualCategory = data.get(i, data.getPredictedCol());
 			if ( oobPrediction!=actualCategory ) {

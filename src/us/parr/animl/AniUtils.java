@@ -133,4 +133,38 @@ public class AniUtils {
 		}
 		return buf.toString();
 	}
+
+	public static String join(int[] a, String separator) {
+		StringBuilder buf = new StringBuilder();
+		for (int i=0; i<a.length; i++) {
+			buf.append(a[i]);
+			if ( (i+1)<a.length ) {
+				buf.append(separator);
+			}
+		}
+		return buf.toString();
+	}
+
+
+	public static String join(float[] a, String separator) {
+		StringBuilder buf = new StringBuilder();
+		for (int i=0; i<a.length; i++) {
+			buf.append(a[i]);
+			if ( (i+1)<a.length ) {
+				buf.append(separator);
+			}
+		}
+		return buf.toString();
+	}
+
+	public static String join(double[] a, String separator) {
+		StringBuilder buf = new StringBuilder();
+		for (int i=0; i<a.length; i++) {
+			buf.append(a[i]);
+			if ( (i+1)<a.length ) {
+				buf.append(separator);
+			}
+		}
+		return buf.toString();
+	}
 }

@@ -146,6 +146,7 @@ public class AniStats {
 	}
 
 	public static int majorityVote(Collection<Integer> data) {
+		if ( data.size()==0 ) return 0;
 		FrequencySet<Integer> valueCounts = new FrequencySet<>();
 		for (Integer d : data) {
 			valueCounts.add(d);

@@ -46,9 +46,6 @@ import static us.parr.animl.data.DataTable.VariableType.UNUSED_INT;
 import static us.parr.animl.data.DataTable.VariableType.UNUSED_STRING;
 
 public class DataTable implements Iterable<int[]> {
-	public static final int SEED = 999222777; // need randomness but use same seed to get reproducibility
-	public static final Random random = new Random(SEED);
-
 	public static final Pattern floatPattern = Pattern.compile("[0-9]+\\.[0-9]*|\\.[0-9]+");
 
 	/** Input sometimes has NA or blanks for unknown values */
@@ -330,7 +327,7 @@ public class DataTable implements Iterable<int[]> {
 		return AniStats.entropy(valueCounts.counts());
 	}
 
-	public List<Integer> getSubsetOfVarIndexes(int m) {
+	public List<Integer> getSubsetOfVarIndexes(int m, Random random) {
 		// create set of all predictor vars
 		List<Integer> indexes = new ArrayList<>(colTypes.length);
 		for (int i = 0; i<colTypes.length; i++) {
@@ -340,13 +337,21 @@ public class DataTable implements Iterable<int[]> {
 		}
 		int M = indexes.size(); // number of usable predictor variables M
 		if ( m<=0 ) m = M;
+		if ( m>M ) m = M;
+		if ( m==M ) {
+			// don't bother to shuffle then sort
+			return indexes;
+		}
+		if ( random==null ) {
+			random = new Random();
+		}
 		Collections.shuffle(indexes, random);
 		indexes = indexes.subList(0, m);
 		Collections.sort(indexes);
 		return indexes;
 	}
 
-	public int getNumberOfPredictorVar() { return getSubsetOfVarIndexes(rows.get(0).length).size(); }
+	public int getNumberOfPredictorVar() { return getSubsetOfVarIndexes(rows.get(0).length, null).size(); }
 
 	public boolean isPredictorVar(VariableType colType) {
 		return

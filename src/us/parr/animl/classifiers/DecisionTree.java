@@ -29,6 +29,8 @@ public abstract class DecisionTree {
 	public static final Random random = new Random(SEED);
 	public static final int INVALID_CATEGORY = -1;
 
+	public static final boolean debug = false;
+
 	/** This tree was created from which data table? */
 	protected DataTable data;
 
@@ -83,7 +85,7 @@ public abstract class DecisionTree {
 			return t;
 		}
 
-		System.out.printf("entropy of all %d values = %.2f\n", N, complete_entropy);
+		if ( debug ) System.out.printf("entropy of all %d values = %.2f\n", N, complete_entropy);
 		double best_gain = 0.0;
 		int best_var = -1;
 		int best_val = 0;
@@ -91,7 +93,7 @@ public abstract class DecisionTree {
 		// Non-random forest decision trees do just: for (int i=0; i<M; i++) {
 		// but RF must use a subset m << M of predictor variables so this is
 		// a generalization
-		List<Integer> indexes = data.getSubsetOfVarIndexes(m); // consider all or a subset of M variables
+		List<Integer> indexes = data.getSubsetOfVarIndexes(m, random); // consider all or a subset of M variables
 		for (Integer j : indexes) { // for each variable i
 			// The goal is to find the lowest expected entropy for all possible values of this predictor variable
 			// Rather than splitting the data table for each unique value of this variable
@@ -139,8 +141,10 @@ public abstract class DecisionTree {
 					newbest=" (new best)";
 				}
 				String var = data.getColNames()[j];
-				System.out.printf("Entropies var=%13s val=%d r1=%d/%d*%.2f r2=%d/%d*%.2f, ExpEntropy=%.2f gain=%.2f%s\n",
-				                  var, splitValue, n1, n1+n2, r1_entropy, n2, n1+n2,r2_entropy, expectedEntropyValue, gain, newbest);
+				if ( debug ) {
+					System.out.printf("Entropies var=%13s val=%d r1=%d/%d*%.2f r2=%d/%d*%.2f, ExpEntropy=%.2f gain=%.2f%s\n",
+					                  var, splitValue, n1, n1+n2, r1_entropy, n2, n1+n2, r2_entropy, expectedEntropyValue, gain, newbest);
+				}
 			}
 		}
 		if ( best_gain>0.0 ) {
