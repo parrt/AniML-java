@@ -31,7 +31,7 @@ public abstract class DecisionTree {
 
 	public static final boolean debug = false;
 
-	/** This tree was created from which data table? */
+	/** This tree was created from which data table? */ // TODO try to remove this ref. it'll keep all that data from being GC'd
 	protected DataTable data;
 
 	// for debugging, fields below
@@ -57,7 +57,7 @@ public abstract class DecisionTree {
 //	}
 
 	public static DecisionTree build(DataTable data) {
-		return build(data, 0);
+		return build(data, 0, 5);
 	}
 
 	/** Build a decision tree starting with arg data and recursively
@@ -68,7 +68,7 @@ public abstract class DecisionTree {
 	 *
 	 *  If m>0, select split var from random subset of size m from all variable set.
 	 */
-	public static DecisionTree build(DataTable data, int m) {
+	public static DecisionTree build(DataTable data, int m, int leafSize) {
 		if ( data==null || data.size()==0 ) return null;
 		int N = data.size();
 		int yi = data.getPredictedCol(); // last index is usually the target variable
@@ -77,7 +77,7 @@ public abstract class DecisionTree {
 		FrequencySet<Integer> completePredictionCounts = data.valueCountsInColumn(yi);
 		double complete_entropy = AniStats.entropy(completePredictionCounts.counts());
 		Set<Integer> predictions = data.uniqueValues(yi);
-		if ( predictions.size()==1 ) {
+		if ( predictions.size()==1 || data.size()<=leafSize ) {
 			DecisionTree t = new DecisionLeafNode(predictions.iterator().next(), yi);
 			t.numRecords = N;
 			t.entropy = complete_entropy;
@@ -152,8 +152,8 @@ public abstract class DecisionTree {
 			t.numRecords = N;
 			t.entropy = complete_entropy;
 			t.data = data;
-			t.left = build(best_split.region1, m);
-			t.right = build(best_split.region2, m);
+			t.left = build(best_split.region1, m, leafSize);
+			t.right = build(best_split.region2, m, leafSize);
 			return t;
 		}
 		// we would gain nothing by splitting, make a leaf predicting majority vote

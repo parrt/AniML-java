@@ -16,6 +16,7 @@ import java.util.Arrays;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static us.parr.animl.TestRFBasics.MIN_NODE_SIZE;
 import static us.parr.animl.data.DataTable.VariableType.UNUSED_INT;
 
 public class TestRFDataSets extends BaseTest {
@@ -24,7 +25,7 @@ public class TestRFDataSets extends BaseTest {
 		int N = 100; // try from 1 to 100 estimators
 		int[] missed = new int[N];
 		for (int k = 1; k<=N; k++) {
-			RandomForest rf = RandomForest.train(data, k);
+			RandomForest rf = RandomForest.train(data, k, MIN_NODE_SIZE);
 			int miss = numberMisclassifications(data, rf);
 			missed[k-1] = miss;
 		}
@@ -39,9 +40,22 @@ public class TestRFDataSets extends BaseTest {
 		assertArrayEquals(expected, missed);
 	}
 
+	@Test public void testRestaurantOOBError() {
+		DataTable data = DataTable.fromStrings(Arrays.asList(TestDataSets.restaurant));
+//		RandomForest rf = RandomForest.train(data, 200, MIN_NODE_SIZE);
+//		double result = rf.getErrorEstimate(data);
+//		System.out.println(result);
+		int N = 100; // try from 1 to 100 estimators
+		for (int k = 1; k<=N; k++) {
+			RandomForest rf = RandomForest.train(data, k, MIN_NODE_SIZE);
+			double result = rf.getErrorEstimate(data);
+			System.out.println(result);
+		}
+	}
+
 	@Test public void testWebsiteSignups() {
 		DataTable data = DataTable.fromStrings(Arrays.asList(TestDataSets.signups));
-		DecisionTree tree = DecisionTree.build(data,0);
+		DecisionTree tree = DecisionTree.build(data,0, MIN_NODE_SIZE);
 		// I verified this string by looking at DOT output
 		String expecting = "{'var':'pageviews','val':21,'n':16,'E':'1.51','left':{'var':'readfaq','val':'no','n':9,'E':'0.92','left':{'var':'referrer','val':'google','n':5,'E':'0.97','left':{'predict':'None','n':2},'right':{'predict':'Basic','n':3}},'right':{'predict':'None','n':4}},'right':{'var':'referrer','val':'digg','n':7,'E':'1.45','left':{'var':'referrer','val':'google','n':4,'E':'0.81','left':{'predict':'None','n':1},'right':{'predict':'Premium','n':3}},'right':{'predict':'Basic','n':3}}}";
 		String result = toTestString(tree);
@@ -69,7 +83,7 @@ public class TestRFDataSets extends BaseTest {
 		int N = 100; // try from 1 to 100 estimators
 		int[] missed = new int[N];
 		for (int k = 1; k<=N; k++) {
-			RandomForest rf = RandomForest.train(data, k);
+			RandomForest rf = RandomForest.train(data, k, MIN_NODE_SIZE);
 			int miss = numberMisclassifications(data, rf);
 			missed[k-1] = miss;
 		}
@@ -89,7 +103,7 @@ public class TestRFDataSets extends BaseTest {
 		DataTable data = DataTable.loadCSV(url.getFile().toString(), "excel", null, null, true);
 		int N = 100; // try from 1 to 100 estimators
 		for (int k = 1; k<=N; k++) {
-			RandomForest rf = RandomForest.train(data, k);
+			RandomForest rf = RandomForest.train(data, k, 1);
 			double result = rf.getErrorEstimate(data);
 			System.out.println(result);
 		}

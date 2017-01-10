@@ -40,18 +40,18 @@ public class RandomForest {
 	/** Train numEstimators trees using 2D matrix data as training
 	 *  where last column in data is the category of the ith feature vector data_i.
 	 */
-	public static RandomForest train(DataTable data, int numEstimators) {
+	public static RandomForest train(DataTable data, int numEstimators, int minLeafSize) {
 		if ( data==null || data.size()==0 || numEstimators==0 ) return null;
 		RandomForest forest = new RandomForest(numEstimators);
 //		forest.outOfBagEstimators = new Set[data.size()];
 		int M = data.getNumberOfPredictorVar();
 		// Number of variables to select at random at each decision node to find best split
-		int m = (int)Math.sqrt(M);
+		int m = (int)Math.round(Math.sqrt(M));
 		for (int i = 1; i<=numEstimators; i++) {
 			Set<Integer> outOfBagSamples = new HashSet<>(); // gets filled in
 			List<int[]> bootstrap = AniStats.bootstrapWithRepl(data.getRows(), outOfBagSamples);
 			DataTable table = new DataTable(data, bootstrap);
-			DecisionTree tree = DecisionTree.build(table, m);
+			DecisionTree tree = DecisionTree.build(table, m, minLeafSize);
 			forest.trees.add(tree);
 			forest.treeOutOfBagSampleIndexes.add(outOfBagSamples);
 		}
