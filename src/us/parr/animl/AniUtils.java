@@ -14,8 +14,6 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static us.parr.animl.classifiers.RandomForest.INVALID_CATEGORY;
-
 public class AniUtils {
 	public static FrequencySet<Integer> valueCountsInColumn(List<int[]> X, int splitVariable) {
 		FrequencySet<Integer> valueCounts = new FrequencySet<>();
@@ -25,20 +23,6 @@ public class AniUtils {
 			valueCounts.add(col);
 		}
 		return valueCounts;
-	}
-
-	public static int uniqueValue(List<int[]> data, int varIndex) {
-		if ( data==null ) {
-			return INVALID_CATEGORY;
-		}
-		int[] firstRow = data.get(0);
-		int v = firstRow[varIndex];
-		for (int[] row : data) {
-			if ( row[varIndex]!=v ) {
-				return INVALID_CATEGORY;
-			}
-		}
-		return v;
 	}
 
 	public static <T> List<T> filter(List<T> data, Predicate<T> pred) {

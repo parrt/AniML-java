@@ -17,7 +17,7 @@ import static us.parr.animl.AniMath.isClose;
 
 public class DecisionLeafNode extends DecisionTree {
 	/** The predicted category if this is a leaf node; non-leaf by default */
-	protected int prediction = RandomForest.INVALID_CATEGORY;
+	protected int prediction = INVALID_CATEGORY;
 	protected int predictionVariable;
 
 	public DecisionLeafNode(int prediction, int predictionVariable) {

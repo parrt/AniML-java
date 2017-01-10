@@ -11,6 +11,7 @@ import us.parr.animl.data.FrequencySet;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import static us.parr.animl.classifiers.DecisionTree.random;
 
@@ -127,10 +128,12 @@ public class AniStats {
 	/** From data, grab n records at random with replacement, fill in oob with
 	 *  data NOT in returned bootstrap (if non-null).
 	 */
-	public static List<int[]> bootstrapWithRepl(List<int[]> data, List<int[]> oob) {
+	public static List<int[]> bootstrapWithRepl(List<int[]> data, Set<Integer> oob) {
 		int[] indexes = randint(data.size(), data.size());
 		if ( oob!=null ) {
-			oob.addAll(data);
+			for (int i = 0; i<data.size(); i++) {
+				oob.add(i);
+			}
 		}
 		List<int[]> bootstrap = new ArrayList<>(indexes.length);
 		for (int i : indexes) {

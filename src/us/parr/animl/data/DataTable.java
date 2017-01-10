@@ -346,6 +346,8 @@ public class DataTable implements Iterable<int[]> {
 		return indexes;
 	}
 
+	public int getNumberOfPredictorVar() { return getSubsetOfVarIndexes(rows.get(0).length).size(); }
+
 	public boolean isPredictorVar(VariableType colType) {
 		return
 			!(

@@ -27,6 +27,7 @@ import static us.parr.animl.AniStats.sum;
 public abstract class DecisionTree {
 	public static final int SEED = 777111333; // need randomness but use same seed to get reproducibility
 	public static final Random random = new Random(SEED);
+	public static final int INVALID_CATEGORY = -1;
 
 	/** This tree was created from which data table? */
 	protected DataTable data;
