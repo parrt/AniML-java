@@ -15,18 +15,17 @@ import java.util.List;
 
 import static us.parr.animl.AniMath.isClose;
 
-public class DecisionSplitNode extends DecisionTree {
+public class DecisionNumericSplitNode extends DecisionTree {
 	/** This node is split on which variable? */
 	protected int splitVariable;
 
 	/** Split at what variable value? */
 	protected int splitValue;
 
-	/** Left child if not a leaf node; non-null implies not a leaf node. */
 	protected DecisionTree left;
 	protected DecisionTree right;
 
-	public DecisionSplitNode(int splitVariable, int splitValue) {
+	public DecisionNumericSplitNode(int splitVariable, int splitValue) {
 		this.splitVariable = splitVariable;
 		this.splitValue = splitValue;
 	}
@@ -65,7 +64,7 @@ public class DecisionSplitNode extends DecisionTree {
 
 	@Override
 	protected void getDOTNodeNames(List<String> nodes) {
-		DecisionSplitNode t = this;
+		DecisionNumericSplitNode t = this;
 		int id = System.identityHashCode(t);
 		nodes.add(String.format("n%d [label=\"%s\\nn=%d\\nE=%.2f\"];",
 		                        id, data.getColNames()[splitVariable], numRecords, entropy));

@@ -148,7 +148,7 @@ public abstract class DecisionTree {
 			}
 		}
 		if ( best_gain>0.0 ) {
-			DecisionSplitNode t = new DecisionSplitNode(best_var, best_val);
+			DecisionNumericSplitNode t = new DecisionNumericSplitNode(best_var, best_val);
 			t.numRecords = N;
 			t.entropy = complete_entropy;
 			t.data = data;

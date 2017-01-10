@@ -16,7 +16,8 @@ relying on two cat vars being less than or greater. It's like
 grouping cat vars: easiest thing is to sort them. Or, like
 binary search looking for a specific value. The int comparison
 relationship is arbitrary but useful nonetheless for searching,
-which is what the random forest is doing. sweet.
+which is what the random forest is doing. sweet.  Hmm... OOB error is huge.
+Jeremy clarified: "*Use one-hot encoding if cardinality <=5, otherwise treat it like an int.*"
 
 log likelihood or p(1-p) per category
 
