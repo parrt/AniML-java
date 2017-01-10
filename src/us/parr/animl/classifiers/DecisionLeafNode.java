@@ -32,8 +32,16 @@ public class DecisionLeafNode extends DecisionTree {
 	@Override
 	public JsonObject toJSON() {
 		JsonObjectBuilder builder =  Json.createObjectBuilder();
-		String p = DataTable.getValue(data, prediction, predictionVariable).toString();
-		builder.add("predict", p);
+		Object p = DataTable.getValue(data, prediction, predictionVariable);
+		if ( p instanceof Integer ) {
+			builder.add("predict", ((Integer)p));
+		}
+		else if ( p instanceof Float ) {
+			builder.add("predict", ((Float)p));
+		}
+		else {
+			builder.add("predict", p.toString());
+		}
 		builder.add("n", numRecords);
 		if ( !isClose(entropy,0.0) ) {
 			builder.add("E", String.format("%.2f",entropy));

@@ -206,6 +206,26 @@ public class TestTable extends BaseTest {
 	@Test public void testHeartDataSenseTypes() {
 		URL url = this.getClass().getClassLoader().getResource("Heart.csv");
 		DataTable t = DataTable.loadCSV(url.getFile().toString(), "excel", null, null, true);
+
+		final DataTable.VariableType[] expectedColTypes = {
+			NUMERICAL_INT,
+			NUMERICAL_INT,
+			NUMERICAL_INT,
+			CATEGORICAL_STRING,
+			NUMERICAL_INT,
+			NUMERICAL_INT,
+			NUMERICAL_INT,
+			NUMERICAL_INT,
+			NUMERICAL_INT,
+			NUMERICAL_INT,
+			NUMERICAL_FLOAT,
+			NUMERICAL_INT,
+			NUMERICAL_INT,
+			CATEGORICAL_STRING,
+			PREDICTED_CATEGORICAL_STRING
+		};
+		assertArrayEquals(expectedColTypes, t.getColTypes());
+
 		String expected = // first 20 records
 			"    Age Sex  ChestPain   RestBP Chol Fbs RestECG MaxHR ExAng Oldpeak Slope Ca    Thal    AHD\n"+
 			"  1  63   1   typical       145  233   1       2   150     0     2.3     3  0   fixed    No \n"+
@@ -230,24 +250,5 @@ public class TestTable extends BaseTest {
 			" 20  49   1  nontypical     130  266   0       0   171     0     0.6     1  0   normal   No \n";
 		String result = join(Arrays.asList(t.toString().split("\n")).subList(0,21), "\n")+"\n";
 		assertEquals(expected, result);
-
-		final DataTable.VariableType[] expectedColTypes = {
-			NUMERICAL_INT,
-			NUMERICAL_INT,
-			NUMERICAL_INT,
-			CATEGORICAL_STRING,
-			NUMERICAL_INT,
-			NUMERICAL_INT,
-			NUMERICAL_INT,
-			NUMERICAL_INT,
-			NUMERICAL_INT,
-			NUMERICAL_INT,
-			NUMERICAL_FLOAT,
-			NUMERICAL_INT,
-			NUMERICAL_INT,
-			CATEGORICAL_STRING,
-			PREDICTED_CATEGORICAL_STRING
-		};
-		assertArrayEquals(expectedColTypes, t.getColTypes());
 	}
 }
