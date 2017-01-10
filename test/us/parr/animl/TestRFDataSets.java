@@ -86,6 +86,7 @@ public class TestRFDataSets extends BaseTest {
 			RandomForest rf = RandomForest.train(data, k, MIN_NODE_SIZE);
 			int miss = numberMisclassifications(data, rf);
 			missed[k-1] = miss;
+			System.out.println(miss);
 		}
 		// randomness is reproducible via same seed in various classes
 		int[] expected = new int[] {

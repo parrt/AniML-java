@@ -15,15 +15,9 @@ import java.util.List;
 
 import static us.parr.animl.AniMath.isClose;
 
-public class DecisionCategoricalSplitNode extends DecisionTree {
-	/** This node is split on which variable? */
-	protected int splitVariable;
-
+public class DecisionCategoricalSplitNode extends DecisionSplitNode {
 	/** Split according to what variable category? An unknown matches category yes or no */
 	protected int splitCategory;
-
-	protected DecisionTree left;
-	protected DecisionTree right;
 
 	public DecisionCategoricalSplitNode(int splitVariable, int splitCategory) {
 		this.splitVariable = splitVariable;
@@ -68,8 +62,8 @@ public class DecisionCategoricalSplitNode extends DecisionTree {
 	protected void getDOTEdges(List<String> edges) {
 		int id = System.identityHashCode(this);
 		Object p = DataTable.getValue(data, splitCategory, splitVariable);
-		edges.add(String.format("n%s -> n%s [label=\"==%s\"];", id, System.identityHashCode(left), p.toString()));
-		edges.add(String.format("n%s -> n%s [label=\"!=%s\"];", id, System.identityHashCode(right), p.toString()));
+		edges.add(String.format("n%s -> n%s [label=\"%s\"];", id, System.identityHashCode(left), p.toString()));
+		edges.add(String.format("n%s -> n%s [label=\"!%s\"];", id, System.identityHashCode(right), p.toString()));
 		left.getDOTEdges(edges);
 		right.getDOTEdges(edges);
 	}

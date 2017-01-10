@@ -15,15 +15,9 @@ import java.util.List;
 
 import static us.parr.animl.AniMath.isClose;
 
-public class DecisionNumericSplitNode extends DecisionTree {
-	/** This node is split on which variable? */
-	protected int splitVariable;
-
+public class DecisionNumericSplitNode extends DecisionSplitNode {
 	/** Split at what variable value? */
 	protected int splitValue;
-
-	protected DecisionTree left;
-	protected DecisionTree right;
 
 	public DecisionNumericSplitNode(int splitVariable, int splitValue) {
 		this.splitVariable = splitVariable;

@@ -353,7 +353,7 @@ public class DataTable implements Iterable<int[]> {
 
 	public int getNumberOfPredictorVar() { return getSubsetOfVarIndexes(rows.get(0).length, null).size(); }
 
-	public boolean isPredictorVar(VariableType colType) {
+	public static boolean isPredictorVar(VariableType colType) {
 		return
 			!(
 				colType==UNUSED_INT ||
@@ -362,6 +362,12 @@ public class DataTable implements Iterable<int[]> {
 				colType==PREDICTED_CATEGORICAL_INT ||
 				colType==PREDICTED_CATEGORICAL_STRING
 			);
+	}
+
+	public static boolean isCategoricalVar(VariableType colType) {
+		return
+			colType==DataTable.VariableType.CATEGORICAL_INT ||
+			colType==DataTable.VariableType.CATEGORICAL_STRING;
 	}
 
 	/** Create a set that counts how many of each value in colIndex there is. Only
