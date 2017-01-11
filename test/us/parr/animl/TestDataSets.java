@@ -6,7 +6,9 @@ import us.parr.animl.data.DataTable;
 
 import java.net.URL;
 import java.util.Arrays;
+import java.util.List;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static us.parr.animl.data.DataTable.VariableType.UNUSED_INT;
 
@@ -111,13 +113,17 @@ public class TestDataSets extends BaseTest {
 	@Test public void testIris() {
 		URL url = this.getClass().getClassLoader().getResource("iris.csv");
 		DataTable data = DataTable.loadCSV(url.getFile().toString(), null, null, null, true);
-		System.out.println(data);
-		DecisionTree.debug = true;
 		DecisionTree tree = DecisionTree.build(data, 0, 1);
-		String expecting = "";
+		// This is exact same tree as shown here http://scikit-learn.org/stable/modules/tree.html
+		String expecting = "{'var':' petal len','val':2.450000047683716,'n':150,'E':'1.58','left':{'predict':'Iris-setosa','n':50},'right':{'var':' petal wid','val':1.75,'n':100,'E':'1.00','left':{'var':' petal len','val':4.949999809265137,'n':54,'E':'0.45','left':{'var':' petal wid','val':1.6500000953674316,'n':48,'E':'0.15','left':{'predict':'Iris-versicolor','n':47},'right':{'predict':'Iris-virginica','n':1}},'right':{'var':' petal wid','val':1.5499999523162842,'n':6,'E':'0.92','left':{'predict':'Iris-virginica','n':3},'right':{'var':'sepal len','val':6.949999809265137,'n':3,'E':'0.92','left':{'predict':'Iris-versicolor','n':2},'right':{'predict':'Iris-virginica','n':1}}}},'right':{'var':' petal len','val':4.850000381469727,'n':46,'E':'0.15','left':{'var':'sepal len','val':5.949999809265137,'n':3,'E':'0.92','left':{'predict':'Iris-versicolor','n':1},'right':{'predict':'Iris-virginica','n':2}},'right':{'predict':'Iris-virginica','n':43}}}}";
 		String result = toTestString(tree);
-		System.out.println(tree.toDOT());
+//		System.out.println(tree.toDOT());
 		assertEquals(expecting, result);
-		checkPredictions(data.getRows(), tree);
+		List<Integer> p = predictions(data.getRows(), tree);
+		Integer[] expectedPredictions = new Integer[] {
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+		};
+		System.out.println(p);
+		assertArrayEquals(expectedPredictions, p.toArray());
 	}
 }

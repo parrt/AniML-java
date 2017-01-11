@@ -17,15 +17,22 @@ import static us.parr.animl.AniMath.isClose;
 
 public class DecisionNumericSplitNode extends DecisionSplitNode {
 	/** Split at what variable value? */
-	protected int splitValue;
+	protected double splitValue;
 
-	public DecisionNumericSplitNode(int splitVariable, int splitValue) {
-		this.splitVariable = splitVariable;
+	public DecisionNumericSplitNode(int splitVariable, DataTable.VariableType colType, double splitValue) {
+		super(splitVariable, colType);
 		this.splitValue = splitValue;
 	}
 
 	public int classify(int[] X) {
-		if ( X[splitVariable] < splitValue ) {
+		double v;
+		if ( colType==DataTable.VariableType.NUMERICAL_INT ) {
+			v = X[splitVariable];
+		}
+		else {
+			v = Float.intBitsToFloat(X[splitVariable]);
+		}
+		if ( v < splitValue ) {
 			return left.classify(X);
 		}
 		else {
@@ -37,16 +44,7 @@ public class DecisionNumericSplitNode extends DecisionSplitNode {
 	public JsonObject toJSON() {
 		JsonObjectBuilder builder =  Json.createObjectBuilder();
 		builder.add("var", data.getColNames()[splitVariable]);
-		Object p = DataTable.getValue(data, splitValue, splitVariable);
-		if ( p instanceof Integer ) {
-			builder.add("val", ((Integer)p));
-		}
-		else if ( p instanceof Float ) {
-			builder.add("val", ((Float)p));
-		}
-		else {
-			builder.add("val", p.toString());
-		}
+		builder.add("val", splitValue);
 		builder.add("n", numRecords);
 		if ( !isClose(entropy,0.0) ) {
 			builder.add("E", String.format("%.2f",entropy));
@@ -69,9 +67,8 @@ public class DecisionNumericSplitNode extends DecisionSplitNode {
 	@Override
 	protected void getDOTEdges(List<String> edges) {
 		int id = System.identityHashCode(this);
-		Object p = DataTable.getValue(data, splitValue, splitVariable);
-		edges.add(String.format("n%s -> n%s [label=\"<%s\"];", id, System.identityHashCode(left), p.toString()));
-		edges.add(String.format("n%s -> n%s [label=\">=%s\"];", id, System.identityHashCode(right), p.toString()));
+		edges.add(String.format("n%s -> n%s [label=\"<%.2f\"];", id, System.identityHashCode(left), splitValue));
+		edges.add(String.format("n%s -> n%s [label=\">=%.2f\"];", id, System.identityHashCode(right), splitValue));
 		left.getDOTEdges(edges);
 		right.getDOTEdges(edges);
 	}

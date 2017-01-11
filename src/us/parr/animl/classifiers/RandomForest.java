@@ -79,8 +79,8 @@ public class RandomForest {
 		Set<DecisionTree>[] outOfBagEstimators = getOutOfBagEstimatorSets(data);
 		for (int i = 0; i<data.size(); i++) {
 			if ( outOfBagEstimators[i]==null ) continue; // for small number of trees, some data rows might not appear in oob set
-			int oobPrediction = classify(outOfBagEstimators[i], data.get(i));
-			int actualCategory = data.get(i, data.getPredictedCol());
+			int oobPrediction = classify(outOfBagEstimators[i], data.getAsInt(i));
+			int actualCategory = data.getAsInt(i, data.getPredictedCol());
 			if ( oobPrediction!=actualCategory ) {
 				mismatches++;
 			}

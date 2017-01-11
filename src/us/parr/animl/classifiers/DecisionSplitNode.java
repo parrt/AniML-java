@@ -6,10 +6,18 @@
 
 package us.parr.animl.classifiers;
 
+import us.parr.animl.data.DataTable;
+
 public abstract class DecisionSplitNode extends DecisionTree {
 	/** This node is split on which variable? */
 	protected int splitVariable;
+	protected DataTable.VariableType colType;
 
 	protected DecisionTree left;
 	protected DecisionTree right;
+
+	public DecisionSplitNode(int splitVariable, DataTable.VariableType colType) {
+		this.splitVariable = splitVariable;
+		this.colType = colType;
+	}
 }

@@ -19,8 +19,8 @@ public class DecisionCategoricalSplitNode extends DecisionSplitNode {
 	/** Split according to what variable category? An unknown matches category yes or no */
 	protected int splitCategory;
 
-	public DecisionCategoricalSplitNode(int splitVariable, int splitCategory) {
-		this.splitVariable = splitVariable;
+	public DecisionCategoricalSplitNode(int splitVariable, DataTable.VariableType colType, int splitCategory) {
+		super(splitVariable, colType);
 		this.splitCategory = splitCategory;
 	}
 

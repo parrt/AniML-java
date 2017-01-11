@@ -32,16 +32,15 @@ public abstract class DecisionTree {
 	protected static class BestInfo {
 		public double gain = 0.0;
 		public int var = -1;
-		public int val = 0;
-		public DataPair split = null;
+		public double val = 0.0;
+		public int cat = INVALID_CATEGORY;
 
 		public BestInfo() { }
 
-		public BestInfo(double gain, int var, int val, DataPair split) {
+		public BestInfo(double gain, int var, int val) {
 			this.gain = gain;
 			this.var = var;
 			this.val = val;
-			this.split = split;
 		}
 	}
 
@@ -121,24 +120,33 @@ public abstract class DecisionTree {
 			}
 			if ( bestj.gain > best.gain ) {
 				best = bestj;
-				System.out.printf("Best is now var %s val %s gain=%.2f\n", data.getColNames()[best.var], best.val, best.gain);
+				if ( debug ) System.out.printf("Best is now var %s val %s gain=%.2f\n", data.getColNames()[best.var], best.val, best.gain);
 			}
 		}
-		System.out.printf("FINAL best is var %s val %s gain=%.2f\n", data.getColNames()[best.var], best.val, best.gain);
+		if ( debug ) System.out.printf("FINAL best is var %s val %s gain=%.2f\n", data.getColNames()[best.var], best.val, best.gain);
 		if ( best.gain>0.0 ) {
+			DataPair split;
 			DecisionSplitNode t;
 			DataTable.VariableType colType = data.getColTypes()[best.var];
 			if ( DataTable.isCategoricalVar(colType) ) {
-				t = new DecisionCategoricalSplitNode(best.var, best.val);
+				// split is expensive, do it only after we get best var/val
+				split = categoricalSplit(data, best.var, best.cat);
+				t = new DecisionCategoricalSplitNode(best.var, colType, best.cat);
 			}
 			else {
-				t = new DecisionNumericSplitNode(best.var, best.val);
+				if ( colType==DataTable.VariableType.NUMERICAL_FLOAT ) {
+					split = numericalFloatSplit(data, best.var, best.val);
+				}
+				else {
+					split = numericalIntSplit(data, best.var, best.val);
+				}
+				t = new DecisionNumericSplitNode(best.var, colType, best.val);
 			}
 			t.numRecords = N;
 			t.entropy = complete_entropy;
 			t.data = data;
-			t.left = build(best.split.region1, m, minLeafSize);
-			t.right = build(best.split.region2, m, minLeafSize);
+			t.left = build(split.region1, m, minLeafSize);
+			t.right = build(split.region2, m, minLeafSize);
 			return t;
 		}
 		// we would gain nothing by splitting, make a leaf predicting majority vote
@@ -164,23 +172,32 @@ public abstract class DecisionTree {
 		data.sortBy(j);
 		// look for discontinuities (transitions) in predictor var values,
 		// recording prediction cat counts for each
-		LinkedHashMap<Integer, FrequencySet<Integer>> predictionCountSets = new LinkedHashMap<>(); // track key order of insertion
+		LinkedHashMap<Double, FrequencySet<Integer>> predictionCountSets = new LinkedHashMap<>(); // track key order of insertion
 		FrequencySet<Integer> currentPredictionCounts = new FrequencySet<>();
+		DataTable.VariableType colType = data.getColTypes()[j];
 		for (int i = 0; i<n; i++) { // walk all records, updating currentPredictionCounts
 			if ( i>0 && data.compare(i-1, i, j)<0 ) { // if row i-1 < row i, discontinuity in predictor var
 				// Take snapshot of current predictor counts, associate with current/new value as split point
 				// Don't include new value in this snapshot
-				predictionCountSets.put(data.get(i, j), new FrequencySet<>(currentPredictionCounts));
+				// as split value, choose midway between previous and current value as it's likely more general.
+				// it's unlikely that split value is exactly the current value
+				double midpoint;
+				if ( colType==DataTable.VariableType.NUMERICAL_INT ) {
+					midpoint = (data.getAsInt(i, j)+data.getAsInt(i-1, j))/2.0;
+				}
+				else {
+					midpoint = (data.getAsFloat(i, j)+data.getAsFloat(i-1, j))/2.0;
+				}
+				predictionCountSets.put(midpoint, new FrequencySet<>(currentPredictionCounts));
 			}
-			currentPredictionCounts.add(data.get(i, yi));
+			currentPredictionCounts.add(data.getAsInt(i, yi));
 		}
-
 
 		// Now, walk all possible prediction count sets to find the split
 		// with the minimum entropy. predictionCountSets keys are the
 		// unique set of values from column j. predictionCountSets[v] is
 		// the predictor count set for values of column j < v
-		for (Integer splitValue : predictionCountSets.keySet()) {
+		for (Double splitValue : predictionCountSets.keySet()) {
 			FrequencySet<Integer> region1 = predictionCountSets.get(splitValue);
 			FrequencySet<Integer> region2 = FrequencySet.minus(completePredictionCounts, region1);
 			double r1_entropy = AniStats.entropy(region1.counts());
@@ -197,11 +214,10 @@ public abstract class DecisionTree {
 				best.gain = gain;
 				best.var = j;
 				best.val = splitValue;
-				best.split = numericalSplit(data, best.var, best.val);
 			}
 			String var = data.getColNames()[j];
 			if ( debug ) {
-				System.out.printf("Entropies var=%13s val=%d r1=%d/%d*%.2f r2=%d/%d*%.2f, ExpEntropy=%.2f gain=%.2f\n",
+				System.out.printf("Entropies var=%13s val=%.2f r1=%d/%d*%.2f r2=%d/%d*%.2f, ExpEntropy=%.2f gain=%.2f\n",
 				                  var, splitValue, n1, n1+n2, r1_entropy, n2, n1+n2, r2_entropy, expectedEntropyValue, gain);
 			}
 		}
@@ -221,13 +237,13 @@ public abstract class DecisionTree {
 			if ( i>0 && data.compare(i-1, i, j)<0 ) { // if row i-1 < row i, discontinuity in predictor var
 				// Take snapshot of current predictor counts, associate with current/new value as split point
 				// Don't include new value in this snapshot
-				predictionCountSets.put(data.get(i-1, j), currentPredictionCounts);
+				predictionCountSets.put(data.getAsInt(i-1, j), currentPredictionCounts);
 				currentPredictionCounts = new FrequencySet<>();
 			}
-			currentPredictionCounts.add(data.get(i, yi));
+			currentPredictionCounts.add(data.getAsInt(i, yi));
 		}
 		// then for the last cat value, record the prediction set
-		predictionCountSets.put(data.get(n-1, j), new FrequencySet<>(currentPredictionCounts));
+		predictionCountSets.put(data.getAsInt(n-1, j), new FrequencySet<>(currentPredictionCounts));
 
 
 		// Now, walk all possible prediction count sets to find the split
@@ -250,8 +266,7 @@ public abstract class DecisionTree {
 			if ( gain>best.gain && n1>0 && n2>0 ) {
 				best.gain = gain;
 				best.var = j;
-				best.val = splitValue;
-				best.split = categoricalSplit(data, best.var, best.val);
+				best.cat = splitValue;
 			}
 			String var = data.getColNames()[j];
 			if ( debug ) {
@@ -268,15 +283,21 @@ public abstract class DecisionTree {
 		return data;
 	}
 
-	public static DataPair numericalSplit(DataTable X, int splitVariable, int splitValue) {
+	public static DataPair numericalIntSplit(DataTable X, int splitVariable, double splitValue) {
 		DataTable a = X.filter(x -> x[splitVariable] < splitValue);
 		DataTable b = X.filter(x -> x[splitVariable] >= splitValue);
 		return new DataPair(a,b);
 	}
 
-	public static DataPair categoricalSplit(DataTable X, int splitVariable, int splitValue) {
-		DataTable a = X.filter(x -> x[splitVariable] == splitValue);
-		DataTable b = X.filter(x -> x[splitVariable] != splitValue);
+	public static DataPair numericalFloatSplit(DataTable X, int splitVariable, double splitValue) {
+		DataTable a = X.filter(x -> Float.intBitsToFloat(x[splitVariable]) < splitValue);
+		DataTable b = X.filter(x -> Float.intBitsToFloat(x[splitVariable]) >= splitValue);
+		return new DataPair(a,b);
+	}
+
+	public static DataPair categoricalSplit(DataTable X, int splitVariable, int splitCategory) {
+		DataTable a = X.filter(x -> x[splitVariable] == splitCategory);
+		DataTable b = X.filter(x -> x[splitVariable] != splitCategory);
 		return new DataPair(a,b);
 	}
 

@@ -389,7 +389,7 @@ public class DataTable implements Iterable<int[]> {
 			throw new IllegalArgumentException(colNames[colIndex]+" is not an int-based column; type is "+colTypes[colIndex]);
 		}
 		for (int i = 0; i<size(); i++) { // for each row, count different values for col splitVariable
-			int[] row = get(i);
+			int[] row = getAsInt(i);
 			int col = row[colIndex];
 			valueCounts.add(col);
 		}
@@ -421,12 +421,21 @@ public class DataTable implements Iterable<int[]> {
 
 	public int size() { return rows.size(); }
 
-	public int[] get(int i) {
+	public int[] getAsInt(int i) {
 		return rows.get(i);
 	}
 
-	public int get(int i, int j) {
-		return getAsInt(i,j);
+	/** Return the data[i,j] item as an appropriate object: Integer, Float, String */
+	public Object get(int i, int j) {
+		return getValue(i,j);
+	}
+
+	public int getAsInt(int i, int j) {
+		return rows.get(i)[j];
+	}
+
+	public float getAsFloat(int i, int j) {
+		return Float.intBitsToFloat(rows.get(i)[j]);
 	}
 
 	public List<int[]> getRows() { return rows; }
@@ -483,14 +492,6 @@ public class DataTable implements Iterable<int[]> {
 		return o;
 	}
 
-	public int getAsInt(int i, int j) {
-		return rows.get(i)[j];
-	}
-
-	public float getAsFloat(int i, int j) {
-		return Float.intBitsToFloat(rows.get(i)[j]);
-	}
-
 	public int compare(int rowi, int rowj, int colIndex) {
 		switch (colTypes[colIndex]) {
 			case CATEGORICAL_INT:
@@ -500,7 +501,7 @@ public class DataTable implements Iterable<int[]> {
 			case PREDICTED_CATEGORICAL_INT :
 			case UNUSED_INT:
 			case UNUSED_STRING :
-				return Integer.compare(get(rowi, colIndex), get(rowj, colIndex));
+				return Integer.compare(getAsInt(rowi, colIndex), getAsInt(rowj, colIndex));
 			case NUMERICAL_FLOAT:
 			case UNUSED_FLOAT :
 				return Float.compare(getAsFloat(rowi, colIndex), getAsFloat(rowj, colIndex));
