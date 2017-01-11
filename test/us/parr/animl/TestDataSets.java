@@ -112,5 +112,12 @@ public class TestDataSets extends BaseTest {
 		URL url = this.getClass().getClassLoader().getResource("iris.csv");
 		DataTable data = DataTable.loadCSV(url.getFile().toString(), null, null, null, true);
 		System.out.println(data);
+		DecisionTree.debug = true;
+		DecisionTree tree = DecisionTree.build(data, 0, 1);
+		String expecting = "";
+		String result = toTestString(tree);
+		System.out.println(tree.toDOT());
+		assertEquals(expecting, result);
+		checkPredictions(data.getRows(), tree);
 	}
 }

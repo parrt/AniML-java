@@ -228,20 +228,25 @@ public class DataTable implements Iterable<int[]> {
 			FileInputStream fis = new FileInputStream(fileName);
 			final Reader reader = new InputStreamReader(new BOMInputStream(fis), "UTF-8");
 			CSVFormat format;
-			switch ( formatType.toLowerCase() ) {
-				case "tsv" :
-					format = hasHeaderRow ? CSVFormat.TDF.withHeader() : CSVFormat.TDF;
-					break;
-				case "mysql" :
-					format = hasHeaderRow ? CSVFormat.MYSQL.withHeader() : CSVFormat.MYSQL;
-					break;
-				case "excel" :
-					format = hasHeaderRow ? CSVFormat.EXCEL.withHeader() : CSVFormat.EXCEL;
-					break;
-				case "rfc4180" :
-				default :
-					format = hasHeaderRow ? CSVFormat.RFC4180.withHeader() : CSVFormat.RFC4180;
-					break;
+			if ( formatType==null ) {
+				format = hasHeaderRow ? CSVFormat.RFC4180.withHeader() : CSVFormat.RFC4180;
+			}
+			else {
+				switch ( formatType.toLowerCase() ) {
+					case "tsv":
+						format = hasHeaderRow ? CSVFormat.TDF.withHeader() : CSVFormat.TDF;
+						break;
+					case "mysql":
+						format = hasHeaderRow ? CSVFormat.MYSQL.withHeader() : CSVFormat.MYSQL;
+						break;
+					case "excel":
+						format = hasHeaderRow ? CSVFormat.EXCEL.withHeader() : CSVFormat.EXCEL;
+						break;
+					case "rfc4180":
+					default:
+						format = hasHeaderRow ? CSVFormat.RFC4180.withHeader() : CSVFormat.RFC4180;
+						break;
+				}
 			}
 			final CSVParser parser = new CSVParser(reader, format);
 			List<String[]> rows = new ArrayList<>();

@@ -65,7 +65,7 @@ public class TestRFDataSets extends BaseTest {
 	}
 
 	@Test public void testHeartDataSenseTypes() {
-		URL url = this.getClass().getClassLoader().getResource("Heart.csv");
+		URL url = this.getClass().getClassLoader().getResource("Heart-wo-NA.csv");
 		DataTable data = DataTable.loadCSV(url.getFile().toString(), "excel", null, null, true);
 		data.setColType(0, UNUSED_INT); // first column is ID
 		DecisionTree tree = DecisionTree.build(data);
@@ -78,7 +78,7 @@ public class TestRFDataSets extends BaseTest {
 	}
 
 	@Test public void testHeartOnTrainingSet() {
-		URL url = this.getClass().getClassLoader().getResource("Heart.csv");
+		URL url = this.getClass().getClassLoader().getResource("Heart-wo-NA.csv");
 		DataTable data = DataTable.loadCSV(url.getFile().toString(), "excel", null, null, true);
 		int N = 100; // try from 1 to 100 estimators
 		int[] missed = new int[N];
@@ -100,11 +100,11 @@ public class TestRFDataSets extends BaseTest {
 	}
 
 	@Test public void testHeartOOBError() {
-		URL url = this.getClass().getClassLoader().getResource("Heart.csv");
+		URL url = this.getClass().getClassLoader().getResource("Heart-wo-NA.csv");
 		DataTable data = DataTable.loadCSV(url.getFile().toString(), "excel", null, null, true);
 		int N = 100; // try from 1 to 100 estimators
 		for (int k = 1; k<=N; k++) {
-			RandomForest rf = RandomForest.train(data, k, 1);
+			RandomForest rf = RandomForest.train(data, k, 5);
 			double result = rf.getErrorEstimate(data);
 			System.out.println(result);
 		}
