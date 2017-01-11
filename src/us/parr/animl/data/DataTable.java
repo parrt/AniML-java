@@ -398,7 +398,7 @@ public class DataTable implements Iterable<int[]> {
 			throw new IllegalArgumentException(colNames[colIndex]+" is not an int-based column; type is "+colTypes[colIndex]);
 		}
 		for (int i = 0; i<size(); i++) { // for each row, count different values for col splitVariable
-			int[] row = getAsInt(i);
+			int[] row = getRowAsInts(i);
 			int col = row[colIndex];
 			valueCounts.add(col);
 		}
@@ -430,7 +430,7 @@ public class DataTable implements Iterable<int[]> {
 
 	public int size() { return rows.size(); }
 
-	public int[] getAsInt(int i) {
+	public int[] getRowAsInts(int i) {
 		return rows.get(i);
 	}
 

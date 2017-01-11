@@ -79,8 +79,9 @@ public class RandomForest implements Classifier {
 		Set<DecisionTree>[] outOfBagEstimators = getOutOfBagEstimatorSets(data);
 		for (int i = 0; i<data.size(); i++) {
 			if ( outOfBagEstimators[i]==null ) continue; // for small number of trees, some data rows might not appear in oob set
-			int oobPrediction = classify(outOfBagEstimators[i], data.getAsInt(i));
-			int actualCategory = data.getAsInt(i, data.getPredictedCol());
+			int[] row = data.getRowAsInts(i);
+			int oobPrediction = classify(outOfBagEstimators[i], row);
+			int actualCategory = row[data.getPredictedCol()];
 			if ( oobPrediction!=actualCategory ) {
 				mismatches++;
 			}
