@@ -119,6 +119,15 @@ public class DataTable implements Iterable<int[]> {
 		this(rows, old.colTypes, old.colNames, old.colStringToIntMap);
 	}
 
+	/** Make a new table from an old table with shallow copy of rows */
+	public DataTable(DataTable old) {
+		this.rows = new ArrayList<>(old.rows.size());
+		this.rows.addAll(old.rows);
+		this.colNames = old.colNames;
+		this.colTypes = old.colTypes;
+		this.colStringToIntMap = old.colStringToIntMap;
+	}
+
 	public static DataTable fromInts(List<int[]> rows, VariableType[] colTypes, String[] colNames) {
 		if ( rows==null ) return empty(colTypes, colNames);
 		if ( rows.size()==0 && colTypes==null ) {
@@ -454,6 +463,16 @@ public class DataTable implements Iterable<int[]> {
 
 	public void setColType(int colIndex, VariableType colType) {
 		this.colTypes[colIndex] = colType;
+	}
+
+	public void setColType(String colName, VariableType colType) {
+		int j = indexOf(colNames, colName);
+		if ( j>=0 && j<colTypes.length ) {
+			this.colTypes[j] = colType;
+		}
+		else {
+			throw new IllegalArgumentException("Column "+colName+" unknown");
+		}
 	}
 
 	public Object getValue(int rowi, int colj) {

@@ -24,7 +24,7 @@ import static us.parr.animl.AniStats.sum;
  *  classification, not regression. I extended it to handle a subset of predictor
  *  variables at each node to support random forest construction.
  */
-public abstract class DecisionTree {
+public abstract class DecisionTree implements Classifier {
 	public static final int SEED = 777111333; // need randomness but use same seed to get reproducibility
 	public static final Random random = new Random(SEED);
 	public static final int INVALID_CATEGORY = -1;

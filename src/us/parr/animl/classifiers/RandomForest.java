@@ -21,7 +21,7 @@ import static us.parr.animl.AniStats.majorityVote;
  *  values only. Predicts integer categories only. -1 is an invalid predicted
  *  category value.
  */
-public class RandomForest {
+public class RandomForest implements Classifier {
 	/** How many trees to create in the forest */
 	protected int numEstimators;
 
