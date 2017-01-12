@@ -17,8 +17,8 @@ import java.util.Set;
 
 import static us.parr.animl.AniStats.majorityVote;
 
-/** A Random Forest classifier operating on categorical and numerical integer
- *  values only. Predicts integer categories only. -1 is an invalid predicted
+/** A Random Forest classifier operating on categorical and numerical
+ *  values. Predicts integer categories only. -1 is an invalid predicted
  *  category value.
  */
 public class RandomForest implements Classifier {
@@ -37,17 +37,15 @@ public class RandomForest implements Classifier {
 		this.treeOutOfBagSampleIndexes = new ArrayList<>(numEstimators);
 	}
 
-	/** Train numEstimators trees using 2D matrix data as training
-	 *  where last column in data is the category of the ith feature vector data_i.
-	 */
+	/** Train numEstimators trees using 2D matrix data as training. */
 	public static RandomForest train(DataTable data, int numEstimators, int minLeafSize) {
 		if ( data==null || data.size()==0 || numEstimators==0 ) return null;
 		RandomForest forest = new RandomForest(numEstimators);
-//		forest.outOfBagEstimators = new Set[data.size()];
 		int M = data.getNumberOfPredictorVar();
 		// Number of variables to select at random at each decision node to find best split
 		int m = (int)Math.round(Math.sqrt(M));
 		for (int i = 1; i<=numEstimators; i++) {
+			if ( DecisionTree.debug ) System.out.println("Estimator "+i+" ------------------");
 			Set<Integer> outOfBagSamples = new HashSet<>(); // gets filled in
 			List<int[]> bootstrap = AniStats.bootstrapWithRepl(data.getRows(), outOfBagSamples);
 			DataTable table = new DataTable(data, bootstrap);
@@ -76,9 +74,13 @@ public class RandomForest implements Classifier {
 	/** Return the out-of-bag error estimate */
 	public double getErrorEstimate(DataTable data) {
 		int mismatches = 0;
+		int n = 0; // how many rows had oob estimators?
 		Set<DecisionTree>[] outOfBagEstimators = getOutOfBagEstimatorSets(data);
 		for (int i = 0; i<data.size(); i++) {
-			if ( outOfBagEstimators[i]==null ) continue; // for small number of trees, some data rows might not appear in oob set
+			if ( outOfBagEstimators[i]==null ) {
+				continue; // for small number of trees, some data rows might not appear in oob set
+			}
+			n++;
 			int[] row = data.getRowAsInts(i);
 			int oobPrediction = classify(outOfBagEstimators[i], row);
 			int actualCategory = row[data.getPredictedCol()];
@@ -86,7 +88,7 @@ public class RandomForest implements Classifier {
 				mismatches++;
 			}
 		}
-		return ((float)mismatches) / data.size();
+		return ((float)mismatches) / n;
 	}
 
 	/** For each observation in data, (X_i,y_i), compute set of trees that were not
@@ -105,7 +107,7 @@ public class RandomForest implements Classifier {
 		int numEstimators = treeOutOfBagSampleIndexes.size();
 		for (int k = 0; k<numEstimators; k++) { //
 			Set<Integer> oobIndexes = treeOutOfBagSampleIndexes.get(k);
-			for (Integer i : oobIndexes) {
+			for (Integer i : oobIndexes) { // for each observation not used to build tree k
 				if ( outOfBagEstimators[i]==null ) {
 					outOfBagEstimators[i] = new HashSet<>();
 				}

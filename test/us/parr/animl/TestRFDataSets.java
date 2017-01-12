@@ -81,7 +81,7 @@ public class TestRFDataSets extends BaseTest {
 
 	@Test public void testHeartOnTrainingSet() {
 		DataTable data = heartData();
-		int N = 50; // try from 1 to 100 estimators
+		int N = 50;
 		int[] missed = trainingDataMisclassifications(data, N);
 		// randomness is reproducible via same seed in various classes
 //		System.out.println(Arrays.toString(missed));
@@ -93,16 +93,14 @@ public class TestRFDataSets extends BaseTest {
 		assertArrayEquals(expected, missed);
 	}
 
-	@Test public void testHeartOOBError() {
+	@Test public void testHeartLeaveOneOutError() {
 		DataTable data = heartData();
-		int N = 50; // try from 1 to 100 estimators
+		int N = 50;
 		int[] missed = new int[N];
 		for (int k = 1; k<=N; k++) {
 			RandomForest rf = RandomForest.train(data, k, 1);
 			LeaveOneOutValidator validator = new LeaveOneOutValidator(data, rf);
 			missed[k-1] = validator.validate();
-			double result = rf.getErrorEstimate(data);
-			System.out.println(result);
 		}
 		int[] expected = new int[] {
 			31, 31, 10, 15, 3, 8, 7, 4, 3, 5, 2, 2, 0, 2, 3, 1, 1, 2, 0, 1,
@@ -110,6 +108,23 @@ public class TestRFDataSets extends BaseTest {
 			0, 0, 0, 0, 0, 0, 0, 0, 0
 		};
 		assertArrayEquals(expected, missed);
+	}
+
+	@Test public void testHeartOOBError() {
+		DataTable data = heartData();
+		int N = 50;
+		double[] missed = new double[N];
+		for (int k = 1; k<=N; k++) {
+			RandomForest rf = RandomForest.train(data, k, 1);
+			missed[k-1] = rf.getErrorEstimate(data);
+			System.out.println(missed[k-1]);
+		}
+//		double[] expected = new double[] {
+//			31, 31, 10, 15, 3, 8, 7, 4, 3, 5, 2, 2, 0, 2, 3, 1, 1, 2, 0, 1,
+//			0, 0, 0, 0, 1, 0, 1, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1,
+//			0, 0, 0, 0, 0, 0, 0, 0, 0
+//		};
+//		assertArrayEquals(expected, missed, 0.00000001);
 	}
 
 	/*

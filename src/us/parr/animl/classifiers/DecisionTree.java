@@ -123,8 +123,11 @@ public abstract class DecisionTree implements Classifier {
 				if ( debug ) System.out.printf("Best is now var %s val %s gain=%.2f\n", data.getColNames()[best.var], best.val, best.gain);
 			}
 		}
-		if ( debug ) System.out.printf("FINAL best is var %s val %s gain=%.2f\n", data.getColNames()[best.var], best.val, best.gain);
 		if ( best.gain>0.0 ) {
+			if ( debug ) {
+				System.out.printf("FINAL best is var %s val %s gain=%.2f\n",
+				                  data.getColNames()[best.var], best.val, best.gain);
+			}
 			DataPair split;
 			DecisionSplitNode t;
 			DataTable.VariableType colType = data.getColTypes()[best.var];
@@ -151,6 +154,10 @@ public abstract class DecisionTree implements Classifier {
 		}
 		// we would gain nothing by splitting, make a leaf predicting majority vote
 		int majorityVote = data.valueCountsInColumn(yi).argmax();
+		if ( debug ) {
+			System.out.printf("FINAL no improvement; make leaf predicting %s\n",
+			                  DataTable.getValue(data,majorityVote,yi));
+		}
 		DecisionTree t = new DecisionLeafNode(majorityVote, yi);
 		t.numRecords = N;
 		t.entropy = complete_entropy;

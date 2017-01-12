@@ -10,7 +10,6 @@ import us.parr.animl.data.FrequencySet;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -131,7 +130,7 @@ public class AniStats {
 	 */
 	public static List<int[]> bootstrapWithRepl(List<int[]> data, Set<Integer> oob) {
 		int[] indexes = randint(data.size(), data.size());
-		Set<Integer> in = new HashSet<>();
+//		Set<Integer> in = new HashSet<>();
 		if ( oob!=null ) {
 			for (int i = 0; i<data.size(); i++) {
 				oob.add(i);
@@ -140,7 +139,7 @@ public class AniStats {
 		List<int[]> bootstrap = new ArrayList<>(indexes.length);
 		for (int i : indexes) {
 			bootstrap.add(data.get(i));
-			in.add(i);
+//			in.add(i);
 			if ( oob!=null ) {
 				oob.remove(i); // make sure bootstrap records are not in oob
 			}
