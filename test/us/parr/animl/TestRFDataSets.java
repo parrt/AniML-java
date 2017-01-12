@@ -99,11 +99,10 @@ public class TestRFDataSets extends BaseTest {
 		int[] missed = new int[N];
 		for (int k = 1; k<=N; k++) {
 			RandomForest rf = RandomForest.train(data, k, 1);
-
 			LeaveOneOutValidator validator = new LeaveOneOutValidator(data, rf);
 			missed[k-1] = validator.validate();
-//			double result = rf.getErrorEstimate(data);
-//			System.out.println(result);
+			double result = rf.getErrorEstimate(data);
+			System.out.println(result);
 		}
 		int[] expected = new int[] {
 			31, 31, 10, 15, 3, 8, 7, 4, 3, 5, 2, 2, 0, 2, 3, 1, 1, 2, 0, 1,

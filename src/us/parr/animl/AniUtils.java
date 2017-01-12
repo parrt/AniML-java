@@ -10,7 +10,9 @@ import us.parr.animl.data.FrequencySet;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -103,6 +105,22 @@ public class AniUtils {
 			output.add(getter.apply(x));
 		}
 		return output;
+	}
+
+	public static <T> Set<T> intersection(Set<T> a, Set<T> b) {
+		Set<T> inter = new HashSet<T>();
+		for (T v : a) {
+			if ( b.contains(v) ) inter.add(v);
+		}
+		return inter;
+	}
+
+	public static <T> Set<T> difference(Set<T> a, Set<T> b) { // 1,2,3 - 2 = 1,3
+		Set<T> diff = new HashSet<T>();
+		for (T v : a) {
+			if ( !b.contains(v) ) diff.add(v);
+		}
+		return diff;
 	}
 
 	public static String join(Collection<?> a, String separator) {
