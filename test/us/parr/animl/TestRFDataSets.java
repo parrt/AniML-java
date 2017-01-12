@@ -36,6 +36,19 @@ public class TestRFDataSets extends BaseTest {
 		assertArrayEquals(expected, missed);
 	}
 
+	@Test public void testRestaurantLeaveOneOutError() {
+		DataTable data = DataTable.fromStrings(Arrays.asList(TestDataSets.restaurant));
+		int N = 50;
+		int[] missed = leaveOneOutErrors(data, N);
+//		System.out.println(Arrays.toString(missed));
+		int[] expected = new int[] {
+			4, 2, 4, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
+			1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		};
+		assertArrayEquals(expected, missed);
+	}
+
 	@Test public void testRestaurantOOBError() {
 		DataTable data = DataTable.fromStrings(Arrays.asList(TestDataSets.restaurant));
 //		RandomForest rf = RandomForest.train(data, 200, MIN_NODE_SIZE);
@@ -96,12 +109,7 @@ public class TestRFDataSets extends BaseTest {
 	@Test public void testHeartLeaveOneOutError() {
 		DataTable data = heartData();
 		int N = 50;
-		int[] missed = new int[N];
-		for (int k = 1; k<=N; k++) {
-			RandomForest rf = RandomForest.train(data, k, 1);
-			LeaveOneOutValidator validator = new LeaveOneOutValidator(data, rf);
-			missed[k-1] = validator.validate();
-		}
+		int[] missed = leaveOneOutErrors(data, N);
 		int[] expected = new int[] {
 			31, 31, 10, 15, 3, 8, 7, 4, 3, 5, 2, 2, 0, 2, 3, 1, 1, 2, 0, 1,
 			0, 0, 0, 0, 1, 0, 1, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1,
@@ -146,10 +154,31 @@ public class TestRFDataSets extends BaseTest {
 	    assert_greater(score, 0.5, "Failed with criterion %s and score = %f"
 	                               % (criterion, score))
 	 */
-	@Test public void testIris() {
+	@Test public void testIrisLeaveOneOut() {
 		URL url = this.getClass().getClassLoader().getResource("iris.csv");
 		DataTable data = DataTable.loadCSV(url.getFile().toString(), null, null, null, true);
+		int N = 50;
+		int[] missed = leaveOneOutErrors(data, N);
+//		System.out.println(Arrays.toString(missed));
+		int[] expected = new int[] {
+			8, 2, 1, 0, 3, 1, 1, 0, 0, 1, 0, 2, 0, 0, 0, 0, 1, 2, 1, 0,
+			0, 0, 0, 0, 0, 1, 0, 1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		};
+		assertArrayEquals(expected, missed);
 	}
+
+	@Test public void testIrisOOBError() {
+		DataTable data = DataTable.fromStrings(Arrays.asList(TestDataSets.restaurant));
+		int N = 50;
+		for (int k = 1; k<=N; k++) {
+			RandomForest rf = RandomForest.train(data, k, MIN_NODE_SIZE);
+			double result = rf.getErrorEstimate(data);
+			System.out.println(result);
+		}
+	}
+
+	// ---------------------------------
 
 	protected DataTable heartData() {
 		URL url = this.getClass().getClassLoader().getResource("Heart-wo-NA.csv");
@@ -172,6 +201,17 @@ public class TestRFDataSets extends BaseTest {
 			RandomForest rf = RandomForest.train(data, k, MIN_NODE_SIZE);
 			int miss = numberMisclassifications(data, rf);
 			missed[k-1] = miss;
+		}
+		return missed;
+	}
+
+	/** For 1..n (num trees), compute leave one out errors */
+	protected int[] leaveOneOutErrors(DataTable data, int n) {
+		int[] missed = new int[n];
+		for (int k = 1; k<=n; k++) {
+			RandomForest rf = RandomForest.train(data, k, 1);
+			LeaveOneOutValidator validator = new LeaveOneOutValidator(data, rf);
+			missed[k-1] = validator.validate();
 		}
 		return missed;
 	}

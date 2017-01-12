@@ -35,7 +35,7 @@ public class BaseTest {
 
 	public void checkPredictions(DataTable data, Classifier classifier) {
 		for (int i = 0; i<data.size(); i++) {
-			int prediction = classifier.classify(data.getRowAsInts(i));
+			int prediction = classifier.classify(data.getRow(i));
 			assertEquals(prediction, data.getAsInt(i, data.getPredictedCol()));
 		}
 	}
@@ -43,7 +43,7 @@ public class BaseTest {
 	protected int numberMisclassifications(DataTable data, Classifier classifier) {
 		int miss = 0;
 		for (int i = 0; i<data.size(); i++) {
-			int prediction = classifier.classify(data.getRowAsInts(i));
+			int prediction = classifier.classify(data.getRow(i));
 			if ( prediction!=data.getAsInt(i, data.getPredictedCol()) ) {
 				miss++;
 			}

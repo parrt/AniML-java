@@ -16,7 +16,7 @@ class DataTableIterator implements Iterator<int[]> {
 	public boolean hasNext() { return i<table.size(); }
 
 	@Override
-	public int[] next() { return table.getRowAsInts(i++); }
+	public int[] next() { return table.getRow(i++); }
 
 	public DataTableIterator(DataTable table) {this.table = table;	}
 }

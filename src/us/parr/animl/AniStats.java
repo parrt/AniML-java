@@ -87,6 +87,22 @@ public class AniStats {
 		return sum / data.size();
 	}
 
+	public static double mean(double[] data) {
+		double sum = 0.0;
+		for (double d : data) {
+			sum += d;
+		}
+		return sum / data.length;
+	}
+
+	public static double mean(int[] data) {
+		int sum = 0;
+		for (int d : data) {
+			sum += d;
+		}
+		return ((float)sum) / data.length;
+	}
+
 	/** Compute the gini impurity from a collection of counts */
 	public static double gini(Collection<Integer> counts) {
 		double impurity = 0.0;
