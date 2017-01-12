@@ -13,7 +13,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import static us.parr.animl.classifiers.DecisionTree.random;
+import static us.parr.animl.classifiers.trees.DecisionTree.random;
 
 public class AniStats {
 	public static double variance(List<Integer> data) {

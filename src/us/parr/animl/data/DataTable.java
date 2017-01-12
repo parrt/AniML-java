@@ -365,6 +365,11 @@ public class DataTable implements Iterable<int[]> {
 		return indexes;
 	}
 
+	/** Return new table with [i1..i2] inclusive in new table */
+	public DataTable subset(int i1, int i2) {
+		return new DataTable(this, rows.subList(i1, i2+1));
+	}
+
 	public int getNumberOfPredictorVar() { return getSubsetOfVarIndexes(rows.get(0).length, null).size(); }
 
 	public static boolean isPredictorVar(VariableType colType) {

@@ -12,19 +12,11 @@ import us.parr.animl.data.DataTable;
 import java.util.List;
 import java.util.Random;
 
-public class LeaveOneOutValidator {
+public class Validation {
 	public static final int SEED = 333888333; // need randomness but use same seed to get reproducibility
 	public static final Random random = new Random(SEED);
 
-	protected DataTable data;
-	protected Classifier classifier;
-
-	public LeaveOneOutValidator(DataTable data, Classifier classifier) {
-		this.data = data;
-		this.classifier = classifier;
-	}
-
-	public int validate() {
+	public static int leaveOneOut(DataTable data, Classifier classifier) {
 		int miss = 0;
 		for (int whichToLeaveOut = 0; whichToLeaveOut<data.size(); whichToLeaveOut++) {
 			DataTable subset = new DataTable(data); // shallow copy data set
@@ -38,5 +30,25 @@ public class LeaveOneOutValidator {
 			}
 		}
 		return miss;
+	}
+
+	public static int kFoldCross(int k, DataTable data, Classifier classifier) {
+		int n = data.size();
+		int foldSize = n / k;
+		int[] indexes = new int[k];
+		int miss = 0;
+		for (int i = 0; i<indexes.length; i++) {
+			int start = i * foldSize;
+			int stop = start + foldSize - 1;
+			DataTable subset = data.subset(start, stop);
+//			int cat = classifier.classify(leaveOut);
+//			int trueCat = leaveOut[data.getPredictedCol()];
+//			if ( cat!=trueCat ) {
+//				miss++;
+//			}
+		}
+		int remainder = n % k;
+		assert remainder + foldSize * k == n;
+		return 0;
 	}
 }

@@ -4,9 +4,10 @@
  * can be found in the LICENSE file in the project root.
  */
 
-package us.parr.animl.classifiers;
+package us.parr.animl.classifiers.trees;
 
 import us.parr.animl.AniStats;
+import us.parr.animl.classifiers.Classifier;
 import us.parr.animl.data.DataTable;
 
 import java.util.ArrayList;
@@ -25,22 +26,27 @@ public class RandomForest implements Classifier {
 	/** How many trees to create in the forest */
 	protected int numEstimators;
 
+	protected int minLeafSize;
+
 	/** The forest of trees */
 	protected List<DecisionTree> trees;
 
 	/** Which observations (indexes) were out-of-bag for each tree trained on data? */
 	protected List<Set<Integer>> treeOutOfBagSampleIndexes;
 
-	public RandomForest(int numEstimators) {
+	/** Constructors for classifiers / regressors should capture all parameters
+	 *  needed to train except for the actual data, which could vary.
+	 */
+	public RandomForest(int numEstimators, int minLeafSize) {
 		this.numEstimators = numEstimators;
-		this.trees = new ArrayList<>(numEstimators);
-		this.treeOutOfBagSampleIndexes = new ArrayList<>(numEstimators);
+		this.minLeafSize = minLeafSize;
 	}
 
-	/** Train numEstimators trees using 2D matrix data as training. */
-	public static RandomForest train(DataTable data, int numEstimators, int minLeafSize) {
-		if ( data==null || data.size()==0 || numEstimators==0 ) return null;
-		RandomForest forest = new RandomForest(numEstimators);
+	/** Train on this data. Wipe out any existing trees etc... */
+	public void train(DataTable data) {
+		this.trees = new ArrayList<>(numEstimators);
+		this.treeOutOfBagSampleIndexes = new ArrayList<>(numEstimators);
+		if ( data==null || data.size()==0 || numEstimators==0 ) return;
 		int M = data.getNumberOfPredictorVar();
 		// Number of variables to select at random at each decision node to find best split
 		int m = (int)Math.round(Math.sqrt(M));
@@ -49,11 +55,11 @@ public class RandomForest implements Classifier {
 			Set<Integer> outOfBagSamples = new HashSet<>(); // gets filled in
 			List<int[]> bootstrap = AniStats.bootstrapWithRepl(data.getRows(), outOfBagSamples);
 			DataTable table = new DataTable(data, bootstrap);
-			DecisionTree tree = DecisionTree.build(table, m, minLeafSize);
-			forest.trees.add(tree);
-			forest.treeOutOfBagSampleIndexes.add(outOfBagSamples);
+			DecisionTree tree = new DecisionTree(m, minLeafSize);
+			tree.train(table);
+			trees.add(tree);
+			treeOutOfBagSampleIndexes.add(outOfBagSamples);
 		}
-		return forest;
 	}
 
 	public int classify(int[] unknown) {

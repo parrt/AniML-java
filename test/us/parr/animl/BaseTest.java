@@ -1,7 +1,7 @@
 package us.parr.animl;
 
 import us.parr.animl.classifiers.Classifier;
-import us.parr.animl.classifiers.DecisionTree;
+import us.parr.animl.classifiers.trees.DecisionTree;
 import us.parr.animl.data.DataTable;
 
 import java.util.ArrayList;

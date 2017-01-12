@@ -7,10 +7,10 @@
 package us.parr.animl;
 
 import org.junit.Test;
-import us.parr.animl.classifiers.DecisionTree;
-import us.parr.animl.classifiers.RandomForest;
+import us.parr.animl.classifiers.trees.DecisionTree;
+import us.parr.animl.classifiers.trees.RandomForest;
 import us.parr.animl.data.DataTable;
-import us.parr.animl.validation.LeaveOneOutValidator;
+import us.parr.animl.validation.Validation;
 
 import java.net.URL;
 import java.util.Arrays;
@@ -56,7 +56,8 @@ public class TestRFDataSets extends BaseTest {
 //		System.out.println(result);
 		int N = 100; // try from 1 to 100 estimators
 		for (int k = 1; k<=N; k++) {
-			RandomForest rf = RandomForest.train(data, k, MIN_NODE_SIZE);
+			RandomForest rf = new RandomForest(k, MIN_NODE_SIZE);
+			rf.train(data);
 			double result = rf.getErrorEstimate(data);
 			System.out.println(result);
 		}
@@ -64,7 +65,8 @@ public class TestRFDataSets extends BaseTest {
 
 	@Test public void testWebsiteSignups() {
 		DataTable data = DataTable.fromStrings(Arrays.asList(TestDataSets.signups));
-		DecisionTree tree = DecisionTree.build(data,0, MIN_NODE_SIZE);
+		DecisionTree tree = new DecisionTree(0, MIN_NODE_SIZE);
+		tree.train(data);
 		// I verified this string by looking at DOT output
 		// I get same tree has shown here: http://www.patricklamle.com/Tutorials/Decision%20tree%20python/tuto_decision%20tree.html
 		String expecting = "{'var':'referrer','cat':'google','n':16,'E':'1.51','left':{'var':'pageviews','val':19.5,'n':5,'E':'1.37','left':{'var':'readfaq','cat':'yes','n':2,'E':'1.00','left':{'predict':'Basic','n':1},'right':{'predict':'None','n':1}},'right':{'predict':'Premium','n':3}},'right':{'var':'referrer','cat':'slashdot','n':11,'E':'0.99','left':{'predict':'None','n':3},'right':{'var':'readfaq','cat':'yes','n':8,'E':'0.95','left':{'predict':'Basic','n':4},'right':{'var':'pageviews','val':20.0,'n':4,'E':'0.81','left':{'predict':'None','n':3},'right':{'predict':'Basic','n':1}}}}}";
@@ -77,11 +79,12 @@ public class TestRFDataSets extends BaseTest {
 	@Test public void testHeart() {
 		DataTable data = heartData();
 		int m = 4; // sqrt(13) columns
-		DecisionTree tree = DecisionTree.build(data, 0, 1);
+		DecisionTree tree = new DecisionTree(0, 1);
+		tree.train(data);
+
 //		System.out.println(tree.toDOT());
 
-		LeaveOneOutValidator validator = new LeaveOneOutValidator(data, tree);
-		int missed = validator.validate();
+		int missed = Validation.leaveOneOut(data, tree);
 		assertEquals(0, missed);
 		System.out.println(missed);
 		// I verified this string by looking at DOT output
@@ -106,10 +109,23 @@ public class TestRFDataSets extends BaseTest {
 		assertArrayEquals(expected, missed);
 	}
 
-	@Test public void testHeartLeaveOneOutError() {
+	@Test public void testHeartLeaveOneOutErrors() {
 		DataTable data = heartData();
 		int N = 50;
 		int[] missed = leaveOneOutErrors(data, N);
+		int[] expected = new int[] {
+			31, 31, 10, 15, 3, 8, 7, 4, 3, 5, 2, 2, 0, 2, 3, 1, 1, 2, 0, 1,
+			0, 0, 0, 0, 1, 0, 1, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1,
+			0, 0, 0, 0, 0, 0, 0, 0, 0
+		};
+		assertArrayEquals(expected, missed);
+	}
+
+	@Test public void testHeartkFoldCrossErrors() {
+		DataTable data = heartData();
+		int N = 50;
+		int folds = 10;
+		int[] missed = kFoldCrossErrors(data, N, folds);
 		int[] expected = new int[] {
 			31, 31, 10, 15, 3, 8, 7, 4, 3, 5, 2, 2, 0, 2, 3, 1, 1, 2, 0, 1,
 			0, 0, 0, 0, 1, 0, 1, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1,
@@ -123,7 +139,8 @@ public class TestRFDataSets extends BaseTest {
 		int N = 50;
 		double[] missed = new double[N];
 		for (int k = 1; k<=N; k++) {
-			RandomForest rf = RandomForest.train(data, k, 1);
+			RandomForest rf = new RandomForest(k, 1);
+			rf.train(data);
 			missed[k-1] = rf.getErrorEstimate(data);
 			System.out.println(missed[k-1]);
 		}
@@ -168,11 +185,26 @@ public class TestRFDataSets extends BaseTest {
 		assertArrayEquals(expected, missed);
 	}
 
+	@Test public void testIriskFoldCrossErrors() {
+		URL url = this.getClass().getClassLoader().getResource("iris.csv");
+		DataTable data = DataTable.loadCSV(url.getFile().toString(), null, null, null, true);
+		int N = 50;
+		int[] missed = kFoldCrossErrors(data, N, 10);
+//		System.out.println(Arrays.toString(missed));
+		int[] expected = new int[] {
+			8, 2, 1, 0, 3, 1, 1, 0, 0, 1, 0, 2, 0, 0, 0, 0, 1, 2, 1, 0,
+			0, 0, 0, 0, 0, 1, 0, 1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		};
+		assertArrayEquals(expected, missed);
+	}
+
 	@Test public void testIrisOOBError() {
 		DataTable data = DataTable.fromStrings(Arrays.asList(TestDataSets.restaurant));
 		int N = 50;
 		for (int k = 1; k<=N; k++) {
-			RandomForest rf = RandomForest.train(data, k, MIN_NODE_SIZE);
+			RandomForest rf = new RandomForest(k, MIN_NODE_SIZE);
+			rf.train(data);
 			double result = rf.getErrorEstimate(data);
 			System.out.println(result);
 		}
@@ -198,7 +230,8 @@ public class TestRFDataSets extends BaseTest {
 	protected int[] trainingDataMisclassifications(DataTable data, int numEstimators) {
 		int[] missed = new int[numEstimators];
 		for (int k = 1; k<=numEstimators; k++) {
-			RandomForest rf = RandomForest.train(data, k, MIN_NODE_SIZE);
+			RandomForest rf = new RandomForest(k, MIN_NODE_SIZE);
+			rf.train(data);
 			int miss = numberMisclassifications(data, rf);
 			missed[k-1] = miss;
 		}
@@ -209,9 +242,20 @@ public class TestRFDataSets extends BaseTest {
 	protected int[] leaveOneOutErrors(DataTable data, int n) {
 		int[] missed = new int[n];
 		for (int k = 1; k<=n; k++) {
-			RandomForest rf = RandomForest.train(data, k, 1);
-			LeaveOneOutValidator validator = new LeaveOneOutValidator(data, rf);
-			missed[k-1] = validator.validate();
+			RandomForest rf = new RandomForest(k, 1);
+			rf.train(data);
+			missed[k-1] = Validation.leaveOneOut(data, rf);
+		}
+		return missed;
+	}
+
+	/** For 1..n (num trees), compute k-fold errors */
+	protected int[] kFoldCrossErrors(DataTable data, int n, int folds) {
+		int[] missed = new int[n];
+		for (int k = 1; k<=n; k++) {
+			RandomForest rf = new RandomForest(k, 1);
+			rf.train(data);
+			missed[k-1] = Validation.kFoldCross(folds, data, rf);
 		}
 		return missed;
 	}

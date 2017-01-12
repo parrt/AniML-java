@@ -4,18 +4,17 @@
  * can be found in the LICENSE file in the project root.
  */
 
-package us.parr.animl.classifiers;
+package us.parr.animl.classifiers.trees;
 
 import us.parr.animl.data.DataTable;
 
 import javax.json.Json;
-import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
-import java.util.List;
 
 import static us.parr.animl.AniMath.isClose;
+import static us.parr.animl.classifiers.trees.DecisionTree.INVALID_CATEGORY;
 
-public class DecisionLeafNode extends DecisionTree {
+public class DecisionLeafNode extends DecisionTreeNode {
 	/** The predicted category if this is a leaf node; non-leaf by default */
 	protected int prediction = INVALID_CATEGORY;
 	protected int predictionVariable;
@@ -30,7 +29,7 @@ public class DecisionLeafNode extends DecisionTree {
 	}
 
 	@Override
-	public JsonObject toJSON() {
+	public JsonObjectBuilder getJSONData() {
 		JsonObjectBuilder builder =  Json.createObjectBuilder();
 		Object p = DataTable.getValue(data, prediction, predictionVariable);
 		if ( p instanceof Integer ) {
@@ -46,17 +45,14 @@ public class DecisionLeafNode extends DecisionTree {
 		if ( !isClose(entropy,0.0) ) {
 			builder.add("E", String.format("%.2f",entropy));
 		}
-		return builder.build();
+		return builder;
 	}
 
 	@Override
-	protected void getDOTNodeNames(List<String> nodes) {
+	public String getDOTNodeDef() {
 		int id = System.identityHashCode(this);
 		Object p = DataTable.getValue(data, prediction, predictionVariable);
-		nodes.add(String.format("n%d [shape=box, label=\"%s\\nn=%d\\nE=%.2f\"];",
-		                        id, p.toString(), numRecords, entropy));
+		return String.format("n%d [shape=box, label=\"%s\\nn=%d\\nE=%.2f\"];",
+		                     id, p.toString(), numRecords, entropy);
 	}
-
-	@Override
-	protected void getDOTEdges(List<String> edges) { }
 }

@@ -4,22 +4,20 @@
  * can be found in the LICENSE file in the project root.
  */
 
-package us.parr.animl.classifiers;
+package us.parr.animl.classifiers.trees;
 
 import us.parr.animl.data.DataTable;
 
 import javax.json.Json;
-import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
-import java.util.List;
 
 import static us.parr.animl.AniMath.isClose;
 
-public class DecisionNumericSplitNode extends DecisionSplitNode {
+public class DecisionNumericalSplitNode extends DecisionSplitNode {
 	/** Split at what variable value? */
 	protected double splitValue;
 
-	public DecisionNumericSplitNode(int splitVariable, DataTable.VariableType colType, double splitValue) {
+	public DecisionNumericalSplitNode(int splitVariable, DataTable.VariableType colType, double splitValue) {
 		super(splitVariable, colType);
 		this.splitValue = splitValue;
 	}
@@ -41,7 +39,7 @@ public class DecisionNumericSplitNode extends DecisionSplitNode {
 	}
 
 	@Override
-	public JsonObject toJSON() {
+	public JsonObjectBuilder getJSONData() {
 		JsonObjectBuilder builder =  Json.createObjectBuilder();
 		builder.add("var", data.getColNames()[splitVariable]);
 		builder.add("val", splitValue);
@@ -49,27 +47,25 @@ public class DecisionNumericSplitNode extends DecisionSplitNode {
 		if ( !isClose(entropy,0.0) ) {
 			builder.add("E", String.format("%.2f",entropy));
 		}
-		builder.add("left", left.toJSON());
-		builder.add("right", right.toJSON());
-		return builder.build();
+		return builder;
 	}
 
 	@Override
-	protected void getDOTNodeNames(List<String> nodes) {
-		DecisionNumericSplitNode t = this;
-		int id = System.identityHashCode(t);
-		nodes.add(String.format("n%d [label=\"%s\\nn=%d\\nE=%.2f\"];",
-		                        id, data.getColNames()[splitVariable], numRecords, entropy));
-		left.getDOTNodeNames(nodes);
-		right.getDOTNodeNames(nodes);
-	}
-
-	@Override
-	protected void getDOTEdges(List<String> edges) {
+	public String getDOTNodeDef() {
 		int id = System.identityHashCode(this);
-		edges.add(String.format("n%s -> n%s [label=\"<%.2f\"];", id, System.identityHashCode(left), splitValue));
-		edges.add(String.format("n%s -> n%s [label=\">=%.2f\"];", id, System.identityHashCode(right), splitValue));
-		left.getDOTEdges(edges);
-		right.getDOTEdges(edges);
+		return String.format("n%d [label=\"%s\\nn=%d\\nE=%.2f\"];",
+		                     id, data.getColNames()[splitVariable], numRecords, entropy);
+	}
+
+	@Override
+	public String getDOTLeftEdge() {
+		int id = System.identityHashCode(this);
+		return String.format("n%s -> n%s [label=\"<%.2f\"];", id, System.identityHashCode(left), splitValue);
+	}
+
+	@Override
+	public String getDOTRightEdge() {
+		int id = System.identityHashCode(this);
+		return String.format("n%s -> n%s [label=\">=%.2f\"];", id, System.identityHashCode(right), splitValue);
 	}
 }

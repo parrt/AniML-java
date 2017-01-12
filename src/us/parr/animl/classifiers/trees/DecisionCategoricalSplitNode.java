@@ -4,14 +4,12 @@
  * can be found in the LICENSE file in the project root.
  */
 
-package us.parr.animl.classifiers;
+package us.parr.animl.classifiers.trees;
 
 import us.parr.animl.data.DataTable;
 
 import javax.json.Json;
-import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
-import java.util.List;
 
 import static us.parr.animl.AniMath.isClose;
 
@@ -34,7 +32,7 @@ public class DecisionCategoricalSplitNode extends DecisionSplitNode {
 	}
 
 	@Override
-	public JsonObject toJSON() {
+	public JsonObjectBuilder getJSONData() {
 		JsonObjectBuilder builder =  Json.createObjectBuilder();
 		builder.add("var", data.getColNames()[splitVariable]);
 		Object p = DataTable.getValue(data, splitCategory, splitVariable);
@@ -43,28 +41,27 @@ public class DecisionCategoricalSplitNode extends DecisionSplitNode {
 		if ( !isClose(entropy,0.0) ) {
 			builder.add("E", String.format("%.2f",entropy));
 		}
-		builder.add("left", left.toJSON());
-		builder.add("right", right.toJSON());
-		return builder.build();
+		return builder;
 	}
 
 	@Override
-	protected void getDOTNodeNames(List<String> nodes) {
-		DecisionCategoricalSplitNode t = this;
-		int id = System.identityHashCode(t);
-		nodes.add(String.format("n%d [label=\"%s\\nn=%d\\nE=%.2f\"];",
-		                        id, data.getColNames()[splitVariable], numRecords, entropy));
-		left.getDOTNodeNames(nodes);
-		right.getDOTNodeNames(nodes);
-	}
-
-	@Override
-	protected void getDOTEdges(List<String> edges) {
+	public String getDOTLeftEdge() {
 		int id = System.identityHashCode(this);
 		Object p = DataTable.getValue(data, splitCategory, splitVariable);
-		edges.add(String.format("n%s -> n%s [label=\"%s\"];", id, System.identityHashCode(left), p.toString()));
-		edges.add(String.format("n%s -> n%s [label=\"!%s\"];", id, System.identityHashCode(right), p.toString()));
-		left.getDOTEdges(edges);
-		right.getDOTEdges(edges);
+		return String.format("n%s -> n%s [label=\"%s\"];", id, System.identityHashCode(left), p.toString());
+	}
+
+	@Override
+	public String getDOTRightEdge() {
+		int id = System.identityHashCode(this);
+		Object p = DataTable.getValue(data, splitCategory, splitVariable);
+		return String.format("n%s -> n%s [label=\"!%s\"];", id, System.identityHashCode(right), p.toString());
+	}
+
+	@Override
+	public String getDOTNodeDef() {
+		int id = System.identityHashCode(this);
+		return String.format("n%d [label=\"%s\\nn=%d\\nE=%.2f\"];",
+		                     id, data.getColNames()[splitVariable], numRecords, entropy);
 	}
 }

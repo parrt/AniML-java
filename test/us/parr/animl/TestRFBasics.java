@@ -2,9 +2,9 @@ package us.parr.animl;
 
 import org.junit.Assert;
 import org.junit.Test;
-import us.parr.animl.classifiers.RandomForest;
+import us.parr.animl.classifiers.trees.RandomForest;
 import us.parr.animl.data.DataTable;
-import us.parr.animl.validation.LeaveOneOutValidator;
+import us.parr.animl.validation.Validation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +15,8 @@ public class TestRFBasics extends BaseTest {
 	public static final int MIN_NODE_SIZE = 1;
 
 	@Test public void testEmpty() {
-		RandomForest rf = RandomForest.train(DataTable.empty(null,null), 1, MIN_NODE_SIZE);
+		RandomForest rf = new RandomForest(1, MIN_NODE_SIZE);
+		rf.train(DataTable.empty(null,null));
 		Assert.assertEquals(null, rf);
 	}
 
@@ -23,7 +24,8 @@ public class TestRFBasics extends BaseTest {
 		List<int[]> rows = new ArrayList<>();
 		rows.add(new int[] {1,99}); // 1 row with 1 var of value 1 predicting category 99
 		DataTable data = DataTable.fromInts(rows, null, null);
-		RandomForest rf = RandomForest.train(data, 1, MIN_NODE_SIZE);
+		RandomForest rf = new RandomForest(1, MIN_NODE_SIZE);
+		rf.train(data);
 		String expecting = "{'predict':99,'n':1}";
 		String result = toTestString(rf.getTree(0));
 		Assert.assertEquals(expecting, result);
@@ -41,7 +43,8 @@ public class TestRFBasics extends BaseTest {
 		rows.add(new int[]{2, 7, 2});
 		rows.add(new int[]{0, 7, 2});
 		DataTable data = DataTable.fromInts(rows, null, null);
-		RandomForest rf = RandomForest.train(data, 10, MIN_NODE_SIZE);
+		RandomForest rf = new RandomForest(10, MIN_NODE_SIZE);
+		rf.train(data);
 		checkPredictions(data, rf);
 	}
 
@@ -65,10 +68,10 @@ public class TestRFBasics extends BaseTest {
 		rows.add(new int[]{0, 7, 2});
 		DataTable data = DataTable.fromInts(rows, null, null);
 //		DecisionTree.debug = true;
-		RandomForest rf = RandomForest.train(data, 12, MIN_NODE_SIZE);
+		RandomForest rf = new RandomForest(12, MIN_NODE_SIZE);
+		rf.train(data);
 
-		LeaveOneOutValidator validator = new LeaveOneOutValidator(data, rf);
-		int missed = validator.validate();
+		int missed = Validation.leaveOneOut(data, rf);
 		assertEquals(0, missed, 0.00000001);
 
 		double error = rf.getErrorEstimate(data);

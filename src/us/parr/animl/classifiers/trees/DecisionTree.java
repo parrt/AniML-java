@@ -4,13 +4,15 @@
  * can be found in the LICENSE file in the project root.
  */
 
-package us.parr.animl.classifiers;
+package us.parr.animl.classifiers.trees;
 
 import us.parr.animl.AniStats;
+import us.parr.animl.classifiers.Classifier;
 import us.parr.animl.data.DataPair;
 import us.parr.animl.data.DataTable;
 import us.parr.animl.data.FrequencySet;
 
+import javax.json.Json;
 import javax.json.JsonObject;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -24,7 +26,7 @@ import static us.parr.animl.AniStats.sum;
  *  classification, not regression. I extended it to handle a subset of predictor
  *  variables at each node to support random forest construction.
  */
-public abstract class DecisionTree implements Classifier {
+public class DecisionTree implements Classifier {
 	public static final int SEED = 777111333; // need randomness but use same seed to get reproducibility
 	public static final Random random = new Random(SEED);
 	public static final int INVALID_CATEGORY = -1;
@@ -46,17 +48,21 @@ public abstract class DecisionTree implements Classifier {
 
 	public static boolean debug = false;
 
-	/** This tree was created from which data table? */ // TODO try to remove this ref. it'll keep all that data from being GC'd
-	protected DataTable data;
+	protected DecisionTreeNode root;
 
-	// for debugging, fields below
-	protected int numRecords;
-	protected double entropy;
+	/** 0 implies use all possible vars when searching for a split var */
+	protected int varsPerSplit;
 
-	public DecisionTree() {
+	protected int minLeafSize;
+
+	public DecisionTree() { this(0, 1); }
+
+	public DecisionTree(int varsPerSplit, int minLeafSize) {
+		this.varsPerSplit = varsPerSplit;
+		this.minLeafSize = minLeafSize;
 	}
 
-	public abstract int classify(int[] X);
+	public int classify(int[] X) { return root.classify(X); };
 
 	/** Conversion routine from separate X -> Y vectors to single augmented data vector */
 //	public static DecisionTree build(List<int[]> X, List<Integer> Y) {
@@ -71,20 +77,20 @@ public abstract class DecisionTree implements Classifier {
 //		return build(data);
 //	}
 
-	public static DecisionTree build(DataTable data) {
-		return build(data, 0, 1);
-	}
-
 	/** Build a decision tree starting with arg data and recursively
-	 *  build up children. data_i is the ith observation and the last column of
+	 *  build up children. data_i is the ith observation and the (usually) last column of
 	 *  data is the predicted (dependent) variable.  Keeping the data together
-	 *  makes it easier to implement since splitting a set splits both
+	 *  makes it easier to implement since splitting a data set splits both
 	 *  features and predicted variables.
 	 *
-	 *  If m>0, select split var from random subset of size m from all variable set.
+	 *  If varsPerSplit>0, select split var from random subset of size m from all variable set.
 	 */
-	public static DecisionTree build(DataTable data, int m, int minLeafSize) {
-		if ( data==null || data.size()==0 ) return null;
+	public void train(DataTable data) {
+		root = build(data, varsPerSplit, minLeafSize);
+	}
+
+	protected static DecisionTreeNode build(DataTable data, int varsPerSplit, int minLeafSize) {
+		if ( data==null || data.size()==0 ) { return null; }
 		int N = data.size();
 		int yi = data.getPredictedCol(); // last index is usually the target variable
 		// if all predict same category or only one row of data,
@@ -93,7 +99,7 @@ public abstract class DecisionTree implements Classifier {
 		double complete_entropy = AniStats.entropy(completePredictionCounts.counts());
 		Set<Integer> predictions = data.uniqueValues(yi);
 		if ( predictions.size()==1 || data.size()<=minLeafSize ) {
-			DecisionTree t = new DecisionLeafNode(predictions.iterator().next(), yi);
+			DecisionTreeNode t = new DecisionLeafNode(predictions.iterator().next(), yi);
 			t.numRecords = N;
 			t.entropy = complete_entropy;
 			t.data = data;
@@ -105,7 +111,7 @@ public abstract class DecisionTree implements Classifier {
 		// Non-random forest decision trees do just: for (int i=0; i<M; i++) {
 		// but RF must use a subset m << M of predictor variables so this is
 		// a generalization
-		List<Integer> indexes = data.getSubsetOfVarIndexes(m, random); // consider all or a subset of M variables
+		List<Integer> indexes = data.getSubsetOfVarIndexes(varsPerSplit, random); // consider all or a subset of M variables
 		for (Integer j : indexes) { // for each variable i
 			// The goal is to find the lowest expected entropy for all possible
 			// values of predictor variable j.  Then we compare best for j against
@@ -143,13 +149,13 @@ public abstract class DecisionTree implements Classifier {
 				else {
 					split = numericalIntSplit(data, best.var, best.val);
 				}
-				t = new DecisionNumericSplitNode(best.var, colType, best.val);
+				t = new DecisionNumericalSplitNode(best.var, colType, best.val);
 			}
 			t.numRecords = N;
 			t.entropy = complete_entropy;
 			t.data = data;
-			t.left = build(split.region1, m, minLeafSize);
-			t.right = build(split.region2, m, minLeafSize);
+			t.left = build(split.region1,  varsPerSplit, minLeafSize);
+			t.right = build(split.region2, varsPerSplit, minLeafSize);
 			return t;
 		}
 		// we would gain nothing by splitting, make a leaf predicting majority vote
@@ -158,7 +164,7 @@ public abstract class DecisionTree implements Classifier {
 			System.out.printf("FINAL no improvement; make leaf predicting %s\n",
 			                  DataTable.getValue(data,majorityVote,yi));
 		}
-		DecisionTree t = new DecisionLeafNode(majorityVote, yi);
+		DecisionTreeNode t = new DecisionLeafNode(majorityVote, yi);
 		t.numRecords = N;
 		t.entropy = complete_entropy;
 		t.data = data;
@@ -284,11 +290,7 @@ public abstract class DecisionTree implements Classifier {
 		return best;
 	}
 
-	public boolean isLeaf() { return this instanceof DecisionLeafNode; }
-
-	public DataTable getData() {
-		return data;
-	}
+	public boolean isLeaf() { return root instanceof DecisionLeafNode; }
 
 	public static DataPair numericalIntSplit(DataTable X, int splitVariable, double splitValue) {
 		DataTable a = X.filter(x -> x[splitVariable] < splitValue);
@@ -308,18 +310,18 @@ public abstract class DecisionTree implements Classifier {
 		return new DataPair(a,b);
 	}
 
-	public abstract JsonObject toJSON();
+	public JsonObject toJSON() { return root!=null ? root.toJSON() : Json.createObjectBuilder().build(); }
 
 	public String toDOT() {
 		StringBuilder buf = new StringBuilder();
 		buf.append("digraph dtree {\n");
 		List<String> nodes = new ArrayList<>();
-		getDOTNodeNames(nodes);
+		getDOTNodeNames(root, nodes);
 		for (String node : nodes) {
 			buf.append("\t"+node+"\n");
 		}
 		List<String> edges = new ArrayList<>();
-		getDOTEdges(edges);
+		getDOTEdges(root, edges);
 		for (String edge : edges) {
 			buf.append("\t"+edge+"\n");
 		}
@@ -327,7 +329,22 @@ public abstract class DecisionTree implements Classifier {
 		return buf.toString();
 	}
 
-	protected abstract void getDOTEdges(List<String> edges);
+	protected static void getDOTNodeNames(DecisionTreeNode t, List<String> nodes) {
+		nodes.add(t.getDOTNodeDef());
+		if ( t instanceof DecisionSplitNode ) {
+			DecisionSplitNode s = (DecisionSplitNode)t;
+			getDOTNodeNames(s.left, nodes);
+			getDOTNodeNames(s.right, nodes);
+		}
+	}
 
-	protected abstract void getDOTNodeNames(List<String> nodes);
+	protected static void getDOTEdges(DecisionTreeNode t, List<String> edges) {
+		if ( t instanceof DecisionSplitNode ) {
+			DecisionSplitNode s = (DecisionSplitNode) t;
+			edges.add(s.getDOTLeftEdge());
+			edges.add(s.getDOTRightEdge());
+			getDOTEdges(s.left, edges);
+			getDOTEdges(s.right, edges);
+		}
+	}
 }
