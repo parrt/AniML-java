@@ -60,6 +60,12 @@ public class RandomForest implements Classifier {
 		return classify(trees, unknown);
 	}
 
+	/*
+	TODO: from http://scikit-learn.org/stable/modules/ensemble.html#forest
+	"In contrast to the original publication [B2001], the scikit-learn
+	 implementation combines classifiers by averaging their probabilistic
+	  prediction, instead of letting each classifier vote for a single class."
+	 */
 	public static int classify(Collection<DecisionTree> trees, int[] unknown) {
 		if ( unknown==null ) {
 			return DecisionTree.INVALID_CATEGORY;
