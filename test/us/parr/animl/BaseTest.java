@@ -13,6 +13,7 @@ public class BaseTest {
 	public static final String tmpdir = System.getProperty("java.io.tmpdir")+"/animl";
 
 	public static String toTestString(DecisionTree tree) {
+		if ( tree==null ) return "{}";
 		return tree.toJSON().toString().replaceAll("\"", "'");
 	}
 

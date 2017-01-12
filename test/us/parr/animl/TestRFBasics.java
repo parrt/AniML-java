@@ -17,7 +17,9 @@ public class TestRFBasics extends BaseTest {
 	@Test public void testEmpty() {
 		RandomForest rf = new RandomForest(1, MIN_NODE_SIZE);
 		rf.train(DataTable.empty(null,null));
-		Assert.assertEquals(null, rf);
+		String expecting = "{}";
+		String result = toTestString(rf.getTree(0));
+		Assert.assertEquals(expecting, result);
 	}
 
 	@Test public void testOneRow() {

@@ -132,6 +132,7 @@ public class RandomForest implements Classifier {
 	}
 
 	public DecisionTree getTree(int i) {
+		if ( trees==null || i<0 || i>=trees.size() ) return null;
 		return trees.get(i);
 	}
 }
