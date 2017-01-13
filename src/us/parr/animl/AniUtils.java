@@ -6,7 +6,7 @@
 
 package us.parr.animl;
 
-import us.parr.animl.data.FrequencySet;
+import us.parr.animl.data.CountingSet;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,8 +17,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class AniUtils {
-	public static FrequencySet<Integer> valueCountsInColumn(List<int[]> X, int splitVariable) {
-		FrequencySet<Integer> valueCounts = new FrequencySet<>();
+	public static CountingSet<Integer> valueCountsInColumn(List<int[]> X, int splitVariable) {
+		CountingSet<Integer> valueCounts = new CountingSet<>();
 		for (int i = 0; i<X.size(); i++) { // for each row, count different values for col splitVariable
 			int[] row = X.get(i);
 			int col = row[splitVariable];
@@ -175,10 +175,10 @@ public class AniUtils {
 		return buf.toString();
 	}
 
-	public static String join(double[] a, String separator) {
+	public static String join(double[] a, String separator, int numDecPlaces) {
 		StringBuilder buf = new StringBuilder();
 		for (int i=0; i<a.length; i++) {
-			buf.append(a[i]);
+			buf.append(String.format("%."+numDecPlaces+"f",a[i]));
 			if ( (i+1)<a.length ) {
 				buf.append(separator);
 			}

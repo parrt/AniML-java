@@ -6,13 +6,28 @@
 
 package us.parr.animl.classifiers;
 
-import us.parr.animl.data.DataTable;
+import java.util.Map;
 
 /** A classifier can be trained and can classify unknown X vectors.
+ *  It can also return the class probabilities, not just the most likely.
+ *
  *  The fundamental "row" data type is int[] as we can encode strings
  *  as indexes and floats as the raw IEEE-754 floating-point bits.
+ *  {@see Float#floatToIntBits()}.
  */
 public interface Classifier {
-	void train(DataTable data);
+	/** Given an unknown vector X of predictor variables (and usually
+	 *  the predicted category, which is ignored), returned the
+	 *  category predicted by the classifier model.
+	 */
 	int classify(int[] X);
+
+	/** Return the set of class->class_probability items.
+	 *  E.g., a decision tree uses the proportion of
+	 *  instances in a leaf node associated with the predicted
+	 *  category as a class probability. Given that category values
+	 *  could be really large and sparse, use a map not double[]
+	 *  as return value.
+	 */
+	Map<Integer, Double> classProbabilities(int[] X);
 }

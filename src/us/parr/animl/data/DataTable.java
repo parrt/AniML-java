@@ -29,6 +29,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+import static us.parr.animl.AniStats.max;
 import static us.parr.animl.AniUtils.indexOf;
 import static us.parr.animl.AniUtils.join;
 import static us.parr.animl.AniUtils.map;
@@ -95,6 +96,9 @@ public class DataTable implements Iterable<int[]> {
 	protected String[] colNames;
 	protected VariableType[] colTypes;
 	protected StringTable[] colStringToIntMap;
+
+	protected Set<Integer> cachedPredictionCategories;
+	protected int cachedMaxPredictionCategoryValue = -1;
 
 	public DataTable() {
 	}
@@ -326,8 +330,23 @@ public class DataTable implements Iterable<int[]> {
 		return actualTypes;
 	}
 
-	public Set<Integer> uniqueValues(int colIndex) {
-		FrequencySet<Integer> valueCounts = valueCountsInColumn(colIndex);
+
+	public int getMaxPredictionCategoryValue() {
+		if ( cachedMaxPredictionCategoryValue == -1 ) {
+			cachedMaxPredictionCategoryValue = max(getPredictionCategories());
+		}
+		return cachedMaxPredictionCategoryValue;
+	}
+
+	public Set<Integer> getPredictionCategories() {
+		if ( cachedPredictionCategories==null ) {
+			cachedPredictionCategories = getUniqueValues(getPredictedCol());
+		}
+		return cachedPredictionCategories;
+	}
+
+	public Set<Integer> getUniqueValues(int colIndex) {
+		CountingSet<Integer> valueCounts = valueCountsInColumn(colIndex);
 		return valueCounts.keySet();
 	}
 
@@ -337,7 +356,7 @@ public class DataTable implements Iterable<int[]> {
 	}
 
 	public double entropy(int colIndex) {
-		FrequencySet<Integer> valueCounts = valueCountsInColumn(colIndex);
+		CountingSet<Integer> valueCounts = valueCountsInColumn(colIndex);
 		return AniStats.entropy(valueCounts.counts());
 	}
 
@@ -370,6 +389,26 @@ public class DataTable implements Iterable<int[]> {
 		return new DataTable(this, rows.subList(i1, i2+1));
 	}
 
+	/** Return new table with all data except [i1..i2] inclusive in new table */
+	public DataTable subsetNot(int i1, int i2) {
+		List<int[]> missingChunk = new ArrayList<>();
+		for (int i = 0; i<i1; i++) {
+			missingChunk.add(rows.get(i));
+		}
+		for (int i = i2+1; i<rows.size(); i++) {
+			missingChunk.add(rows.get(i));
+		}
+		return new DataTable(this, missingChunk);
+	}
+
+	/** Return new table with row i missing from table; makes shallow copy to do so. */
+	public DataTable subsetNot(int i) {
+		List<int[]> lessOne = new ArrayList<>();
+		lessOne.addAll(rows);
+		lessOne.remove(i);
+		return new DataTable(this, lessOne);
+	}
+
 	public int getNumberOfPredictorVar() { return getSubsetOfVarIndexes(rows.get(0).length, null).size(); }
 
 	public static boolean isPredictorVar(VariableType colType) {
@@ -392,8 +431,8 @@ public class DataTable implements Iterable<int[]> {
 	/** Create a set that counts how many of each value in colIndex there is. Only
 	 *  works on int-valued columns.
 	 */
-	public FrequencySet<Integer> valueCountsInColumn(int colIndex) {
-		FrequencySet<Integer> valueCounts = new FrequencySet<>();
+	public CountingSet<Integer> valueCountsInColumn(int colIndex) {
+		CountingSet<Integer> valueCounts = new CountingSet<>();
 		if ( !(colTypes[colIndex]==NUMERICAL_INT ||
 			colTypes[colIndex]==CATEGORICAL_INT ||
 			colTypes[colIndex]==CATEGORICAL_STRING ||
@@ -433,11 +472,11 @@ public class DataTable implements Iterable<int[]> {
 		}
 	}
 
-	public int size() { return rows.size(); }
-
-	public int[] getRow(int i) {
-		return rows.get(i);
+	public void shuffle(Random random) {
+		Collections.shuffle(rows, random);
 	}
+
+	public int size() { return rows.size(); }
 
 	/** Return the data[i,j] item as an appropriate object: Integer, Float, String */
 	public Object get(int i, int j) {
@@ -451,6 +490,9 @@ public class DataTable implements Iterable<int[]> {
 	public float getAsFloat(int i, int j) {
 		return Float.intBitsToFloat(rows.get(i)[j]);
 	}
+
+	public int[] getRow(int i) { return rows.get(i); }
+	public void removeRow(int i) { rows.remove(i); }
 
 	public List<int[]> getRows() { return rows; }
 

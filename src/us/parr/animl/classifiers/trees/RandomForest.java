@@ -6,23 +6,27 @@
 
 package us.parr.animl.classifiers.trees;
 
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import us.parr.animl.AniStats;
-import us.parr.animl.classifiers.Classifier;
+import us.parr.animl.classifiers.ClassifierModel;
 import us.parr.animl.data.DataTable;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-import static us.parr.animl.AniStats.majorityVote;
+import static us.parr.animl.AniStats.mean;
+import static us.parr.animl.classifiers.trees.DecisionTree.INVALID_CATEGORY;
 
 /** A Random Forest classifier operating on categorical and numerical
  *  values. Predicts integer categories only. -1 is an invalid predicted
  *  category value.
  */
-public class RandomForest implements Classifier {
+public class RandomForest implements ClassifierModel {
 	/** How many trees to create in the forest */
 	protected int numEstimators;
 
@@ -66,21 +70,47 @@ public class RandomForest implements Classifier {
 		return classify(trees, unknown);
 	}
 
-	/*
+	/* 	From: http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
+	   "The predicted class probabilities of an input sample are computed
+		as the mean predicted class probabilities of the trees in the forest.
+		The class probability of a single tree is the fraction of samples of
+		the same class in a leaf."
+	*/
+	@Override
+	public Map<Integer, Double> classProbabilities(int[] X) {
+		return null;
+	}
+
+	/**
 	TODO: from http://scikit-learn.org/stable/modules/ensemble.html#forest
 	"In contrast to the original publication [B2001], the scikit-learn
-	 implementation combines classifiers by averaging their probabilistic
-	  prediction, instead of letting each classifier vote for a single class."
+	implementation combines classifiers by averaging their probabilistic
+	prediction, instead of letting each classifier vote for a single class."
 	 */
 	public static int classify(Collection<DecisionTree> trees, int[] unknown) {
 		if ( unknown==null ) {
-			return DecisionTree.INVALID_CATEGORY;
+			return INVALID_CATEGORY;
 		}
-		List<Integer> predictions = new ArrayList<>();
+		MultiValuedMap<Integer, Double> catToProbList = new ArrayListValuedHashMap<>();
 		for (DecisionTree tree : trees) {
-			predictions.add( tree.classify(unknown) );
+			Map<Integer, Double> classProbs = tree.classProbabilities(unknown);
+			for (Integer catI : classProbs.keySet()) {
+				Double catProb = classProbs.get(catI);
+				catToProbList.put(catI, catProb);
+			}
 		}
-		return majorityVote(predictions);
+		// compute average prob for each cat/class
+		double max = 0.0;
+		int catOfMax = INVALID_CATEGORY;
+		for (Integer catI : catToProbList.keySet()) {
+			Collection<Double> probs = catToProbList.get(catI);
+			double m = mean(probs);
+			if ( m>max ) {
+				max = m;
+				catOfMax = catI;
+			}
+		}
+		return catOfMax;
 	}
 
 	/** Return the out-of-bag error estimate */

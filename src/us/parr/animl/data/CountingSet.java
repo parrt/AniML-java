@@ -11,11 +11,14 @@ import java.util.HashMap;
 import java.util.List;
 
 /** Count how many of each key we have; not thread safe */
-public class FrequencySet<T> extends HashMap<T, MutableInt> {
-	public FrequencySet() {
+public class CountingSet<T> extends HashMap<T, MutableInt> {
+	/** How many total elements added to set? */
+	protected int n = 0;
+
+	public CountingSet() {
 	}
 
-	public FrequencySet(FrequencySet<T> old) {
+	public CountingSet(CountingSet<T> old) {
 		for (T key : old.keySet()) {
 			put(key, new MutableInt(old.get(key).v)); // make sure MutableInts are copied deeply
 		}
@@ -36,14 +39,32 @@ public class FrequencySet<T> extends HashMap<T, MutableInt> {
 		else {
 			value.v++;
 		}
+		n++;
 	}
+
+	@Override
+	public MutableInt remove(Object key) {
+		MutableInt I = super.remove(key);
+		n -= I.v;
+		return I;
+	}
+
+	@Override
+	public boolean remove(Object key, Object value) {
+		throw new UnsupportedOperationException();
+	}
+
+	/** How many total elements added to set including repeats?
+	 *  Note that size() returns number of keys.
+	 */
+	public int total() { return n; }
 
 	/** Return a new set containing a[i]-b[i] for all keys i. Values in b
 	 *  but not in a are ignored.  Values in a but not in b yield a's same value
 	 *  in the result.
 	 */
-	public static <T> FrequencySet<T> minus(FrequencySet<T> a, FrequencySet<T> b) {
-		FrequencySet<T> r = new FrequencySet<T>(a);
+	public static <T> CountingSet<T> minus(CountingSet<T> a, CountingSet<T> b) {
+		CountingSet<T> r = new CountingSet<T>(a);
 		for (T key : r.keySet()) {
 			MutableInt bI = b.get(key);
 			if ( bI!=null ) {

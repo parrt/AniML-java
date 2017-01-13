@@ -7,18 +7,18 @@
 package us.parr.animl.classifiers.trees;
 
 import us.parr.animl.AniStats;
-import us.parr.animl.classifiers.Classifier;
+import us.parr.animl.classifiers.ClassifierModel;
+import us.parr.animl.data.CountingSet;
 import us.parr.animl.data.DataPair;
 import us.parr.animl.data.DataTable;
-import us.parr.animl.data.FrequencySet;
 
 import javax.json.Json;
 import javax.json.JsonObject;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
 import static us.parr.animl.AniStats.sum;
 
@@ -26,7 +26,7 @@ import static us.parr.animl.AniStats.sum;
  *  classification, not regression. I extended it to handle a subset of predictor
  *  variables at each node to support random forest construction.
  */
-public class DecisionTree implements Classifier {
+public class DecisionTree implements ClassifierModel {
 	public static final int SEED = 777111333; // need randomness but use same seed to get reproducibility
 	public static final Random random = new Random(SEED);
 	public static final int INVALID_CATEGORY = -1;
@@ -64,6 +64,11 @@ public class DecisionTree implements Classifier {
 
 	public int classify(int[] X) { return root.classify(X); };
 
+	@Override
+	public Map<Integer, Double> classProbabilities(int[] X) {
+		return root.classProbabilities(X);
+	}
+
 	/** Conversion routine from separate X -> Y vectors to single augmented data vector */
 //	public static DecisionTree build(List<int[]> X, List<Integer> Y) {
 //		List<int[]> data = new ArrayList<>(X.size());
@@ -95,13 +100,10 @@ public class DecisionTree implements Classifier {
 		int yi = data.getPredictedCol(); // last index is usually the target variable
 		// if all predict same category or only one row of data,
 		// create leaf predicting that
-		FrequencySet<Integer> completePredictionCounts = data.valueCountsInColumn(yi);
-		double complete_entropy = AniStats.entropy(completePredictionCounts.counts());
-		Set<Integer> predictions = data.uniqueValues(yi);
-		if ( predictions.size()==1 || data.size()<=minLeafSize ) {
-			DecisionTreeNode t = new DecisionLeafNode(predictions.iterator().next(), yi);
-			t.numRecords = N;
-			t.entropy = complete_entropy;
+		CountingSet<Integer> completeCategoryCounts = data.valueCountsInColumn(yi);
+		double complete_entropy = AniStats.entropy(completeCategoryCounts.counts());
+		if ( completeCategoryCounts.size()==1 || data.size()<=minLeafSize ) {
+			DecisionTreeNode t = new DecisionLeafNode(completeCategoryCounts, yi);
 			t.data = data;
 			return t;
 		}
@@ -119,10 +121,10 @@ public class DecisionTree implements Classifier {
 			DataTable.VariableType colType = data.getColTypes()[j];
 			BestInfo bestj;
 			if ( DataTable.isCategoricalVar(colType) ) {
-				bestj = bestCategoricalSplit(data, j, yi, completePredictionCounts, complete_entropy);
+				bestj = bestCategoricalSplit(data, j, yi, completeCategoryCounts, complete_entropy);
 			}
 			else {
-				bestj = bestNumericSplit(data, j, yi, completePredictionCounts, complete_entropy);
+				bestj = bestNumericSplit(data, j, yi, completeCategoryCounts, complete_entropy);
 			}
 			if ( bestj.gain > best.gain ) {
 				best = bestj;
@@ -164,15 +166,13 @@ public class DecisionTree implements Classifier {
 			System.out.printf("FINAL no improvement; make leaf predicting %s\n",
 			                  DataTable.getValue(data,majorityVote,yi));
 		}
-		DecisionTreeNode t = new DecisionLeafNode(majorityVote, yi);
-		t.numRecords = N;
-		t.entropy = complete_entropy;
+		DecisionTreeNode t = new DecisionLeafNode(completeCategoryCounts, yi);
 		t.data = data;
 		return t;
 	}
 
 	protected static BestInfo bestNumericSplit(DataTable data, int j, int yi,
-	                                           FrequencySet<Integer> completePredictionCounts,
+	                                           CountingSet<Integer> completePredictionCounts,
 	                                           double complete_entropy)
 	{
 		int n = data.size();
@@ -185,8 +185,8 @@ public class DecisionTree implements Classifier {
 		data.sortBy(j);
 		// look for discontinuities (transitions) in predictor var values,
 		// recording prediction cat counts for each
-		LinkedHashMap<Double, FrequencySet<Integer>> predictionCountSets = new LinkedHashMap<>(); // track key order of insertion
-		FrequencySet<Integer> currentPredictionCounts = new FrequencySet<>();
+		LinkedHashMap<Double, CountingSet<Integer>> predictionCountSets = new LinkedHashMap<>(); // track key order of insertion
+		CountingSet<Integer> currentPredictionCounts = new CountingSet<>();
 		DataTable.VariableType colType = data.getColTypes()[j];
 		for (int i = 0; i<n; i++) { // walk all records, updating currentPredictionCounts
 			if ( i>0 && data.compare(i-1, i, j)<0 ) { // if row i-1 < row i, discontinuity in predictor var
@@ -201,7 +201,7 @@ public class DecisionTree implements Classifier {
 				else {
 					midpoint = (data.getAsFloat(i, j)+data.getAsFloat(i-1, j))/2.0;
 				}
-				predictionCountSets.put(midpoint, new FrequencySet<>(currentPredictionCounts));
+				predictionCountSets.put(midpoint, new CountingSet<>(currentPredictionCounts));
 			}
 			currentPredictionCounts.add(data.getAsInt(i, yi));
 		}
@@ -211,8 +211,8 @@ public class DecisionTree implements Classifier {
 		// unique set of values from column j. predictionCountSets[v] is
 		// the predictor count set for values of column j < v
 		for (Double splitValue : predictionCountSets.keySet()) {
-			FrequencySet<Integer> region1 = predictionCountSets.get(splitValue);
-			FrequencySet<Integer> region2 = FrequencySet.minus(completePredictionCounts, region1);
+			CountingSet<Integer> region1 = predictionCountSets.get(splitValue);
+			CountingSet<Integer> region2 = CountingSet.minus(completePredictionCounts, region1);
 			double r1_entropy = AniStats.entropy(region1.counts());
 			double r2_entropy = AniStats.entropy(region2.counts());
 
@@ -238,25 +238,25 @@ public class DecisionTree implements Classifier {
 	}
 
 	protected static BestInfo bestCategoricalSplit(DataTable data, int j, int yi,
-	                                               FrequencySet<Integer> completePredictionCounts,
+	                                               CountingSet<Integer> completePredictionCounts,
 	                                               double complete_entropy)
 	{
 		int n = data.size();
 		BestInfo best = new BestInfo();
 		data.sortBy(j);
-		LinkedHashMap<Integer, FrequencySet<Integer>> predictionCountSets = new LinkedHashMap<>(); // track key order of insertion
-		FrequencySet<Integer> currentPredictionCounts = new FrequencySet<>();
+		LinkedHashMap<Integer, CountingSet<Integer>> predictionCountSets = new LinkedHashMap<>(); // track key order of insertion
+		CountingSet<Integer> currentPredictionCounts = new CountingSet<>();
 		for (int i = 0; i<n; i++) { // walk all records, updating currentPredictionCounts
 			if ( i>0 && data.compare(i-1, i, j)<0 ) { // if row i-1 < row i, discontinuity in predictor var
 				// Take snapshot of current predictor counts, associate with current/new value as split point
 				// Don't include new value in this snapshot
 				predictionCountSets.put(data.getAsInt(i-1, j), currentPredictionCounts);
-				currentPredictionCounts = new FrequencySet<>();
+				currentPredictionCounts = new CountingSet<>();
 			}
 			currentPredictionCounts.add(data.getAsInt(i, yi));
 		}
 		// then for the last cat value, record the prediction set
-		predictionCountSets.put(data.getAsInt(n-1, j), new FrequencySet<>(currentPredictionCounts));
+		predictionCountSets.put(data.getAsInt(n-1, j), new CountingSet<>(currentPredictionCounts));
 
 
 		// Now, walk all possible prediction count sets to find the split
@@ -264,8 +264,8 @@ public class DecisionTree implements Classifier {
 		// unique set of values from column j. predictionCountSets[v] is
 		// the predictor count set for values of column j < v
 		for (Integer splitValue : predictionCountSets.keySet()) {
-			FrequencySet<Integer> region1 = predictionCountSets.get(splitValue);
-			FrequencySet<Integer> region2 = FrequencySet.minus(completePredictionCounts, region1);
+			CountingSet<Integer> region1 = predictionCountSets.get(splitValue);
+			CountingSet<Integer> region2 = CountingSet.minus(completePredictionCounts, region1);
 			double r1_entropy = AniStats.entropy(region1.counts());
 			double r2_entropy = AniStats.entropy(region2.counts());
 

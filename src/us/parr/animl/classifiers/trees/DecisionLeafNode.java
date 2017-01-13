@@ -6,26 +6,49 @@
 
 package us.parr.animl.classifiers.trees;
 
+import us.parr.animl.AniStats;
+import us.parr.animl.data.CountingSet;
 import us.parr.animl.data.DataTable;
 
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;
+import java.util.HashMap;
+import java.util.Map;
 
 import static us.parr.animl.AniMath.isClose;
 import static us.parr.animl.classifiers.trees.DecisionTree.INVALID_CATEGORY;
 
 public class DecisionLeafNode extends DecisionTreeNode {
-	/** The predicted category if this is a leaf node; non-leaf by default */
+	/** The predicted category */
 	protected int prediction = INVALID_CATEGORY;
+
+	/** The predicted variable index */
 	protected int predictionVariable;
 
-	public DecisionLeafNode(int prediction, int predictionVariable) {
-		this.prediction = prediction;
+	/** Track how many of each category we have in this leaf */
+	protected CountingSet<Integer> categoryCounts;
+
+	protected Map<Integer, Double> categoryProbabilities;
+
+	public DecisionLeafNode(CountingSet<Integer> categoryCounts, int predictionVariable) {
+		this.prediction = categoryCounts.argmax();
 		this.predictionVariable = predictionVariable;
+		this.entropy = AniStats.entropy(categoryCounts.counts());
+		this.categoryCounts = categoryCounts;
+		this.numRecords = categoryCounts.total();
+		categoryProbabilities = new HashMap<>();
+		for (Integer I : categoryCounts.keySet()) {
+			categoryProbabilities.put(I, categoryCounts.get(I).v / (double)numRecords);
+		}
 	}
 
 	public int classify(int[] X) {
 		return prediction;
+	}
+
+	@Override
+	public Map<Integer, Double> classProbabilities(int[] X) {
+		return categoryProbabilities;
 	}
 
 	@Override

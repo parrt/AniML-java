@@ -6,7 +6,7 @@
 
 package us.parr.animl;
 
-import us.parr.animl.data.FrequencySet;
+import us.parr.animl.data.CountingSet;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -79,10 +79,21 @@ public class AniStats {
 		return m;
 	}
 
-	public static double mean(Collection<Double> data) {
+	public static double max(double[] data) {
+		if ( data==null ) {
+			return Double.MIN_VALUE;
+		}
+		double m = Double.MIN_VALUE;
+		for (double d : data) {
+			if ( d>m ) m = d;
+		}
+		return m;
+	}
+
+	public static double mean(Collection<? extends Number> data) {
 		double sum = 0.0;
-		for (Double d : data) {
-			sum += d;
+		for (Number d : data) {
+			sum += d.doubleValue();
 		}
 		return sum / data.size();
 	}
@@ -167,7 +178,7 @@ public class AniStats {
 
 	public static int majorityVote(Collection<Integer> data) {
 		if ( data.size()==0 ) return 0;
-		FrequencySet<Integer> valueCounts = new FrequencySet<>();
+		CountingSet<Integer> valueCounts = new CountingSet<>();
 		for (Integer d : data) {
 			valueCounts.add(d);
 		}

@@ -73,7 +73,7 @@ public class TestRFBasics extends BaseTest {
 		RandomForest rf = new RandomForest(12, MIN_NODE_SIZE);
 		rf.train(data);
 
-		int missed = Validation.leaveOneOut(data, rf);
+		int missed = Validation.leaveOneOut(rf, data);
 		assertEquals(0, missed, 0.00000001);
 
 		double error = rf.getErrorEstimate(data);

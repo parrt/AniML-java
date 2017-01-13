@@ -1,17 +1,17 @@
 package us.parr.animl;
 
 import org.junit.Test;
-import us.parr.animl.data.FrequencySet;
+import us.parr.animl.data.CountingSet;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
-import static us.parr.animl.AniStats.entropy;
-import static us.parr.animl.AniStats.gini;
 import static us.parr.animl.AniMath.isClose;
 import static us.parr.animl.AniMath.log2;
+import static us.parr.animl.AniStats.entropy;
+import static us.parr.animl.AniStats.gini;
 
 public class TestImpurity {
 	public static final int HEADS = 0;
@@ -48,7 +48,7 @@ public class TestImpurity {
 
 	@Test public void testCategoriesFromRestaurant() {
 		int[] willwait = new int[] {1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1};
-		FrequencySet<Object> valueToCounts = new FrequencySet<>();
+		CountingSet<Object> valueToCounts = new CountingSet<>();
 		for (int wait : willwait) {
 			valueToCounts.add(wait);
 		}
@@ -63,7 +63,7 @@ public class TestImpurity {
 
 	@Test public void testCategoriesFromSignups() {
 		int[] signups = new int[] {1, 3, 2, 2, 3, 1, 2, 3, 1, 1, 1, 1, 2, 1, 2, 2};
-		FrequencySet<Object> valueToCounts = new FrequencySet<>();
+		CountingSet<Object> valueToCounts = new CountingSet<>();
 		for (int signup : signups) {
 			valueToCounts.add(signup);
 		}

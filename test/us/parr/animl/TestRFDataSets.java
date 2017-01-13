@@ -17,6 +17,7 @@ import java.util.Arrays;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static us.parr.animl.AniUtils.join;
 import static us.parr.animl.TestRFBasics.MIN_NODE_SIZE;
 import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_INT;
 import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_STRING;
@@ -39,7 +40,7 @@ public class TestRFDataSets extends BaseTest {
 	@Test public void testRestaurantLeaveOneOutError() {
 		DataTable data = DataTable.fromStrings(Arrays.asList(TestDataSets.restaurant));
 		int N = 50;
-		int[] missed = leaveOneOutErrors(data, N);
+		int[] missed = RF_leaveOneOutErrors(data, 1, N);
 //		System.out.println(Arrays.toString(missed));
 		int[] expected = new int[] {
 			4, 2, 4, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
@@ -84,7 +85,7 @@ public class TestRFDataSets extends BaseTest {
 
 //		System.out.println(tree.toDOT());
 
-		int missed = Validation.leaveOneOut(data, tree);
+		int missed = Validation.leaveOneOut(tree, data);
 		assertEquals(0, missed);
 		System.out.println(missed);
 		// I verified this string by looking at DOT output
@@ -112,7 +113,7 @@ public class TestRFDataSets extends BaseTest {
 	@Test public void testHeartLeaveOneOutErrors() {
 		DataTable data = heartData();
 		int N = 50;
-		int[] missed = leaveOneOutErrors(data, N);
+		int[] missed = RF_leaveOneOutErrors(data, 1, N);
 		int[] expected = new int[] {
 			31, 31, 10, 15, 3, 8, 7, 4, 3, 5, 2, 2, 0, 2, 3, 1, 1, 2, 0, 1,
 			0, 0, 0, 0, 1, 0, 1, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1,
@@ -125,13 +126,17 @@ public class TestRFDataSets extends BaseTest {
 		DataTable data = heartData();
 		int N = 50;
 		int folds = 10;
-		int[] missed = kFoldCrossErrors(data, N, folds);
-		int[] expected = new int[] {
-			31, 31, 10, 15, 3, 8, 7, 4, 3, 5, 2, 2, 0, 2, 3, 1, 1, 2, 0, 1,
-			0, 0, 0, 0, 1, 0, 1, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1,
-			0, 0, 0, 0, 0, 0, 0, 0, 0
+		double[] errors = RF_kFoldCrossErrors(data, 1, N, folds);
+		System.out.println(join(errors, ", ", 3));
+		double[] expected = new double[] {
+			0.270, 0.268, 0.235, 0.230, 0.189, 0.219, 0.191, 0.199, 0.221,
+			0.176, 0.188, 0.209, 0.196, 0.204, 0.170, 0.185, 0.181, 0.174,
+			0.178, 0.186, 0.204, 0.166, 0.184, 0.180, 0.186, 0.202, 0.171,
+			0.201, 0.187, 0.166, 0.197, 0.185, 0.182, 0.179, 0.146, 0.219,
+			0.209, 0.155, 0.155, 0.170, 0.173, 0.196, 0.182, 0.161, 0.182,
+			0.177, 0.187, 0.190, 0.168, 0.168
 		};
-		assertArrayEquals(expected, missed);
+		assertArrayEquals(expected, errors, 0.001);
 	}
 
 	@Test public void testHeartOOBError() {
@@ -175,12 +180,13 @@ public class TestRFDataSets extends BaseTest {
 		URL url = this.getClass().getClassLoader().getResource("iris.csv");
 		DataTable data = DataTable.loadCSV(url.getFile().toString(), null, null, null, true);
 		int N = 50;
-		int[] missed = leaveOneOutErrors(data, N);
+		int[] missed = RF_leaveOneOutErrors(data, 1, N);
 //		System.out.println(Arrays.toString(missed));
+		// bounces but settles on < 0.06 error rate
 		int[] expected = new int[] {
-			8, 2, 1, 0, 3, 1, 1, 0, 0, 1, 0, 2, 0, 0, 0, 0, 1, 2, 1, 0,
-			0, 0, 0, 0, 0, 1, 0, 1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+			9, 13, 10, 9, 8, 8, 10, 8, 7, 10, 7, 8, 9, 9, 9, 6, 9, 6, 7, 8,
+			8, 8, 9, 10, 8, 7, 9, 8, 8, 8, 7, 6, 8, 8, 7, 10, 8, 8, 7, 8, 9,
+			7, 7, 10, 7, 8, 7, 9, 10, 8
 		};
 		assertArrayEquals(expected, missed);
 	}
@@ -189,14 +195,18 @@ public class TestRFDataSets extends BaseTest {
 		URL url = this.getClass().getClassLoader().getResource("iris.csv");
 		DataTable data = DataTable.loadCSV(url.getFile().toString(), null, null, null, true);
 		int N = 50;
-		int[] missed = kFoldCrossErrors(data, N, 10);
-//		System.out.println(Arrays.toString(missed));
-		int[] expected = new int[] {
-			8, 2, 1, 0, 3, 1, 1, 0, 0, 1, 0, 2, 0, 0, 0, 0, 1, 2, 1, 0,
-			0, 0, 0, 0, 0, 1, 0, 1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		int folds = 10;
+		double[] errors = RF_kFoldCrossErrors(data, 1, N, folds);
+		System.out.println(join(errors, ", ", 3));
+		double[] expected = new double[] {
+			0.060, 0.067, 0.060, 0.060, 0.053, 0.060, 0.047, 0.053, 0.067,
+			0.053, 0.060, 0.040, 0.047, 0.060, 0.053, 0.047, 0.053, 0.060,
+			0.053, 0.047, 0.040, 0.053, 0.067, 0.060, 0.047, 0.053, 0.053,
+			0.053, 0.047, 0.047, 0.047, 0.053, 0.047, 0.060, 0.053, 0.060,
+			0.060, 0.053, 0.047, 0.060, 0.060, 0.053, 0.047, 0.040, 0.060,
+			0.040, 0.053, 0.053, 0.060, 0.060
 		};
-		assertArrayEquals(expected, missed);
+		assertArrayEquals(expected, errors, 0.001);
 	}
 
 	@Test public void testIrisOOBError() {
@@ -238,25 +248,30 @@ public class TestRFDataSets extends BaseTest {
 		return missed;
 	}
 
-	/** For 1..n (num trees), compute leave one out errors */
-	protected int[] leaveOneOutErrors(DataTable data, int n) {
-		int[] missed = new int[n];
-		for (int k = 1; k<=n; k++) {
+	/** For 1..maxEstimators (num trees), compute leave one out errors */
+	protected int[] RF_leaveOneOutErrors(DataTable data, int minEstimators, int maxEstimators) {
+		int[] missed = new int[maxEstimators-minEstimators+1];
+		int i = 0;
+		for (int k = minEstimators; k<=maxEstimators; k++) {
 			RandomForest rf = new RandomForest(k, 1);
-			rf.train(data);
-			missed[k-1] = Validation.leaveOneOut(data, rf);
+			missed[i] = Validation.leaveOneOut(rf, data);
+			System.out.println(missed[i]);
+			i++;
 		}
 		return missed;
 	}
 
 	/** For 1..n (num trees), compute k-fold errors */
-	protected int[] kFoldCrossErrors(DataTable data, int n, int folds) {
-		int[] missed = new int[n];
-		for (int k = 1; k<=n; k++) {
+	protected double[] RF_kFoldCrossErrors(DataTable data, int minEstimators, int maxEstimators, int folds) {
+		double[] errors = new double[maxEstimators-minEstimators+1];
+		int i = 0;
+		for (int k = minEstimators; k<=maxEstimators; k++) {
 			RandomForest rf = new RandomForest(k, 1);
 			rf.train(data);
-			missed[k-1] = Validation.kFoldCross(folds, data, rf);
+			errors[i] = Validation.kFoldCross(rf, folds, data);
+//			System.out.println(errors[i]);
+			i++;
 		}
-		return missed;
+		return errors;
 	}
 }

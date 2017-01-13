@@ -10,6 +10,7 @@ import us.parr.animl.data.DataTable;
 
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;
+import java.util.Map;
 
 import static us.parr.animl.AniMath.isClose;
 
@@ -28,6 +29,16 @@ public class DecisionCategoricalSplitNode extends DecisionSplitNode {
 		}
 		else {
 			return right.classify(X);
+		}
+	}
+
+	@Override
+	public Map<Integer, Double> classProbabilities(int[] X) {
+		if ( X[splitVariable]==splitCategory ) { // if equal, choose left child
+			return left.classProbabilities(X);
+		}
+		else {
+			return right.classProbabilities(X);
 		}
 	}
 
