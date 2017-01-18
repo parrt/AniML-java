@@ -1,6 +1,15 @@
-# Simple Random Forest(tm) in Java
+# AniML machine learning library in Java
+
+I started out building a random forest implementation for fun but finally
+decided that this might be the start of a nice little machine learning
+library in Java. My emphasis will be on easy to understand code rather than
+performance.
+
+## Random Forest(tm) in Java
 
 [codebuff](https://github.com/antlr/codebuff) could really use a random forest so I'm playing with an implementation here.
+
+Notes as I try to implement this properly. There's a lot of handwaving out there as well as incorrect implementations. grrr.
 
 **Limitations**
 
@@ -35,6 +44,12 @@ I'm going to try encoding floats as int so int[] can always
 be the data type of a row.
 
 <img src="whiteboard.jpg" width=300>
+
+More Jeremy notes from Jan 17, 2017:
+
+* Sorting is a huge bottleneck so choose perhaps 20 elements from the complete list associated with a particular node. make it a parameter.
+* Map dependent variable categories to 0..n-1 contiguous category encodings a priori; this lets us use a simple array for counting sets per category.
+* Don't need to sort actual data; you can divide a column of independent variables into those values that are less than and greater than equal to the split. As you scan the column, can move values to the appropriate region. Hmm... still sounds like modifying the data but Jeremy claims that you can do this with one array holding the column values all the way through building a decision tree.
 
 **References**
 
