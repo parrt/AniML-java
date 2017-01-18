@@ -50,6 +50,9 @@ More Jeremy notes from Jan 17, 2017:
 * Sorting is a huge bottleneck so choose perhaps 20 elements from the complete list associated with a particular node. make it a parameter.
 * Map dependent variable categories to 0..n-1 contiguous category encodings a priori; this lets us use a simple array for counting sets per category.
 * Don't need to sort actual data; you can divide a column of independent variables into those values that are less than and greater than equal to the split. As you scan the column, can move values to the appropriate region. Hmm... still sounds like modifying the data but Jeremy claims that you can do this with one array holding the column values all the way through building a decision tree.
+* use min leaf size of like 20 (as it's about where t-distribution looks gaussian)
+* definitely use category probabilities when making ensemble classification; ok to average probabilities and pick one
+* don't worry about optimizations that help with creating nodes near top of tree; there are few of them. worry about leaves and last decision layer
 
 **References**
 
