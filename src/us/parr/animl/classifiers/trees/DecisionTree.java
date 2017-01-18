@@ -19,6 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import static us.parr.animl.AniStats.sum;
 
@@ -243,26 +244,58 @@ public class DecisionTree implements ClassifierModel {
 	{
 		int n = data.size();
 		BestInfo best = new BestInfo();
-		data.sortBy(j);
-		LinkedHashMap<Integer, CountingSet<Integer>> predictionCountSets = new LinkedHashMap<>(); // track key order of insertion
+		Set<Integer> uniqueValues = data.getUniqueValues(j);
+		for (Integer splitValue : uniqueValues) { // for each unique category in col j
+			CountingSet<Integer> eq = new CountingSet<>();
+			CountingSet<Integer> noteq = new CountingSet<>();
+			for (int i = 0; i<n; i++) { // walk all records, counting dep categories in two groups: indep cat equal and not-equal to splitValue
+				int currentCat = data.getAsInt(i, j);
+				int currentTargetCat = data.getAsInt(i, yi);
+				if ( currentCat==splitValue ) {
+					eq.add(currentTargetCat);
+				}
+				else {
+					noteq.add(currentTargetCat);
+				}
+			}
+			List<Integer> eqcounts = eq.counts();
+			double r1_entropy = AniStats.entropy(eqcounts);
+			List<Integer> noteqcounts = noteq.counts();
+			double r2_entropy = AniStats.entropy(noteqcounts);
+			int n1 = sum(eqcounts);
+			int n2 = sum(noteqcounts);
+			double p1 = ((double) n1)/(n1+n2);
+			double p2 = ((double) n2)/(n1+n2);
+			double expectedEntropyValue = p1*r1_entropy+p2*r2_entropy;
+			double gain = complete_entropy-expectedEntropyValue;
+			if ( gain>best.gain && n1>0 && n2>0 ) {
+				best.gain = gain;
+				best.var = j;
+				best.cat = splitValue;
+			}
+			if ( debug ) {
+				String var = data.getColNames()[j];
+				System.out.printf("Entropies var=%13s val=%d r1=%d/%d*%.2f r2=%d/%d*%.2f, ExpEntropy=%.2f gain=%.2f\n",
+				                  var, splitValue, n1, n1+n2, r1_entropy, n2, n1+n2, r2_entropy,
+				                  expectedEntropyValue, gain);
+			}
+		}
+		return best;
+		/*
+		// no need to sort
+		// Map col j category value to target category counts
+		Map<Integer, CountingSet<Integer>> predictionCountSets = new HashMap<>();
 		CountingSet<Integer> currentPredictionCounts = new CountingSet<>();
 		for (int i = 0; i<n; i++) { // walk all records, updating currentPredictionCounts
-			if ( i>0 && data.compare(i-1, i, j)<0 ) { // if row i-1 < row i, discontinuity in predictor var
-				// Take snapshot of current predictor counts, associate with current/new value as split point
-				// Don't include new value in this snapshot
-				predictionCountSets.put(data.getAsInt(i-1, j), currentPredictionCounts);
-				currentPredictionCounts = new CountingSet<>();
-			}
+			int cat = data.getAsInt(n-1, j);
+			predictionCountSets.computeIfAbsent(cat, k -> new CountingSet<>());
 			currentPredictionCounts.add(data.getAsInt(i, yi));
 		}
-		// then for the last cat value, record the prediction set
-		predictionCountSets.put(data.getAsInt(n-1, j), new CountingSet<>(currentPredictionCounts));
 
-
-		// Now, walk all possible prediction count sets to find the split
-		// with the minimum entropy. predictionCountSets keys are the
-		// unique set of values from column j. predictionCountSets[v] is
-		// the predictor count set for values of column j < v
+		// Now, walk all possible col j category values and check count sets
+		// to find the split with the minimum entropy.
+		// predictionCountSets keys are the unique set of values from column j.
+		// predictionCountSets[v] is the predictor count set for values of column j == v
 		for (Integer splitValue : predictionCountSets.keySet()) {
 			CountingSet<Integer> region1 = predictionCountSets.get(splitValue);
 			CountingSet<Integer> region2 = CountingSet.minus(completePredictionCounts, region1);
@@ -288,6 +321,7 @@ public class DecisionTree implements ClassifierModel {
 			}
 		}
 		return best;
+		*/
 	}
 
 	public boolean isLeaf() { return root instanceof DecisionLeafNode; }

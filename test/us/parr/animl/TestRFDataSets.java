@@ -18,12 +18,13 @@ import java.util.Arrays;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static us.parr.animl.AniUtils.join;
-import static us.parr.animl.TestRFBasics.MIN_NODE_SIZE;
 import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_INT;
 import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_STRING;
 import static us.parr.animl.data.DataTable.VariableType.UNUSED_INT;
 
 public class TestRFDataSets extends BaseTest {
+	public static final int MIN_LEAF_SIZE = 20;
+
 	@Test public void testRestaurantOnTrainingSet() {
 		DataTable data = DataTable.fromStrings(Arrays.asList(TestDataSets.restaurant));
 		int N = 50; // try from 1 to 50 estimators
@@ -57,7 +58,7 @@ public class TestRFDataSets extends BaseTest {
 //		System.out.println(result);
 		int N = 100; // try from 1 to 100 estimators
 		for (int k = 1; k<=N; k++) {
-			RandomForest rf = new RandomForest(k, MIN_NODE_SIZE);
+			RandomForest rf = new RandomForest(k, TestRFBasics.MIN_LEAF_SIZE);
 			rf.train(data);
 			double result = rf.getErrorEstimate(data);
 			System.out.println(result);
@@ -66,7 +67,7 @@ public class TestRFDataSets extends BaseTest {
 
 	@Test public void testWebsiteSignups() {
 		DataTable data = DataTable.fromStrings(Arrays.asList(TestDataSets.signups));
-		DecisionTree tree = new DecisionTree(0, MIN_NODE_SIZE);
+		DecisionTree tree = new DecisionTree(0, TestRFBasics.MIN_LEAF_SIZE);
 		tree.train(data);
 		// I verified this string by looking at DOT output
 		// I get same tree has shown here: http://www.patricklamle.com/Tutorials/Decision%20tree%20python/tuto_decision%20tree.html
@@ -80,10 +81,10 @@ public class TestRFDataSets extends BaseTest {
 	@Test public void testHeart() {
 		DataTable data = heartData();
 		int m = 4; // sqrt(13) columns
-		DecisionTree tree = new DecisionTree(0, 1);
+		DecisionTree tree = new DecisionTree(0, MIN_LEAF_SIZE);
 		tree.train(data);
 
-//		System.out.println(tree.toDOT());
+		System.out.println(tree.toDOT());
 
 		int missed = Validation.leaveOneOut(tree, data);
 		assertEquals(0, missed);
@@ -213,7 +214,7 @@ public class TestRFDataSets extends BaseTest {
 		DataTable data = DataTable.fromStrings(Arrays.asList(TestDataSets.restaurant));
 		int N = 50;
 		for (int k = 1; k<=N; k++) {
-			RandomForest rf = new RandomForest(k, MIN_NODE_SIZE);
+			RandomForest rf = new RandomForest(k, TestRFBasics.MIN_LEAF_SIZE);
 			rf.train(data);
 			double result = rf.getErrorEstimate(data);
 			System.out.println(result);
@@ -240,7 +241,7 @@ public class TestRFDataSets extends BaseTest {
 	protected int[] trainingDataMisclassifications(DataTable data, int numEstimators) {
 		int[] missed = new int[numEstimators];
 		for (int k = 1; k<=numEstimators; k++) {
-			RandomForest rf = new RandomForest(k, MIN_NODE_SIZE);
+			RandomForest rf = new RandomForest(k, TestRFBasics.MIN_LEAF_SIZE);
 			rf.train(data);
 			int miss = numberMisclassifications(data, rf);
 			missed[k-1] = miss;
@@ -253,7 +254,7 @@ public class TestRFDataSets extends BaseTest {
 		int[] missed = new int[maxEstimators-minEstimators+1];
 		int i = 0;
 		for (int k = minEstimators; k<=maxEstimators; k++) {
-			RandomForest rf = new RandomForest(k, 1);
+			RandomForest rf = new RandomForest(k, MIN_LEAF_SIZE);
 			missed[i] = Validation.leaveOneOut(rf, data);
 			System.out.println(missed[i]);
 			i++;
@@ -266,7 +267,7 @@ public class TestRFDataSets extends BaseTest {
 		double[] errors = new double[maxEstimators-minEstimators+1];
 		int i = 0;
 		for (int k = minEstimators; k<=maxEstimators; k++) {
-			RandomForest rf = new RandomForest(k, 1);
+			RandomForest rf = new RandomForest(k, MIN_LEAF_SIZE);
 			rf.train(data);
 			errors[i] = Validation.kFoldCross(rf, folds, data);
 //			System.out.println(errors[i]);

@@ -12,10 +12,10 @@ import java.util.List;
 import static junit.framework.TestCase.assertEquals;
 
 public class TestRFBasics extends BaseTest {
-	public static final int MIN_NODE_SIZE = 1;
+	public static final int MIN_LEAF_SIZE = 1;
 
 	@Test public void testEmpty() {
-		RandomForest rf = new RandomForest(1, MIN_NODE_SIZE);
+		RandomForest rf = new RandomForest(1, MIN_LEAF_SIZE);
 		rf.train(DataTable.empty(null,null));
 		String expecting = "{}";
 		String result = toTestString(rf.getTree(0));
@@ -26,7 +26,7 @@ public class TestRFBasics extends BaseTest {
 		List<int[]> rows = new ArrayList<>();
 		rows.add(new int[] {1,99}); // 1 row with 1 var of value 1 predicting category 99
 		DataTable data = DataTable.fromInts(rows, null, null);
-		RandomForest rf = new RandomForest(1, MIN_NODE_SIZE);
+		RandomForest rf = new RandomForest(1, MIN_LEAF_SIZE);
 		rf.train(data);
 		String expecting = "{'predict':99,'n':1}";
 		String result = toTestString(rf.getTree(0));
@@ -45,7 +45,7 @@ public class TestRFBasics extends BaseTest {
 		rows.add(new int[]{2, 7, 2});
 		rows.add(new int[]{0, 7, 2});
 		DataTable data = DataTable.fromInts(rows, null, null);
-		RandomForest rf = new RandomForest(10, MIN_NODE_SIZE);
+		RandomForest rf = new RandomForest(10, MIN_LEAF_SIZE);
 		rf.train(data);
 		checkPredictions(data, rf);
 	}
@@ -70,7 +70,7 @@ public class TestRFBasics extends BaseTest {
 		rows.add(new int[]{0, 7, 2});
 		DataTable data = DataTable.fromInts(rows, null, null);
 //		DecisionTree.debug = true;
-		RandomForest rf = new RandomForest(12, MIN_NODE_SIZE);
+		RandomForest rf = new RandomForest(12, MIN_LEAF_SIZE);
 		rf.train(data);
 
 		int missed = Validation.leaveOneOut(rf, data);
