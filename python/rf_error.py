@@ -58,3 +58,5 @@ clf = RandomForestClassifier(n_estimators=n_estimators, oob_score=True,
 clf = clf.fit(X, y)
 oob_error = 1 - clf.oob_score_
 print "oob %.5f" % oob_error, "kfold %5f" % (avg_err / 5.0)
+
+exit(0)

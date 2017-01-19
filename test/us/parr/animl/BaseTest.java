@@ -1,11 +1,16 @@
 package us.parr.animl;
 
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.PumpStreamHandler;
 import us.parr.animl.classifiers.Classifier;
 import us.parr.animl.classifiers.trees.DecisionTree;
 import us.parr.animl.classifiers.trees.RandomForest;
 import us.parr.animl.data.DataTable;
 import us.parr.animl.validation.Validation;
 
+import java.io.ByteArrayOutputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -93,5 +98,41 @@ public class BaseTest {
 			i++;
 		}
 		return errors;
+	}
+
+	protected static String[] rf_error(String fileName) {
+		URL dataURL = BaseTest.class.getClassLoader().getResource(fileName);
+		String dataFileName = dataURL.getFile();
+		URL scriptURL = BaseTest.class.getClassLoader().getResource("rf_error.py");
+		String scriptFileName = scriptURL.getFile();
+
+		CommandLine cmdLine = new CommandLine("python2.7");
+		cmdLine.addArgument(scriptFileName);
+		cmdLine.addArgument(dataFileName);
+		cmdLine.addArgument("50");
+		cmdLine.addArgument("20");
+		cmdLine.addArgument("5");
+		cmdLine = CommandLine.parse("python2.7 python/rf_error.py");
+
+		ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+		ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+		try {
+		    DefaultExecutor executor = new DefaultExecutor();
+			executor.setStreamHandler(new PumpStreamHandler(stdout, stderr));
+			int exitValue = executor.execute(cmdLine);
+			System.out.println("exit "+exitValue);
+		}
+		catch (Exception e) {
+			e.printStackTrace(System.err);
+		}
+		finally {
+			System.out.println(stdout.toString());
+			System.out.println(stderr.toString());
+		}
+		return null;
+	}
+
+	public static void main(String[] args) {
+		rf_error("Heart-wo-NA.csv");
 	}
 }
