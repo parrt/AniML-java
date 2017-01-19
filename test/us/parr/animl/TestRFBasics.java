@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertArrayEquals;
 
 public class TestRFBasics extends BaseTest {
 	public static final int MIN_LEAF_SIZE = 1;
@@ -50,9 +51,16 @@ public class TestRFBasics extends BaseTest {
 		data.setColType(0, DataTable.VariableType.CATEGORICAL_INT);
 		data.setColType(1, DataTable.VariableType.CATEGORICAL_INT);
 		RandomForest rf = new RandomForest(15, MIN_LEAF_SIZE);
-		DecisionTree.debug = true;
 		rf.train(data);
 		checkPredictions(data, rf);
+
+		int N = 20;
+		int[] missed = RF_leaveOneOutErrors(data, 1, N, MIN_LEAF_SIZE);
+//		System.out.println(Arrays.toString(missed));
+		int[] expected = new int[] {
+			2, 3, 1, 3, 4, 2, 2, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 2, 1
+		};
+		assertArrayEquals(expected, missed);
 	}
 
 	@Ignore

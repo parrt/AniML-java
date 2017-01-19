@@ -28,7 +28,7 @@ public class TestRFDataSets extends BaseTest {
 	@Test public void testRestaurantOnTrainingSet() {
 		DataTable data = DataTable.fromStrings(Arrays.asList(TestDataSets.restaurant));
 		int N = 50; // try from 1 to 50 estimators
-		int[] missed = trainingDataMisclassifications(data, N);
+		int[] missed = trainingDataMisclassifications(data, N, MIN_LEAF_SIZE);
 		// randomness is reproducible via same seed in various classes
 		int[] expected = new int[] {
 			4, 2, 4, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
@@ -41,7 +41,7 @@ public class TestRFDataSets extends BaseTest {
 	@Test public void testRestaurantLeaveOneOutError() {
 		DataTable data = DataTable.fromStrings(Arrays.asList(TestDataSets.restaurant));
 		int N = 50;
-		int[] missed = RF_leaveOneOutErrors(data, 1, N);
+		int[] missed = RF_leaveOneOutErrors(data, 1, N, MIN_LEAF_SIZE);
 //		System.out.println(Arrays.toString(missed));
 		int[] expected = new int[] {
 			4, 2, 4, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
@@ -58,7 +58,7 @@ public class TestRFDataSets extends BaseTest {
 //		System.out.println(result);
 		int N = 100; // try from 1 to 100 estimators
 		for (int k = 1; k<=N; k++) {
-			RandomForest rf = new RandomForest(k, TestRFBasics.MIN_LEAF_SIZE);
+			RandomForest rf = new RandomForest(k, MIN_LEAF_SIZE);
 			rf.train(data);
 			double result = rf.getErrorEstimate(data);
 			System.out.println(result);
@@ -67,7 +67,7 @@ public class TestRFDataSets extends BaseTest {
 
 	@Test public void testWebsiteSignups() {
 		DataTable data = DataTable.fromStrings(Arrays.asList(TestDataSets.signups));
-		DecisionTree tree = new DecisionTree(0, TestRFBasics.MIN_LEAF_SIZE);
+		DecisionTree tree = new DecisionTree(0, MIN_LEAF_SIZE);
 		tree.train(data);
 		// I verified this string by looking at DOT output
 		// I get same tree has shown here: http://www.patricklamle.com/Tutorials/Decision%20tree%20python/tuto_decision%20tree.html
@@ -101,13 +101,13 @@ public class TestRFDataSets extends BaseTest {
 	@Test public void testHeartOnTrainingSet() {
 		DataTable data = heartData();
 		int N = 50;
-		int[] missed = trainingDataMisclassifications(data, N);
+		int[] missed = trainingDataMisclassifications(data, N, MIN_LEAF_SIZE);
 		// randomness is reproducible via same seed in various classes
-//		System.out.println(Arrays.toString(missed));
+		System.out.println(Arrays.toString(missed));
 		int[] expected = new int[] {
-			31, 31, 10, 15, 3, 8, 7, 4, 3, 5, 2, 2, 0, 2, 3, 1, 1, 2, 0, 1,
-			0, 0, 0, 0, 1, 0, 1, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1,
-			0, 0, 0, 0, 0, 0, 0, 0, 0
+			47, 44, 42, 41, 35, 37, 34, 27, 28, 41, 27, 28, 27, 30, 28, 26, 28,
+			27, 28, 23, 26, 25, 30, 23, 27, 28, 28, 27, 31, 26, 24, 33, 28, 28,
+			28, 31, 24, 26, 23, 24, 28, 22, 26, 26, 26, 28, 22, 25, 21, 26
 		};
 		assertArrayEquals(expected, missed);
 	}
@@ -115,7 +115,7 @@ public class TestRFDataSets extends BaseTest {
 	@Test public void testHeartLeaveOneOutErrors() {
 		DataTable data = heartData();
 		int N = 50;
-		int[] missed = RF_leaveOneOutErrors(data, 1, N);
+		int[] missed = RF_leaveOneOutErrors(data, 1, N, MIN_LEAF_SIZE);
 		int[] expected = new int[] {
 			31, 31, 10, 15, 3, 8, 7, 4, 3, 5, 2, 2, 0, 2, 3, 1, 1, 2, 0, 1,
 			0, 0, 0, 0, 1, 0, 1, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1,
@@ -128,7 +128,7 @@ public class TestRFDataSets extends BaseTest {
 		DataTable data = heartData();
 		int N = 50;
 		int folds = 10;
-		double[] errors = RF_kFoldCrossErrors(data, 1, N, folds);
+		double[] errors = RF_kFoldCrossErrors(data, 1, N, folds, MIN_LEAF_SIZE);
 		System.out.println(join(errors, ", ", 3));
 		double[] expected = new double[] {
 			0.270, 0.268, 0.235, 0.230, 0.189, 0.219, 0.191, 0.199, 0.221,
@@ -182,7 +182,7 @@ public class TestRFDataSets extends BaseTest {
 		URL url = this.getClass().getClassLoader().getResource("iris.csv");
 		DataTable data = DataTable.loadCSV(url.getFile().toString(), null, null, null, true);
 		int N = 50;
-		int[] missed = RF_leaveOneOutErrors(data, 1, N);
+		int[] missed = RF_leaveOneOutErrors(data, 1, N, MIN_LEAF_SIZE);
 //		System.out.println(Arrays.toString(missed));
 		// bounces but settles on < 0.06 error rate
 		int[] expected = new int[] {
@@ -197,16 +197,33 @@ public class TestRFDataSets extends BaseTest {
 		URL url = this.getClass().getClassLoader().getResource("iris.csv");
 		DataTable data = DataTable.loadCSV(url.getFile().toString(), null, null, null, true);
 		int N = 50;
-		int folds = 10;
-		double[] errors = RF_kFoldCrossErrors(data, 1, N, folds);
+		int folds = 5;
+		double[] errors = RF_kFoldCrossErrors(data, 1, N, folds, MIN_LEAF_SIZE);
 		System.out.println(join(errors, ", ", 3));
+		/*
+		This data is consistent with scikit-learn 5-fold with 20 trees RF. See python/iris.py file.
+		RandomForestClassifier(n_estimators=20, oob_score=True, min_samples_leaf=20, criterion="entropy") gives:
+
+		oob error 0.075 5-fold error: 0 / 30 0.0
+		oob error 0.0583333333333 5-fold error: 4 / 30 0.133333333333
+		oob error 0.0666666666667 5-fold error: 0 / 30 0.0
+		oob error 0.0416666666667 5-fold error: 3 / 30 0.1
+		oob error 0.0416666666667 5-fold error: 3 / 30 0.1
+
+		another run:
+
+		oob error 0.05 5-fold error: 4 / 30 0.133333333333
+		oob error 0.0583333333333 5-fold error: 2 / 30 0.0666666666667
+		oob error 0.075 5-fold error: 1 / 30 0.0333333333333
+		oob error 0.075 5-fold error: 2 / 30 0.0666666666667
+		oob error 0.108333333333 5-fold error: 2 / 30 0.0666666666667
+		 */
 		double[] expected = new double[] {
-			0.060, 0.067, 0.060, 0.060, 0.053, 0.060, 0.047, 0.053, 0.067,
-			0.053, 0.060, 0.040, 0.047, 0.060, 0.053, 0.047, 0.053, 0.060,
-			0.053, 0.047, 0.040, 0.053, 0.067, 0.060, 0.047, 0.053, 0.053,
-			0.053, 0.047, 0.047, 0.047, 0.053, 0.047, 0.060, 0.053, 0.060,
-			0.060, 0.053, 0.047, 0.060, 0.060, 0.053, 0.047, 0.040, 0.060,
-			0.040, 0.053, 0.053, 0.060, 0.060
+			0.087, 0.067, 0.060, 0.067, 0.053, 0.053, 0.067, 0.053, 0.073, 0.053, 0.047,
+			0.040, 0.047, 0.053, 0.033, 0.053, 0.053, 0.060, 0.053, 0.040, 0.060, 0.060,
+			0.040, 0.080, 0.053, 0.053, 0.073, 0.053, 0.067, 0.067, 0.060, 0.080, 0.080,
+			0.067, 0.080, 0.053, 0.100, 0.053, 0.060, 0.073, 0.047, 0.053, 0.073, 0.087,
+			0.060, 0.053, 0.033, 0.053, 0.040, 0.060
 		};
 		assertArrayEquals(expected, errors, 0.001);
 	}
@@ -235,43 +252,5 @@ public class TestRFDataSets extends BaseTest {
 		data.setColType("ExAng", CATEGORICAL_INT);
 		data.setColType("Slope", CATEGORICAL_INT);
 		return data;
-	}
-
-	protected int[] trainingDataMisclassifications(DataTable data, int numEstimators) {
-		int[] missed = new int[numEstimators];
-		for (int k = 1; k<=numEstimators; k++) {
-			RandomForest rf = new RandomForest(k, TestRFBasics.MIN_LEAF_SIZE);
-			rf.train(data);
-			int miss = numberMisclassifications(data, rf);
-			missed[k-1] = miss;
-		}
-		return missed;
-	}
-
-	/** For 1..maxEstimators (num trees), compute leave one out errors */
-	protected int[] RF_leaveOneOutErrors(DataTable data, int minEstimators, int maxEstimators) {
-		int[] missed = new int[maxEstimators-minEstimators+1];
-		int i = 0;
-		for (int k = minEstimators; k<=maxEstimators; k++) {
-			RandomForest rf = new RandomForest(k, MIN_LEAF_SIZE);
-			missed[i] = Validation.leaveOneOut(rf, data);
-			System.out.println(missed[i]);
-			i++;
-		}
-		return missed;
-	}
-
-	/** For 1..n (num trees), compute k-fold errors */
-	protected double[] RF_kFoldCrossErrors(DataTable data, int minEstimators, int maxEstimators, int folds) {
-		double[] errors = new double[maxEstimators-minEstimators+1];
-		int i = 0;
-		for (int k = minEstimators; k<=maxEstimators; k++) {
-			RandomForest rf = new RandomForest(k, MIN_LEAF_SIZE);
-			rf.train(data);
-			errors[i] = Validation.kFoldCross(rf, folds, data);
-//			System.out.println(errors[i]);
-			i++;
-		}
-		return errors;
 	}
 }

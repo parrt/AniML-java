@@ -2,7 +2,9 @@ package us.parr.animl;
 
 import us.parr.animl.classifiers.Classifier;
 import us.parr.animl.classifiers.trees.DecisionTree;
+import us.parr.animl.classifiers.trees.RandomForest;
 import us.parr.animl.data.DataTable;
+import us.parr.animl.validation.Validation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,5 +55,43 @@ public class BaseTest {
 			}
 		}
 		return miss;
+	}
+
+	protected int[] trainingDataMisclassifications(DataTable data, int numEstimators, int minLeafSize) {
+		int[] missed = new int[numEstimators];
+		for (int k = 1; k<=numEstimators; k++) {
+			RandomForest rf = new RandomForest(k, minLeafSize);
+			rf.train(data);
+			int miss = numberMisclassifications(data, rf);
+			missed[k-1] = miss;
+		}
+		return missed;
+	}
+
+	/** For 1..maxEstimators (num trees), compute leave one out errors */
+	protected int[] RF_leaveOneOutErrors(DataTable data, int minEstimators, int maxEstimators, int minLeafSize) {
+		int[] missed = new int[maxEstimators-minEstimators+1];
+		int i = 0;
+		for (int k = minEstimators; k<=maxEstimators; k++) {
+			RandomForest rf = new RandomForest(k, minLeafSize);
+			missed[i] = Validation.leaveOneOut(rf, data);
+			System.out.println(missed[i]);
+			i++;
+		}
+		return missed;
+	}
+
+	/** For 1..n (num trees), compute k-fold errors */
+	protected double[] RF_kFoldCrossErrors(DataTable data, int minEstimators, int maxEstimators, int folds, int minLeafSize) {
+		double[] errors = new double[maxEstimators-minEstimators+1];
+		int i = 0;
+		for (int k = minEstimators; k<=maxEstimators; k++) {
+			RandomForest rf = new RandomForest(k, minLeafSize);
+			rf.train(data);
+			errors[i] = Validation.kFoldCross(rf, folds, data);
+//			System.out.println(errors[i]);
+			i++;
+		}
+		return errors;
 	}
 }
