@@ -89,7 +89,7 @@ public class BaseTest {
 			RandomForest rf = new RandomForest(k, minLeafSize);
 			rf.train(data);
 			errors[i] = Validation.kFoldCross(rf, folds, data);
-//			System.out.println(errors[i]);
+			System.out.println(errors[i]);
 			i++;
 		}
 		return errors;
