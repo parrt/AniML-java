@@ -26,6 +26,7 @@ y = v[:,14]
 kfold = KFold(n_splits=5, shuffle=True)
 print kfold
 
+avg_err = 0.0
 for train_index, test_index in kfold.split(X):
     # print("TRAIN:", train_index, "TEST:", test_index)
     X_train, X_test = X[train_index], X[test_index]
@@ -36,4 +37,8 @@ for train_index, test_index in kfold.split(X):
     print "oob error", oob_error,
     cats = clf.predict(X_test)
     counts = collections.Counter(y_test==cats)
-    print "5-fold error:", counts[False], '/', len(y_test), counts[False]/float(len(y_test))
+    err = counts[False] / float(len(y_test))
+    avg_err += err
+    print "5-fold error:", counts[False], '/', len(y_test), err
+
+print "avg error ", avg_err / 5.0
