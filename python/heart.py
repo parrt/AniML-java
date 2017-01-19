@@ -9,8 +9,7 @@ heart = pandas.read_table("../data/Heart-wo-NA.csv", header=0, sep=",")
 
 # names = ["id","Age","Sex","ChestPain","RestBP","Chol","Fbs","RestECG","MaxHR","ExAng","Oldpeak","Slope","Ca","Thal","AHD"]
 
-cols = ['ChestPain', 'Thal', 'AHD'] # label encode these
-
+# label encode strings
 heart = heart[heart.columns].apply(lambda x : pandas.factorize(x)[0])
 
 
