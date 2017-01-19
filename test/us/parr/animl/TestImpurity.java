@@ -78,7 +78,6 @@ public class TestImpurity {
 		assertTrue(isClose(expected, result));
 	}
 
-
 	@Test public void testGiniFairCoinOneEach() {
 		List<Integer> valueCounts = new ArrayList<>();
 		valueCounts.add(1); // 1 head

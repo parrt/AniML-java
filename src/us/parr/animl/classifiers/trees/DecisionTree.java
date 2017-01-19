@@ -245,19 +245,21 @@ public class DecisionTree implements ClassifierModel {
 		int n = data.size();
 		BestInfo best = new BestInfo();
 		Set<Integer> uniqueValues = data.getUniqueValues(j);
-		for (Integer splitValue : uniqueValues) { // for each unique category in col j
+		for (Integer splitCat : uniqueValues) { // for each unique category in col j
 			CountingSet<Integer> eq = new CountingSet<>();
 			CountingSet<Integer> noteq = new CountingSet<>();
-			for (int i = 0; i<n; i++) { // walk all records, counting dep categories in two groups: indep cat equal and not-equal to splitValue
+			for (int i = 0; i<n; i++) { // walk all records, counting dep categories in two groups: indep cat equal and not-equal to splitCat
 				int currentCat = data.getAsInt(i, j);
+//				System.out.println(Arrays.toString(data.getRow(i))+", currentCat = "+currentCat+" @ "+i+","+j);
 				int currentTargetCat = data.getAsInt(i, yi);
-				if ( currentCat==splitValue ) {
+				if ( currentCat==splitCat ) {
 					eq.add(currentTargetCat);
 				}
 				else {
 					noteq.add(currentTargetCat);
 				}
 			}
+//			System.out.println("eq="+eq+", noteq="+noteq);
 			List<Integer> eqcounts = eq.counts();
 			double r1_entropy = AniStats.entropy(eqcounts);
 			List<Integer> noteqcounts = noteq.counts();
@@ -271,12 +273,13 @@ public class DecisionTree implements ClassifierModel {
 			if ( gain>best.gain && n1>0 && n2>0 ) {
 				best.gain = gain;
 				best.var = j;
-				best.cat = splitValue;
+				best.cat = splitCat;
 			}
 			if ( debug ) {
 				String var = data.getColNames()[j];
-				System.out.printf("Entropies var=%13s val=%d r1=%d/%d*%.2f r2=%d/%d*%.2f, ExpEntropy=%.2f gain=%.2f\n",
-				                  var, splitValue, n1, n1+n2, r1_entropy, n2, n1+n2, r2_entropy,
+				Object p = DataTable.getValue(data, splitCat, j);
+				System.out.printf("Entropies var=%13s cat=%-13s r1=%2d/%3d*%.2f r2=%2d/%3d*%.2f, ExpEntropy=%.2f gain=%.2f\n",
+				                  var, p, n1, n1+n2, r1_entropy, n2, n1+n2, r2_entropy,
 				                  expectedEntropyValue, gain);
 			}
 		}

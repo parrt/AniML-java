@@ -1,7 +1,9 @@
 package us.parr.animl;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
+import us.parr.animl.classifiers.trees.DecisionTree;
 import us.parr.animl.classifiers.trees.RandomForest;
 import us.parr.animl.data.DataTable;
 import us.parr.animl.validation.Validation;
@@ -45,11 +47,15 @@ public class TestRFBasics extends BaseTest {
 		rows.add(new int[]{2, 7, 2});
 		rows.add(new int[]{0, 7, 2});
 		DataTable data = DataTable.fromInts(rows, null, null);
-		RandomForest rf = new RandomForest(10, MIN_LEAF_SIZE);
+		data.setColType(0, DataTable.VariableType.CATEGORICAL_INT);
+		data.setColType(1, DataTable.VariableType.CATEGORICAL_INT);
+		RandomForest rf = new RandomForest(15, MIN_LEAF_SIZE);
+		DecisionTree.debug = true;
 		rf.train(data);
 		checkPredictions(data, rf);
 	}
 
+	@Ignore
 	@Test public void testOutOfBagSets() {
 		List<int[]> rows = new ArrayList<>();
 		rows.add(new int[]{1, 9, 1}); // x0 is crappy but x1 is perfect predictor of y
@@ -69,7 +75,9 @@ public class TestRFBasics extends BaseTest {
 		rows.add(new int[]{2, 7, 2});
 		rows.add(new int[]{0, 7, 2});
 		DataTable data = DataTable.fromInts(rows, null, null);
-//		DecisionTree.debug = true;
+		data.setColType(0, DataTable.VariableType.CATEGORICAL_INT);
+		data.setColType(1, DataTable.VariableType.CATEGORICAL_INT);
+		DecisionTree.debug = true;
 		RandomForest rf = new RandomForest(12, MIN_LEAF_SIZE);
 		rf.train(data);
 

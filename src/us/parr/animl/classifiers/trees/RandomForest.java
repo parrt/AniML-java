@@ -59,6 +59,7 @@ public class RandomForest implements ClassifierModel {
 			Set<Integer> outOfBagSamples = new HashSet<>(); // gets filled in
 			List<int[]> bootstrap = AniStats.bootstrapWithRepl(data.getRows(), outOfBagSamples);
 			DataTable table = new DataTable(data, bootstrap);
+//			System.out.println("bootstrap:\n"+table.toString());
 			DecisionTree tree = new DecisionTree(m, minLeafSize);
 			tree.train(table);
 			trees.add(tree);

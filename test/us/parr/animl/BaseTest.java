@@ -37,6 +37,9 @@ public class BaseTest {
 	public void checkPredictions(DataTable data, Classifier classifier) {
 		for (int i = 0; i<data.size(); i++) {
 			int prediction = classifier.classify(data.getRow(i));
+			if ( prediction!=data.getAsInt(i, data.getPredictedCol()) ) {
+				System.out.println("oops");
+			}
 			assertEquals(prediction, data.getAsInt(i, data.getPredictedCol()));
 		}
 	}

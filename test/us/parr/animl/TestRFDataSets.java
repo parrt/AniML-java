@@ -82,6 +82,7 @@ public class TestRFDataSets extends BaseTest {
 		DataTable data = heartData();
 		int m = 4; // sqrt(13) columns
 		DecisionTree tree = new DecisionTree(0, MIN_LEAF_SIZE);
+		DecisionTree.debug=true;
 		tree.train(data);
 
 		System.out.println(tree.toDOT());
@@ -231,8 +232,6 @@ public class TestRFDataSets extends BaseTest {
 		data.setColType("ChestPain", CATEGORICAL_STRING);
 		data.setColType("Fbs", CATEGORICAL_INT);
 		data.setColType("RestECG", CATEGORICAL_INT);
-		data.setColType("ExAng", CATEGORICAL_INT);
-		data.setColType("MaxHR", CATEGORICAL_INT);
 		data.setColType("ExAng", CATEGORICAL_INT);
 		data.setColType("Slope", CATEGORICAL_INT);
 		return data;

@@ -172,12 +172,36 @@ public class TestDecisionTreeBasics extends BaseTest {
 		data.add(new int[] {2,7,2});
 		data.add(new int[] {0,7,2});
 		DecisionTree tree = new DecisionTree();
+		DecisionTree.debug = true;
 		tree.train(DataTable.fromInts(data, null, null));
 		String expecting = "{'var':'x1','val':8.0,'n':8,'E':'1.00','left':{'predict':2,'n':4},'right':{'predict':1,'n':4}}";
 		String result = toTestString(tree);
 //		System.out.println(tree.toDOT(null,null));
 		assertEquals(expecting, result);
 		checkPredictions(data, tree);
+	}
+
+	@Test public void testCategoricalNoiseAndGoodPredictor() {
+		List<int[]> rows = new ArrayList<>();
+		rows.add(new int[] {1,9,1}); // x0 is crappy but x1 is perfect predictor of y
+		rows.add(new int[] {1,9,1});
+		rows.add(new int[] {2,9,1});
+		rows.add(new int[] {1,9,1});
+		rows.add(new int[] {2,7,2});
+		rows.add(new int[] {1,7,2});
+		rows.add(new int[] {2,7,2});
+		rows.add(new int[] {0,7,2});
+		DecisionTree tree = new DecisionTree();
+		DecisionTree.debug = true;
+		DataTable data = DataTable.fromInts(rows, null, null);
+		data.setColType(0, DataTable.VariableType.CATEGORICAL_INT);
+		data.setColType(1, DataTable.VariableType.CATEGORICAL_INT);
+		tree.train(data);
+		String expecting = "{'var':'x1','cat':'7','n':8,'E':'1.00','left':{'predict':2,'n':4},'right':{'predict':1,'n':4}}";
+		String result = toTestString(tree);
+//		System.out.println(tree.toDOT(null,null));
+		assertEquals(expecting, result);
+		checkPredictions(rows, tree);
 	}
 
 	@Test public void testFixedAndGoodPredictorWith4PredictorValues() {
