@@ -91,6 +91,7 @@ public class BaseTest {
 		for (int n_estimators : sizes) {
 			// Check data scikit-learn
 			double[] scikitResult = scikit_rf_error(fileName, n_estimators, minLeafSize, kfolds);
+//			double[] scikitResult = {0.0,0.0};
 			// Now mine
 			RandomForest rf = new RandomForest(n_estimators, minLeafSize);
 			rf.train(data);

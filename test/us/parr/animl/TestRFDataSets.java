@@ -216,6 +216,33 @@ public class TestRFDataSets extends BaseTest {
 		RF_kFoldCrossErrors(fileName, data, sizes, kfolds, minLeafSize, 0.03);
 	}
 
+	@Test public void testRunWine() {
+		String fileName = "wine.csv";
+		URL url = this.getClass().getClassLoader().getResource(fileName);
+		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
+//		DecisionTree.debug = true;
+		RandomForest rf = new RandomForest(5000, 5);
+		rf.train(data);
+	}
+
+	@Test public void testRunHeart() {
+		String fileName = "Heart-wo-NA.csv";
+		URL url = this.getClass().getClassLoader().getResource(fileName);
+		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
+//		DecisionTree.debug = true;
+		RandomForest rf = new RandomForest(500, 1);
+		rf.train(data);
+	}
+
+	@Test public void testRunIris() {
+		String fileName = "iris.csv";
+		URL url = this.getClass().getClassLoader().getResource(fileName);
+		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
+//		DecisionTree.debug = true;
+		RandomForest rf = new RandomForest(500, 1);
+		rf.train(data);
+	}
+
 	// ---------------------------------
 
 	protected DataTable heartData() {
