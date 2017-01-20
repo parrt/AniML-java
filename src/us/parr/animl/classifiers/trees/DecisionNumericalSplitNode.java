@@ -12,7 +12,8 @@ import javax.json.Json;
 import javax.json.JsonObjectBuilder;
 import java.util.Map;
 
-import static us.parr.animl.AniMath.isClose;
+import static us.parr.lib.ParrtMath.isClose;
+
 
 public class DecisionNumericalSplitNode extends DecisionSplitNode {
 	/** Split at what variable value? */

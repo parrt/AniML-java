@@ -5,6 +5,7 @@ import us.parr.animl.classifiers.trees.DecisionTree;
 import us.parr.animl.classifiers.trees.RandomForest;
 import us.parr.animl.data.DataTable;
 import us.parr.animl.validation.Validation;
+import us.parr.lib.ParrtSys;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -124,11 +125,11 @@ public class BaseTest {
 
 		String home = System.getProperty("user.home");
 		String anacondaPython = home+"/anaconda2/bin/python2.7"; // needs latest scikit learn with conda install scikit-learn
-		String[] result = AniSys.exec(anacondaPython, scriptFileName,
-		                              dataFileName,
-		                              ""+n_estimators,
-		                              ""+min_samples_leaf,
-		                              ""+kfolds);
+		String[] result = ParrtSys.exec(anacondaPython, scriptFileName,
+		                                dataFileName,
+		                                ""+n_estimators,
+		                                ""+min_samples_leaf,
+		                                ""+kfolds);
 		String exitCode = result[0];
 		String stdout = result[1];
 		String stderr = result[2];

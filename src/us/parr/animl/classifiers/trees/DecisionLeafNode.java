@@ -6,17 +6,17 @@
 
 package us.parr.animl.classifiers.trees;
 
-import us.parr.animl.AniStats;
-import us.parr.animl.data.CountingSet;
 import us.parr.animl.data.DataTable;
+import us.parr.lib.ParrtStats;
+import us.parr.lib.collections.CountingSet;
 
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;
 import java.util.HashMap;
 import java.util.Map;
 
-import static us.parr.animl.AniMath.isClose;
 import static us.parr.animl.classifiers.trees.DecisionTree.INVALID_CATEGORY;
+import static us.parr.lib.ParrtMath.isClose;
 
 public class DecisionLeafNode extends DecisionTreeNode {
 	/** The predicted category */
@@ -33,7 +33,7 @@ public class DecisionLeafNode extends DecisionTreeNode {
 	public DecisionLeafNode(CountingSet<Integer> categoryCounts, int predictionVariable) {
 		this.prediction = categoryCounts.argmax();
 		this.predictionVariable = predictionVariable;
-		this.entropy = AniStats.entropy(categoryCounts.counts());
+		this.entropy = ParrtStats.entropy(categoryCounts.counts());
 		this.categoryCounts = categoryCounts;
 		this.numRecords = categoryCounts.total();
 		categoryProbabilities = new HashMap<>();

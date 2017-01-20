@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static us.parr.animl.AniStats.mean;
+import static us.parr.lib.ParrtStats.mean;
 
 public class Validation {
 	public static final int SEED = 333888333; // need randomness but use same seed to get reproducibility

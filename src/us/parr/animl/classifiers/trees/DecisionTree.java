@@ -6,11 +6,11 @@
 
 package us.parr.animl.classifiers.trees;
 
-import us.parr.animl.AniStats;
 import us.parr.animl.classifiers.ClassifierModel;
-import us.parr.animl.data.CountingSet;
 import us.parr.animl.data.DataPair;
 import us.parr.animl.data.DataTable;
+import us.parr.lib.ParrtStats;
+import us.parr.lib.collections.CountingSet;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -100,7 +100,7 @@ public class DecisionTree implements ClassifierModel {
 		// if all predict same category or only one row of data,
 		// create leaf predicting that
 		CountingSet<Integer> completeCategoryCounts = data.valueCountsInColumn(yi);
-		double complete_entropy = AniStats.entropy(completeCategoryCounts.counts());
+		double complete_entropy = ParrtStats.entropy(completeCategoryCounts.counts());
 		if ( completeCategoryCounts.size()==1 || data.size()<=minLeafSize ) {
 			DecisionTreeNode t = new DecisionLeafNode(completeCategoryCounts, yi);
 			t.data = data;
@@ -298,8 +298,8 @@ public class DecisionTree implements ClassifierModel {
 		for (Integer splitValue : predictionCountSets.keySet()) {
 			CountingSet<Integer> region1 = predictionCountSets.get(splitValue);
 			CountingSet<Integer> region2 = CountingSet.minus(completePredictionCounts, region1);
-			double r1_entropy = AniStats.entropy(region1.counts());
-			double r2_entropy = AniStats.entropy(region2.counts());
+			double r1_entropy = ParrtStats.entropy(region1.counts());
+			double r2_entropy = ParrtStats.entropy(region2.counts());
 
 			int n1 = sum(region1.counts());
 			int n2 = sum(region2.counts());

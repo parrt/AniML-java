@@ -11,8 +11,9 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
-import us.parr.animl.AniStats;
-import us.parr.animl.AniUtils;
+import us.parr.lib.ParrtStats;
+import us.parr.lib.collections.CountingSet;
+import us.parr.lib.collections.ParrtCollections;
 
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
@@ -29,10 +30,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-import static us.parr.animl.AniStats.max;
-import static us.parr.animl.AniUtils.indexOf;
-import static us.parr.animl.AniUtils.join;
-import static us.parr.animl.AniUtils.map;
+import static java.util.Collections.max;
 import static us.parr.animl.data.DataTable.VariableFormat.CENTER;
 import static us.parr.animl.data.DataTable.VariableFormat.RIGHT;
 import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_INT;
@@ -45,6 +43,9 @@ import static us.parr.animl.data.DataTable.VariableType.TARGET_CATEGORICAL_STRIN
 import static us.parr.animl.data.DataTable.VariableType.UNUSED_FLOAT;
 import static us.parr.animl.data.DataTable.VariableType.UNUSED_INT;
 import static us.parr.animl.data.DataTable.VariableType.UNUSED_STRING;
+import static us.parr.lib.collections.ParrtCollections.indexOf;
+import static us.parr.lib.collections.ParrtCollections.join;
+import static us.parr.lib.collections.ParrtCollections.map;
 
 public class DataTable implements Iterable<int[]> {
 	public static final Pattern floatPattern = Pattern.compile("[0-9]+\\.[0-9]*|\\.[0-9]+");
@@ -351,13 +352,13 @@ public class DataTable implements Iterable<int[]> {
 	}
 
 	public DataTable filter(Predicate<int[]> pred) {
-		List<int[]> filtered = AniUtils.filter(rows, pred);
+		List<int[]> filtered = ParrtCollections.filter(rows, pred);
 		return new DataTable(this, filtered);
 	}
 
 	public double entropy(int colIndex) {
 		CountingSet<Integer> valueCounts = valueCountsInColumn(colIndex);
-		return AniStats.entropy(valueCounts.counts());
+		return ParrtStats.entropy(valueCounts.counts());
 	}
 
 	public List<Integer> getSubsetOfVarIndexes(int m, Random random) {

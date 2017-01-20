@@ -6,9 +6,9 @@
 
 package us.parr.animl.classifiers.trees;
 
-import us.parr.animl.AniStats;
 import us.parr.animl.classifiers.ClassifierModel;
 import us.parr.animl.data.DataTable;
+import us.parr.lib.ParrtStats;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,7 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static us.parr.animl.AniStats.majorityVote;
+import static us.parr.lib.ParrtStats.majorityVote;
+
 
 /** A Random Forest classifier operating on categorical and numerical
  *  values. Predicts integer categories only. -1 is an invalid predicted
@@ -54,7 +55,7 @@ public class RandomForest implements ClassifierModel {
 		for (int i = 1; i<=numEstimators; i++) {
 			if ( DecisionTree.debug ) System.out.println("Estimator "+i+" ------------------");
 			Set<Integer> outOfBagSamples = new HashSet<>(); // gets filled in
-			List<int[]> bootstrap = AniStats.bootstrapWithRepl(data.getRows(), outOfBagSamples);
+			List<int[]> bootstrap = ParrtStats.bootstrapWithRepl(data.getRows(), outOfBagSamples);
 			DataTable table = new DataTable(data, bootstrap);
 //			System.out.println("bootstrap:\n"+table.toString());
 			DecisionTree tree = new DecisionTree(m, minLeafSize);
