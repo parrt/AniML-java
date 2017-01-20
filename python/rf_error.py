@@ -24,6 +24,10 @@ dim = len(data.columns)
 target_index = dim-1
 
 # label encode strings
+
+# TODO:
+# import pandas as pd
+# s = pd.Series(list('abca'))
 data = data[data.columns].apply(lambda x : pandas.factorize(x)[0])
 
 # convert to ndarray from pandas DataFrame
