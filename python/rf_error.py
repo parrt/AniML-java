@@ -46,6 +46,7 @@ for train_index, test_index in kfold.split(X):
     X_train, X_test = X[train_index], X[test_index]
     y_train, y_test = y[train_index], y[test_index]
     clf = RandomForestClassifier(n_estimators=n_estimators, oob_score=False,
+                                 max_features="sqrt", bootstrap=True,
                                  min_samples_leaf=min_samples_leaf, criterion="entropy",
                                  random_state=random)
     clf = clf.fit(X_train, y_train)
@@ -57,6 +58,7 @@ for train_index, test_index in kfold.split(X):
     # print "5-fold error:", counts[False], '/', len(y_test), err
 
 clf = RandomForestClassifier(n_estimators=n_estimators, oob_score=True,
+                             max_features="sqrt", bootstrap=True,
                              min_samples_leaf=min_samples_leaf, criterion="entropy",
                              random_state=random)
 clf = clf.fit(X, y)

@@ -132,7 +132,7 @@ public class AniStats {
 		for (Integer v : counts) {
 			if ( v==0 ) continue; // avoid log(0), which is undefined
 			double p = ((double)v) / n;
-			entropy += p *AniMath.log2(p);
+			entropy += p * AniMath.log2(p);
 		}
 		entropy = -entropy;
 		return entropy;

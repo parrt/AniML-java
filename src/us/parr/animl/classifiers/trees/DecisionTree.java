@@ -21,8 +21,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import static us.parr.animl.AniStats.sum;
-
 /** A classic CART decision tree but this implementation is suitable just for
  *  classification, not regression. I extended it to handle a subset of predictor
  *  variables at each node to support random forest construction.
@@ -214,15 +212,15 @@ public class DecisionTree implements ClassifierModel {
 		for (Double splitValue : predictionCountSets.keySet()) {
 			CountingSet<Integer> region1 = predictionCountSets.get(splitValue);
 			CountingSet<Integer> region2 = CountingSet.minus(completePredictionCounts, region1);
-			double r1_entropy = AniStats.entropy(region1.counts());
-			double r2_entropy = AniStats.entropy(region2.counts());
 
-			int n1 = sum(region1.counts());
-			int n2 = sum(region2.counts());
+			double r1_entropy = region1.entropy();
+			double r2_entropy = region2.entropy();
+			int n1 = region1.total();
+			int n2 = region2.total();
 			double p1 = ((double) n1)/(n1+n2);
 			double p2 = ((double) n2)/(n1+n2);
-			double expectedEntropyValue = p1*r1_entropy+p2*r2_entropy;
-			double gain = complete_entropy-expectedEntropyValue;
+			double expectedEntropyValue = p1*r1_entropy + p2*r2_entropy;
+			double gain = complete_entropy - expectedEntropyValue;
 
 			if ( gain>best.gain && n1>0 && n2>0 ) {
 				best.gain = gain;
@@ -260,16 +258,14 @@ public class DecisionTree implements ClassifierModel {
 				}
 			}
 //			System.out.println("eq="+eq+", noteq="+noteq);
-			List<Integer> eqcounts = eq.counts();
-			double r1_entropy = AniStats.entropy(eqcounts);
-			List<Integer> noteqcounts = noteq.counts();
-			double r2_entropy = AniStats.entropy(noteqcounts);
-			int n1 = sum(eqcounts);
-			int n2 = sum(noteqcounts);
+			double r1_entropy = eq.entropy();
+			double r2_entropy = noteq.entropy();
+			int n1 = eq.total();
+			int n2 = noteq.total();
 			double p1 = ((double) n1)/(n1+n2);
 			double p2 = ((double) n2)/(n1+n2);
-			double expectedEntropyValue = p1*r1_entropy+p2*r2_entropy;
-			double gain = complete_entropy-expectedEntropyValue;
+			double expectedEntropyValue = p1*r1_entropy + p2*r2_entropy;
+			double gain = complete_entropy - expectedEntropyValue;
 			if ( gain>best.gain && n1>0 && n2>0 ) {
 				best.gain = gain;
 				best.var = j;

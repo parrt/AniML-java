@@ -6,15 +6,14 @@
 
 package us.parr.animl.data;
 
+import us.parr.animl.AniStats;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 /** Count how many of each key we have; not thread safe */
 public class CountingSet<T> extends HashMap<T, MutableInt> {
-	/** How many total elements added to set? */
-	protected int n = 0;
-
 	public CountingSet() {
 	}
 
@@ -39,14 +38,6 @@ public class CountingSet<T> extends HashMap<T, MutableInt> {
 		else {
 			value.v++;
 		}
-		n++;
-	}
-
-	@Override
-	public MutableInt remove(Object key) {
-		MutableInt I = super.remove(key);
-		n -= I.v;
-		return I;
 	}
 
 	@Override
@@ -57,7 +48,13 @@ public class CountingSet<T> extends HashMap<T, MutableInt> {
 	/** How many total elements added to set including repeats?
 	 *  Note that size() returns number of keys.
 	 */
-	public int total() { return n; }
+	public int total() {
+		int n = 0;
+		for (MutableInt i : values()) {
+			n += i.v;
+		}
+		return n;
+	}
 
 	/** Return a new set containing a[i]-b[i] for all keys i. Values in b
 	 *  but not in a are ignored.  Values in a but not in b yield a's same value
@@ -99,5 +96,13 @@ public class CountingSet<T> extends HashMap<T, MutableInt> {
 			if ( count(key)>count(keyOfMax) ) keyOfMax = key;
 		}
 		return keyOfMax;
+	}
+
+	public double entropy() {
+		return AniStats.entropy( counts() );
+	}
+
+	public double gini() {
+		return AniStats.gini( counts() );
 	}
 }
