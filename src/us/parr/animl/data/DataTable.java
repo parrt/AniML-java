@@ -409,7 +409,9 @@ public class DataTable implements Iterable<int[]> {
 		return new DataTable(this, lessOne);
 	}
 
-	public int getNumberOfPredictorVar() { return getSubsetOfVarIndexes(rows.get(0).length, null).size(); }
+	public int getNumberOfPredictorVar() { return getSubsetOfVarIndexes(getNumberOfColumns(), null).size(); }
+
+	public int getNumberOfColumns() { return rows.get(0).length; }
 
 	public static boolean isPredictorVar(VariableType colType) {
 		return
@@ -577,8 +579,8 @@ public class DataTable implements Iterable<int[]> {
 	}
 
 	public int getPredictedCol() {
-		Integer firstCol = indexOf(colTypes, t -> t==TARGET_CATEGORICAL_STRING || t==TARGET_CATEGORICAL_INT);
-		return firstCol!=null ? firstCol : -1;
+		int firstCol = indexOf(colTypes, t -> t==TARGET_CATEGORICAL_STRING || t==TARGET_CATEGORICAL_INT);
+		return firstCol>=0 ? firstCol : getNumberOfColumns() - 1; // default to last column
 	}
 
 	@Override

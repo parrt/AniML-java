@@ -186,10 +186,10 @@ public class TestRFDataSets extends BaseTest {
 	}
 
 	@Test public void testIriskFoldCrossErrors() {
-		URL url = this.getClass().getClassLoader().getResource("iris.csv");
+		String fileName = "iris.csv";
+		URL url = this.getClass().getClassLoader().getResource(fileName);
 		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
 		int kfolds = 5;
-		String fileName = "iris.csv";
 		int minLeafSize = MIN_LEAF_SIZE;
 		int[] sizes = {10, 50, 100, 200};
 		RF_kFoldCrossErrors(fileName, data, sizes, kfolds, minLeafSize, 0.03);
@@ -204,6 +204,16 @@ public class TestRFDataSets extends BaseTest {
 			double result = rf.getErrorEstimate(data);
 			System.out.println(result);
 		}
+	}
+
+	@Test public void testWinekFoldErrors() {
+		String fileName = "wine.csv";
+		URL url = this.getClass().getClassLoader().getResource(fileName);
+		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
+		int kfolds = 5;
+		int minLeafSize = 20;
+		int[] sizes = {1, 10, 50, 100};
+		RF_kFoldCrossErrors(fileName, data, sizes, kfolds, minLeafSize, 0.03);
 	}
 
 	// ---------------------------------

@@ -6,8 +6,6 @@
 
 package us.parr.animl.classifiers.trees;
 
-import org.apache.commons.collections4.MultiValuedMap;
-import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import us.parr.animl.AniStats;
 import us.parr.animl.classifiers.ClassifierModel;
 import us.parr.animl.data.DataTable;
@@ -19,8 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static us.parr.animl.AniStats.mean;
-import static us.parr.animl.classifiers.trees.DecisionTree.INVALID_CATEGORY;
+import static us.parr.animl.AniStats.majorityVote;
 
 /** A Random Forest classifier operating on categorical and numerical
  *  values. Predicts integer categories only. -1 is an invalid predicted
@@ -90,6 +87,16 @@ public class RandomForest implements ClassifierModel {
 	 */
 	public static int classify(Collection<DecisionTree> trees, int[] unknown) {
 		if ( unknown==null ) {
+			return DecisionTree.INVALID_CATEGORY;
+		}
+		List<Integer> predictions = new ArrayList<>();
+		for (DecisionTree tree : trees) {
+			predictions.add( tree.classify(unknown) );
+		}
+		return majorityVote(predictions);
+
+		/*
+		if ( unknown==null ) {
 			return INVALID_CATEGORY;
 		}
 		MultiValuedMap<Integer, Double> catToProbList = new ArrayListValuedHashMap<>();
@@ -112,6 +119,7 @@ public class RandomForest implements ClassifierModel {
 			}
 		}
 		return catOfMax;
+		*/
 	}
 
 	/** Return the out-of-bag error estimate */
