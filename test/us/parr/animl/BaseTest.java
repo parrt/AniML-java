@@ -1,18 +1,15 @@
 package us.parr.animl;
 
-import org.apache.commons.exec.CommandLine;
-import org.apache.commons.exec.DefaultExecutor;
-import org.apache.commons.exec.PumpStreamHandler;
 import us.parr.animl.classifiers.Classifier;
 import us.parr.animl.classifiers.trees.DecisionTree;
 import us.parr.animl.classifiers.trees.RandomForest;
 import us.parr.animl.data.DataTable;
 import us.parr.animl.validation.Validation;
 
-import java.io.ByteArrayOutputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 import static org.junit.Assert.assertEquals;
 
@@ -100,39 +97,32 @@ public class BaseTest {
 		return errors;
 	}
 
-	protected static String[] rf_error(String fileName) {
+	protected static String[] scikit_rf_error(String fileName, int n_estimators, int min_samples_leaf, int kfolds) {
 		URL dataURL = BaseTest.class.getClassLoader().getResource(fileName);
 		String dataFileName = dataURL.getFile();
 		URL scriptURL = BaseTest.class.getClassLoader().getResource("rf_error.py");
 		String scriptFileName = scriptURL.getFile();
 
-		CommandLine cmdLine = new CommandLine("python2.7");
-		cmdLine.addArgument(scriptFileName);
-		cmdLine.addArgument(dataFileName);
-		cmdLine.addArgument("50");
-		cmdLine.addArgument("20");
-		cmdLine.addArgument("5");
-		cmdLine = CommandLine.parse("python2.7 python/rf_error.py");
-
-		ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-		ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-		try {
-		    DefaultExecutor executor = new DefaultExecutor();
-			executor.setStreamHandler(new PumpStreamHandler(stdout, stderr));
-			int exitValue = executor.execute(cmdLine);
-			System.out.println("exit "+exitValue);
+		String home = System.getProperty("user.home");
+		String anacondaPython = home+"/anaconda2/bin/python2.7"; // needs latest scikit learn with conda install scikit-learn
+		String[] result = AniSys.exec(anacondaPython, scriptFileName,
+		                              dataFileName,
+		                              ""+n_estimators,
+		                              ""+min_samples_leaf,
+		                              ""+kfolds);
+		String exitCode = result[0];
+		String stdout = result[1];
+		String stderr = result[2];
+		if ( stderr.length()>0 ) {
+			System.err.println(stderr);
 		}
-		catch (Exception e) {
-			e.printStackTrace(System.err);
-		}
-		finally {
-			System.out.println(stdout.toString());
-			System.out.println(stderr.toString());
-		}
-		return null;
-	}
-
-	public static void main(String[] args) {
-		rf_error("Heart-wo-NA.csv");
+//		System.out.println(stdout);
+		// stdout is like "oob 0.19529 kfold 0.195254"
+		Scanner s = new Scanner(stdout);
+		s.next(); // skip "oob"
+		String oob = s.next();
+		s.next(); // skip "kfold"
+		String kfold = s.next();
+		return new String[] {oob, kfold};
 	}
 }
