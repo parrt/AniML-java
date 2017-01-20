@@ -174,6 +174,51 @@ public class DecisionTree implements ClassifierModel {
 	                                           CountingSet<Integer> completePredictionCounts,
 	                                           double complete_entropy)
 	{
+		BestInfo best = new BestInfo();
+		int n = data.size();
+		Set<Integer> uniqueValues = data.subset()
+		for (Integer splitCat : uniqueValues) { // for each unique category in col j
+			CountingSet<Integer> lt = new CountingSet<>();
+			CountingSet<Integer> ge = new CountingSet<>();
+			for (int i = 0; i<n; i++) { // walk all records, counting dep categories in two groups: indep cat equal and not-equal to splitCat
+				int currentVal = data.getAsInt(i, j);
+//				System.out.println(Arrays.toString(data.getRow(i))+", currentVal = "+currentVal+" @ "+i+","+j);
+				int currentTargetCat = data.getAsInt(i, yi);
+				if ( currentVal<splitCat ) {
+					lt.add(currentTargetCat);
+				}
+				else {
+					ge.add(currentTargetCat);
+				}
+			}
+			double r1_entropy = lt.entropy();
+			double r2_entropy = ge.entropy();
+			int n1 = lt.total();
+			int n2 = ge.total();
+			double p1 = ((double) n1)/(n1+n2);
+			double p2 = ((double) n2)/(n1+n2);
+			double expectedEntropyValue = p1*r1_entropy + p2*r2_entropy;
+			double gain = complete_entropy - expectedEntropyValue;
+			if ( gain>best.gain && n1>0 && n2>0 ) {
+				best.gain = gain;
+				best.var = j;
+				best.cat = splitCat;
+			}
+			if ( debug ) {
+				String var = data.getColNames()[j];
+				Object p = DataTable.getValue(data, splitCat, j);
+				System.out.printf("Entropies var=%13s cat=%-13s r1=%2d/%3d*%.2f r2=%2d/%3d*%.2f, ExpEntropy=%.2f gain=%.2f\n",
+				                  var, p, n1, n1+n2, r1_entropy, n2, n1+n2, r2_entropy,
+				                  expectedEntropyValue, gain);
+			}
+		}
+		return best;
+	}
+
+	protected static BestInfo bestNumericSplit_old(DataTable data, int j, int yi,
+	                                           CountingSet<Integer> completePredictionCounts,
+	                                           double complete_entropy)
+	{
 		int n = data.size();
 		BestInfo best = new BestInfo();
 		// Rather than splitting the data table for each unique value of this variable
