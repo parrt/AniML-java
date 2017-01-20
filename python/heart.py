@@ -5,25 +5,28 @@ from sklearn.model_selection import KFold
 import collections
 from sklearn import preprocessing
 from sklearn.utils import check_random_state
+from sklearn.feature_extraction import DictVectorizer
 
-heart = pandas.read_table("../data/Heart-wo-NA.csv", header=0, sep=",")
+data = pandas.read_table("../data/Heart-wo-NA.csv", header=0, sep=",")
 # print heart
 
 # names = ["id","Age","Sex","ChestPain","RestBP","Chol","Fbs","RestECG","MaxHR","ExAng","Oldpeak","Slope","Ca","Thal","AHD"]
 
-# label encode strings
-heart = heart[heart.columns].apply(lambda x : pandas.factorize(x)[0])
+# encode target strings as int
+data[['AHD']] = data[['AHD']].apply(lambda x : pandas.factorize(x)[0]) # encode target as int if string
+# one hot encode other strings
+data = pandas.get_dummies(data)
 
-
-v = heart.values
+v = data.values
 # print type(v)
 # print heart.columns
 # print len(heart.columns)
 
-le = preprocessing.LabelEncoder()
+dim = data.shape[1]
+target_index = dim-1
 
-X = v[:,0:14]
-y = v[:,14]
+X = v[:,0:target_index]
+y = v[:,target_index]
 
 random = 99 # pick reproducible pseudo-random sequence
 

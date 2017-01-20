@@ -4,11 +4,18 @@ from sklearn.model_selection import KFold
 import collections
 import numpy as np
 import pandas
+from sklearn.preprocessing import OneHotEncoder
+enc = OneHotEncoder()
 
-iris = datasets.load_iris()
+#data = datasets.load_iris()
+data = pandas.read_table("../data/iris.csv", header=0, sep=",")
 
-X = iris.data
-y = iris.target
+# convert target column from string to int 0..2
+data = data[data.columns].apply(lambda x : pandas.factorize(x)[0])
+data = data.values # to ndarray
+
+X = data[:,0:4]
+y = data[:,4]
 
 # print iris
 

@@ -20,18 +20,18 @@ min_samples_leaf = int(sys.argv[3])
 k = int(sys.argv[4])
 
 data = pandas.read_table(filename, header=0, sep=",")
-dim = len(data.columns)
+target_index = len(data.columns) - 1
+target_colname = data.columns[target_index]
+
+# encode target strings as int
+data[[target_colname]] = data[[target_colname]].apply(lambda x : pandas.factorize(x)[0]) # encode target as int if string
+# one hot encode other strings
+data = pandas.get_dummies(data)
+data = data.values
+dim = data.shape[1]
 target_index = dim-1
 
-# label encode strings
-
-# TODO:
-# import pandas as pd
-# s = pd.Series(list('abca'))
-data = data[data.columns].apply(lambda x : pandas.factorize(x)[0])
-
 # convert to ndarray from pandas DataFrame
-data = data.values
 
 X = data[:, 0:target_index]
 y = data[:, target_index]
