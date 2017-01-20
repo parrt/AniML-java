@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class BaseTest {
 	public static final String tmpdir = System.getProperty("java.io.tmpdir")+"/animl";
@@ -83,6 +84,25 @@ public class BaseTest {
 		return missed;
 	}
 
+	protected void RF_kFoldCrossErrors(String fileName, DataTable data,
+	                                   int[] sizes, int kfolds,
+	                                   int minLeafSize, double tolerance)
+	{
+		for (int n_estimators : sizes) {
+			// Check data scikit-learn
+			double[] scikitResult = scikit_rf_error(fileName, n_estimators, minLeafSize, kfolds);
+			// Now mine
+			RandomForest rf = new RandomForest(n_estimators, minLeafSize);
+			rf.train(data);
+			double error = Validation.kFoldCross(rf, kfolds, data);
+			System.out.println(scikitResult[1]+" vs "+error);
+			// should be within small absolute error difference
+			String errMsg = String.format("Error rates %.5f, %.5f should be closer than %.4f",
+			                              scikitResult[1], error, tolerance);
+			assertTrue(errMsg,Math.abs(scikitResult[1]-error)<tolerance);
+		}
+	}
+
 	/** For 1..n (num trees), compute k-fold errors */
 	protected double[] RF_kFoldCrossErrors(DataTable data, int minEstimators, int maxEstimators, int folds, int minLeafSize) {
 		double[] errors = new double[maxEstimators-minEstimators+1];
@@ -97,7 +117,7 @@ public class BaseTest {
 		return errors;
 	}
 
-	protected static String[] scikit_rf_error(String fileName, int n_estimators, int min_samples_leaf, int kfolds) {
+	protected static double[] scikit_rf_error(String fileName, int n_estimators, int min_samples_leaf, int kfolds) {
 		URL dataURL = BaseTest.class.getClassLoader().getResource(fileName);
 		String dataFileName = dataURL.getFile();
 		URL scriptURL = BaseTest.class.getClassLoader().getResource("rf_error.py");
@@ -113,7 +133,7 @@ public class BaseTest {
 		String exitCode = result[0];
 		String stdout = result[1];
 		String stderr = result[2];
-		if ( stderr.length()>0 ) {
+		if ( stderr.length()>0 && !stderr.contains("Some inputs do not have OOB scores") ) {
 			System.err.println(stderr);
 		}
 //		System.out.println(stdout);
@@ -123,6 +143,6 @@ public class BaseTest {
 		String oob = s.next();
 		s.next(); // skip "kfold"
 		String kfold = s.next();
-		return new String[] {oob, kfold};
+		return new double[] {Double.valueOf(oob), Double.valueOf(kfold)};
 	}
 }

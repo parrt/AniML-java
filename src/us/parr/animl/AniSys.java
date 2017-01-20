@@ -8,13 +8,15 @@ package us.parr.animl;
 
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.ExecuteException;
 import org.apache.commons.exec.PumpStreamHandler;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 public class AniSys {
 	/** Given an executable command name and arguments, execute the process
-	 *  and return the {exit code (as a string), stdout, stderr{} in
+	 *  and return the {exit code (as a string), stdout, stderr} in
 	 *  a String array.
 	 *
 	 *  The returned output strings are "" if empty, not null.
@@ -27,7 +29,7 @@ public class AniSys {
 
 	/** Given a command line including executable command name and arguments,
 	 *  execute the process and return the {exit code (as a string),
-	 *  stdout, stderr{} in a String array.
+	 *  stdout, stderr} in a String array.
 	 *
 	 *  The returned output strings are "" if empty, not null.
 	 */
@@ -44,8 +46,12 @@ public class AniSys {
 			executor.setStreamHandler(new PumpStreamHandler(stdout, stderr));
 			exitCode = executor.execute(cmdLine);
 		}
-		catch (Exception e) {
+		catch (ExecuteException e) {
 			//e.printStackTrace(System.err);
+			// stderr should have reason
+		}
+		catch (IOException ioe) {
+			ioe.printStackTrace(System.err);
 		}
 		return new String[] {String.valueOf(exitCode), stdout.toString(), stderr.toString()};
 	}

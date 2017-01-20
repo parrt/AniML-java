@@ -17,7 +17,6 @@ import java.util.Arrays;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static us.parr.animl.AniUtils.join;
 import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_INT;
 import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_STRING;
 import static us.parr.animl.data.DataTable.VariableType.UNUSED_INT;
@@ -126,19 +125,11 @@ public class TestRFDataSets extends BaseTest {
 
 	@Test public void testHeartkFoldCrossErrors() {
 		DataTable data = heartData();
-		int N = 50;
-		int folds = 10;
-		double[] errors = RF_kFoldCrossErrors(data, 1, N, folds, MIN_LEAF_SIZE);
-		System.out.println(join(errors, ", ", 3));
-		double[] expected = new double[] {
-			0.270, 0.268, 0.235, 0.230, 0.189, 0.219, 0.191, 0.199, 0.221,
-			0.176, 0.188, 0.209, 0.196, 0.204, 0.170, 0.185, 0.181, 0.174,
-			0.178, 0.186, 0.204, 0.166, 0.184, 0.180, 0.186, 0.202, 0.171,
-			0.201, 0.187, 0.166, 0.197, 0.185, 0.182, 0.179, 0.146, 0.219,
-			0.209, 0.155, 0.155, 0.170, 0.173, 0.196, 0.182, 0.161, 0.182,
-			0.177, 0.187, 0.190, 0.168, 0.168
-		};
-		assertArrayEquals(expected, errors, 0.001);
+		int kfolds = 5;
+		String fileName = "Heart-wo-NA.csv";
+		int minLeafSize = MIN_LEAF_SIZE;
+		int[] sizes = {1, 10, 50, 100, 200};
+		RF_kFoldCrossErrors(fileName, data, sizes, kfolds, minLeafSize, 0.015);
 	}
 
 	@Test public void testHeartOOBError() {
@@ -195,37 +186,12 @@ public class TestRFDataSets extends BaseTest {
 
 	@Test public void testIriskFoldCrossErrors() {
 		URL url = this.getClass().getClassLoader().getResource("iris.csv");
-		DataTable data = DataTable.loadCSV(url.getFile().toString(), null, null, null, true);
-		int N = 50;
-		int folds = 5;
-		double[] errors = RF_kFoldCrossErrors(data, 1, N, folds, MIN_LEAF_SIZE);
-		System.out.println(join(errors, ", ", 3));
-		/*
-		This data is consistent with scikit-learn 5-fold with 20 trees RF. See python/iris.py file.
-		RandomForestClassifier(n_estimators=20, oob_score=True, min_samples_leaf=20, criterion="entropy") gives:
-
-		oob error 0.075 5-fold error: 0 / 30 0.0
-		oob error 0.0583333333333 5-fold error: 4 / 30 0.133333333333
-		oob error 0.0666666666667 5-fold error: 0 / 30 0.0
-		oob error 0.0416666666667 5-fold error: 3 / 30 0.1
-		oob error 0.0416666666667 5-fold error: 3 / 30 0.1
-
-		another run:
-
-		oob error 0.05 5-fold error: 4 / 30 0.133333333333
-		oob error 0.0583333333333 5-fold error: 2 / 30 0.0666666666667
-		oob error 0.075 5-fold error: 1 / 30 0.0333333333333
-		oob error 0.075 5-fold error: 2 / 30 0.0666666666667
-		oob error 0.108333333333 5-fold error: 2 / 30 0.0666666666667
-		 */
-		double[] expected = new double[] {
-			0.087, 0.067, 0.060, 0.067, 0.053, 0.053, 0.067, 0.053, 0.073, 0.053, 0.047,
-			0.040, 0.047, 0.053, 0.033, 0.053, 0.053, 0.060, 0.053, 0.040, 0.060, 0.060,
-			0.040, 0.080, 0.053, 0.053, 0.073, 0.053, 0.067, 0.067, 0.060, 0.080, 0.080,
-			0.067, 0.080, 0.053, 0.100, 0.053, 0.060, 0.073, 0.047, 0.053, 0.073, 0.087,
-			0.060, 0.053, 0.033, 0.053, 0.040, 0.060
-		};
-		assertArrayEquals(expected, errors, 0.001);
+		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
+		int kfolds = 5;
+		String fileName = "iris.csv";
+		int minLeafSize = MIN_LEAF_SIZE;
+		int[] sizes = {10, 50, 100, 200};
+		RF_kFoldCrossErrors(fileName, data, sizes, kfolds, minLeafSize, 0.03);
 	}
 
 	@Test public void testIrisOOBError() {
