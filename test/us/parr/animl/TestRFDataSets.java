@@ -19,6 +19,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_INT;
 import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_STRING;
+import static us.parr.animl.data.DataTable.VariableType.TARGET_CATEGORICAL_STRING;
 import static us.parr.animl.data.DataTable.VariableType.UNUSED_INT;
 
 public class TestRFDataSets extends BaseTest {
@@ -217,6 +218,7 @@ public class TestRFDataSets extends BaseTest {
 		data.setColType("RestECG", CATEGORICAL_INT);
 		data.setColType("ExAng", CATEGORICAL_INT);
 		data.setColType("Slope", CATEGORICAL_INT);
+		data.setColType("AHD", TARGET_CATEGORICAL_STRING);
 		return data;
 	}
 }

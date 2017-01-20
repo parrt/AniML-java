@@ -15,8 +15,8 @@ import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_INT;
 import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_STRING;
 import static us.parr.animl.data.DataTable.VariableType.NUMERICAL_FLOAT;
 import static us.parr.animl.data.DataTable.VariableType.NUMERICAL_INT;
-import static us.parr.animl.data.DataTable.VariableType.PREDICTED_CATEGORICAL_INT;
-import static us.parr.animl.data.DataTable.VariableType.PREDICTED_CATEGORICAL_STRING;
+import static us.parr.animl.data.DataTable.VariableType.TARGET_CATEGORICAL_INT;
+import static us.parr.animl.data.DataTable.VariableType.TARGET_CATEGORICAL_STRING;
 import static us.parr.animl.data.DataTable.VariableType.UNUSED_INT;
 
 public class TestTable extends BaseTest {
@@ -24,7 +24,7 @@ public class TestTable extends BaseTest {
 	public static final DataTable.VariableType[] colTypes3 = {
 		CATEGORICAL_INT,
 		NUMERICAL_INT,
-		PREDICTED_CATEGORICAL_INT
+		TARGET_CATEGORICAL_INT
 	};
 	public static final List<int[]> rawData1x3 = new ArrayList<int[]>() {{
 		add(new int[] {1,2,3});
@@ -134,7 +134,7 @@ public class TestTable extends BaseTest {
 		final DataTable.VariableType[] colTypes = {
 			CATEGORICAL_STRING,
 			CATEGORICAL_STRING,
-			PREDICTED_CATEGORICAL_STRING
+			TARGET_CATEGORICAL_STRING
 		};
 		DataTable t = DataTable.fromStrings(data, colTypes, null, true);
 		String expected =
@@ -165,7 +165,7 @@ public class TestTable extends BaseTest {
 		final DataTable.VariableType[] colTypes = {
 			CATEGORICAL_INT,
 			NUMERICAL_FLOAT,
-			PREDICTED_CATEGORICAL_INT
+			TARGET_CATEGORICAL_INT
 		};
 		DataTable t = DataTable.fromStrings(data, colTypes, null, true);
 		String expected =
@@ -191,7 +191,7 @@ public class TestTable extends BaseTest {
 		final DataTable.VariableType[] colTypes = {
 			CATEGORICAL_INT,
 			NUMERICAL_FLOAT,
-			PREDICTED_CATEGORICAL_STRING
+			TARGET_CATEGORICAL_STRING
 		};
 		DataTable t = DataTable.loadCSV(url.getFile().toString(), "excel", colTypes, null, true);
 		String expected =
@@ -223,7 +223,7 @@ public class TestTable extends BaseTest {
 			NUMERICAL_INT,
 			NUMERICAL_INT,
 			CATEGORICAL_STRING,
-			PREDICTED_CATEGORICAL_STRING
+			TARGET_CATEGORICAL_STRING
 		};
 		assertArrayEquals(expectedColTypes, t.getColTypes());
 

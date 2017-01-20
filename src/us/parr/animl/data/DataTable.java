@@ -40,8 +40,8 @@ import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_STRING;
 import static us.parr.animl.data.DataTable.VariableType.INVALID;
 import static us.parr.animl.data.DataTable.VariableType.NUMERICAL_FLOAT;
 import static us.parr.animl.data.DataTable.VariableType.NUMERICAL_INT;
-import static us.parr.animl.data.DataTable.VariableType.PREDICTED_CATEGORICAL_INT;
-import static us.parr.animl.data.DataTable.VariableType.PREDICTED_CATEGORICAL_STRING;
+import static us.parr.animl.data.DataTable.VariableType.TARGET_CATEGORICAL_INT;
+import static us.parr.animl.data.DataTable.VariableType.TARGET_CATEGORICAL_STRING;
 import static us.parr.animl.data.DataTable.VariableType.UNUSED_FLOAT;
 import static us.parr.animl.data.DataTable.VariableType.UNUSED_INT;
 import static us.parr.animl.data.DataTable.VariableType.UNUSED_STRING;
@@ -58,7 +58,7 @@ public class DataTable implements Iterable<int[]> {
 
 	public enum VariableType {
 		CATEGORICAL_INT, CATEGORICAL_STRING, NUMERICAL_INT, NUMERICAL_FLOAT,
-		PREDICTED_CATEGORICAL_INT, PREDICTED_CATEGORICAL_STRING,
+		TARGET_CATEGORICAL_INT, TARGET_CATEGORICAL_STRING,
 		UNUSED_INT,
 		UNUSED_FLOAT,
 		UNUSED_STRING,
@@ -75,8 +75,8 @@ public class DataTable implements Iterable<int[]> {
 		varTypeShortNames[CATEGORICAL_STRING.ordinal()] = "string";
 		varTypeShortNames[NUMERICAL_INT.ordinal()] = "int";
 		varTypeShortNames[NUMERICAL_FLOAT.ordinal()] = "float";
-		varTypeShortNames[PREDICTED_CATEGORICAL_INT.ordinal()] = "predicted";
-		varTypeShortNames[PREDICTED_CATEGORICAL_STRING.ordinal()] = "predicted-string";
+		varTypeShortNames[TARGET_CATEGORICAL_INT.ordinal()] = "target";
+		varTypeShortNames[TARGET_CATEGORICAL_STRING.ordinal()] = "target-string";
 		varTypeShortNames[UNUSED_INT.ordinal()] = "unused";
 		varTypeShortNames[UNUSED_FLOAT.ordinal()] = "unused";
 		varTypeShortNames[UNUSED_STRING.ordinal()] = "unused";
@@ -85,8 +85,8 @@ public class DataTable implements Iterable<int[]> {
 		defaultVarFormats[CATEGORICAL_STRING.ordinal()] = CENTER;
 		defaultVarFormats[NUMERICAL_INT.ordinal()] = RIGHT;
 		defaultVarFormats[NUMERICAL_FLOAT.ordinal()] = RIGHT;
-		defaultVarFormats[PREDICTED_CATEGORICAL_INT.ordinal()] = RIGHT;
-		defaultVarFormats[PREDICTED_CATEGORICAL_STRING.ordinal()] = CENTER;
+		defaultVarFormats[TARGET_CATEGORICAL_INT.ordinal()] = RIGHT;
+		defaultVarFormats[TARGET_CATEGORICAL_STRING.ordinal()] = CENTER;
 		defaultVarFormats[UNUSED_INT.ordinal()] = RIGHT;
 		defaultVarFormats[UNUSED_FLOAT.ordinal()] = RIGHT;
 		defaultVarFormats[UNUSED_STRING.ordinal()] = CENTER;
@@ -189,7 +189,7 @@ public class DataTable implements Iterable<int[]> {
 		StringTable[] colStringToIntMap = new StringTable[colTypes.length];
 		// don't waste space on string tables unless we need to
 		for (int j = 0; j < colTypes.length; j++) {
-			if ( colTypes[j]==CATEGORICAL_STRING || colTypes[j]==PREDICTED_CATEGORICAL_STRING ) {
+			if ( colTypes[j]==CATEGORICAL_STRING || colTypes[j]==TARGET_CATEGORICAL_STRING ) {
 				colStringToIntMap[j] = new StringTable();
 			}
 		}
@@ -206,13 +206,13 @@ public class DataTable implements Iterable<int[]> {
 					case CATEGORICAL_INT :
 					case NUMERICAL_INT :
 					case UNUSED_INT:
-					case PREDICTED_CATEGORICAL_INT :
+					case TARGET_CATEGORICAL_INT:
 						if ( !UNKNOWN_VALUE_STRINGS.contains(row[j]) ) {
 							col = Integer.valueOf(colValue);
 						}
 						break;
 					case CATEGORICAL_STRING :
-					case PREDICTED_CATEGORICAL_STRING :
+					case TARGET_CATEGORICAL_STRING:
 					case UNUSED_STRING :
 						if ( !UNKNOWN_VALUE_STRINGS.contains(row[j]) ) {
 							col = colStringToIntMap[j].add(colValue);
@@ -317,7 +317,7 @@ public class DataTable implements Iterable<int[]> {
 						// if we ever see a string, convert and don't change back
 						if ( actualTypes[j]==INVALID || actualTypes[j]==NUMERICAL_INT ) {
 							if ( j==row.length-1 ) { // assume last column is predicted var
-								actualTypes[j] = PREDICTED_CATEGORICAL_STRING;
+								actualTypes[j] = TARGET_CATEGORICAL_STRING;
 							}
 							else {
 								actualTypes[j] = CATEGORICAL_STRING;
@@ -417,8 +417,8 @@ public class DataTable implements Iterable<int[]> {
 				colType==UNUSED_INT ||
 				colType==UNUSED_FLOAT ||
 				colType==UNUSED_STRING ||
-				colType==PREDICTED_CATEGORICAL_INT ||
-				colType==PREDICTED_CATEGORICAL_STRING
+				colType==TARGET_CATEGORICAL_INT ||
+				colType==TARGET_CATEGORICAL_STRING
 			);
 	}
 
@@ -436,8 +436,8 @@ public class DataTable implements Iterable<int[]> {
 		if ( !(colTypes[colIndex]==NUMERICAL_INT ||
 			colTypes[colIndex]==CATEGORICAL_INT ||
 			colTypes[colIndex]==CATEGORICAL_STRING ||
-			colTypes[colIndex]==PREDICTED_CATEGORICAL_INT ||
-			colTypes[colIndex]==PREDICTED_CATEGORICAL_STRING) )
+			colTypes[colIndex]==TARGET_CATEGORICAL_INT ||
+			colTypes[colIndex]==TARGET_CATEGORICAL_STRING) )
 		{
 			throw new IllegalArgumentException(colNames[colIndex]+" is not an int-based column; type is "+colTypes[colIndex]);
 		}
@@ -454,8 +454,8 @@ public class DataTable implements Iterable<int[]> {
 			case CATEGORICAL_INT :
 			case NUMERICAL_INT :
 			case CATEGORICAL_STRING : // strings are encoded as ints
-			case PREDICTED_CATEGORICAL_STRING :
-			case PREDICTED_CATEGORICAL_INT :
+			case TARGET_CATEGORICAL_STRING:
+			case TARGET_CATEGORICAL_INT:
 			case UNUSED_INT :
 			case UNUSED_STRING :
 				Collections.sort(rows, (ra, rb) -> {
@@ -534,11 +534,11 @@ public class DataTable implements Iterable<int[]> {
 		switch ( data.colTypes[colj] ) {
 			case CATEGORICAL_INT :
 			case NUMERICAL_INT :
-			case PREDICTED_CATEGORICAL_INT :
+			case TARGET_CATEGORICAL_INT:
 			case UNUSED_INT:
 				return value;
 			case CATEGORICAL_STRING :
-			case PREDICTED_CATEGORICAL_STRING :
+			case TARGET_CATEGORICAL_STRING:
 			case UNUSED_STRING :
 				return data.colStringToIntMap[colj].get(value);
 			case NUMERICAL_FLOAT :
@@ -563,8 +563,8 @@ public class DataTable implements Iterable<int[]> {
 			case CATEGORICAL_INT:
 			case NUMERICAL_INT:
 			case CATEGORICAL_STRING: // strings are encoded as ints
-			case PREDICTED_CATEGORICAL_STRING :
-			case PREDICTED_CATEGORICAL_INT :
+			case TARGET_CATEGORICAL_STRING:
+			case TARGET_CATEGORICAL_INT:
 			case UNUSED_INT:
 			case UNUSED_STRING :
 				return Integer.compare(getAsInt(rowi, colIndex), getAsInt(rowj, colIndex));
@@ -577,7 +577,7 @@ public class DataTable implements Iterable<int[]> {
 	}
 
 	public int getPredictedCol() {
-		Integer firstCol = indexOf(colTypes, t -> t==PREDICTED_CATEGORICAL_STRING || t==PREDICTED_CATEGORICAL_INT);
+		Integer firstCol = indexOf(colTypes, t -> t==TARGET_CATEGORICAL_STRING || t==TARGET_CATEGORICAL_INT);
 		return firstCol!=null ? firstCol : -1;
 	}
 
@@ -600,7 +600,7 @@ public class DataTable implements Iterable<int[]> {
 		String[] colNames;
 		colNames = new String[dim];
 		for (int i = 0; i < dim; i++) {
-			if ( colTypes[i]==PREDICTED_CATEGORICAL_INT || colTypes[i]==PREDICTED_CATEGORICAL_STRING ) {
+			if ( colTypes[i]==TARGET_CATEGORICAL_INT || colTypes[i]==TARGET_CATEGORICAL_STRING ) {
 				colNames[i] = "y";
 			}
 			else {
@@ -616,7 +616,7 @@ public class DataTable implements Iterable<int[]> {
 		for (int i = 0; i<dim-1; i++) {
 			colTypes[i] = NUMERICAL_INT;
 		}
-		colTypes[dim-1] = PREDICTED_CATEGORICAL_INT;
+		colTypes[dim-1] = TARGET_CATEGORICAL_INT;
 		return colTypes;
 	}
 
