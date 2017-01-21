@@ -216,6 +216,16 @@ public class TestRFDataSets extends BaseTest {
 		RF_kFoldCrossErrors(fileName, data, sizes, kfolds, minLeafSize, 0.03);
 	}
 
+	@Test public void testConnect4kFoldCrossErrors() {
+		String fileName = "connect-4.data";
+		URL url = this.getClass().getClassLoader().getResource(fileName);
+		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
+		int kfolds = 5;
+		int minLeafSize = MIN_LEAF_SIZE;
+		int[] sizes = {20, 100, 200};
+		RF_kFoldCrossErrors(fileName, data, sizes, kfolds, minLeafSize, 0.03);
+	}
+
 	@Test public void testRunWine() {
 		String fileName = "wine.csv";
 		URL url = this.getClass().getClassLoader().getResource(fileName);
