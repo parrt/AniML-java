@@ -1,4 +1,4 @@
-"","Age","Sex","ChestPain","RestBP","Chol","Fbs","RestECG","MaxHR","ExAng","Oldpeak","Slope","Ca","Thal","AHD"
+"id","Age","Sex","ChestPain","RestBP","Chol","Fbs","RestECG","MaxHR","ExAng","Oldpeak","Slope","Ca","Thal","AHD"
 "1",63,1,"typical",145,233,1,2,150,0,2.3,3,0,"fixed","No"
 "2",67,1,"asymptomatic",160,286,0,2,108,1,1.5,2,3,"normal","Yes"
 "3",67,1,"asymptomatic",120,229,0,2,129,1,2.6,2,2,"reversable","Yes"

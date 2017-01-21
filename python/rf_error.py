@@ -20,13 +20,21 @@ min_samples_leaf = int(sys.argv[3])
 k = int(sys.argv[4])
 
 data = pandas.read_table(filename, header=0, sep=",")
-target_index = len(data.columns) - 1
-target_colname = data.columns[target_index]
+
+cvt = data.columns
+targetcol = cvt[-1] # last col
+cvt = cvt[0:-1]     # don't convert last to dummy
+
+# print heart
+# cvt = [u'id', u'Age', u'Sex', u'ChestPain', u'RestBP', u'Chol', u'Fbs',
+#        u'RestECG', u'MaxHR', u'ExAng', u'Oldpeak', u'Slope', u'Ca', u'Thal']
 
 # encode target strings as int
-data[[target_colname]] = data[[target_colname]].apply(lambda x : pandas.factorize(x)[0]) # encode target as int if string
+data[[targetcol]] = data[[targetcol]].apply(lambda x : pandas.factorize(x)[0]) # encode target as int if string
 # one hot encode other strings
-data = pandas.get_dummies(data)
+dummied_data = pandas.get_dummies(data[cvt])
+data = pandas.concat([dummied_data, data[[targetcol]]], axis=1) # put party on the end
+
 data = data.values
 dim = data.shape[1]
 target_index = dim-1

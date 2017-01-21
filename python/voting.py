@@ -8,20 +8,22 @@ from sklearn.utils import check_random_state
 from sklearn.feature_extraction import DictVectorizer
 from sklearn import tree
 
-data = pandas.read_table("../data/Heart-wo-NA.csv", header=0, sep=",")
-cvt = data.columns
-targetcol = cvt[-1] # last col
-cvt = cvt[0:-1]     # don't convert last to dummy
-
-# print heart
-# cvt = [u'id', u'Age', u'Sex', u'ChestPain', u'RestBP', u'Chol', u'Fbs',
-#        u'RestECG', u'MaxHR', u'ExAng', u'Oldpeak', u'Slope', u'Ca', u'Thal']
+data = pandas.read_table("data/house-votes-84.csv", header=0, sep=",")
 
 # encode target strings as int
-data[[targetcol]] = data[[targetcol]].apply(lambda x : pandas.factorize(x)[0]) # encode target as int if string
+data[['party']] = data[['party']].apply(lambda x : pandas.factorize(x)[0]) # encode target as int if string
 # one hot encode other strings
+
+cvt = [u'handicapped-infants', u'water-project-cost-sharing',
+       u'adoption-of-the-budget-resolution', u'physician-fee-freeze',
+       u'el-salvador-aid', u'religious-groups-in-schools',
+       u'anti-satellite-test-ban', u'aid-to-nicaraguan-contras', u'mx-missile',
+       u'immigration', u'synfuels-corporation-cutback', u'education-spending',
+       u'superfund-right-to-sue', u'crime', u'duty-free-exports',
+       u'export-administration-act-south-africa']
 dummied_data = pandas.get_dummies(data[cvt])
-data = pandas.concat([dummied_data, data[[targetcol]]], axis=1) # put party on the end
+data = pandas.concat([dummied_data, data[['party']]], axis=1) # put party on the end
+# print data
 
 colnames = data.columns
 
