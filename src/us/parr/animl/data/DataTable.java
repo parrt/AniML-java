@@ -93,6 +93,7 @@ public class DataTable implements Iterable<int[]> {
 		defaultVarFormats[UNUSED_STRING.ordinal()] = CENTER;
 	}
 
+	// TODO: this should be int[j][i] stored in columnar form; first index is the column then it goes down rows in that column
 	protected List<int[]> rows;
 	protected String[] colNames;
 	protected VariableType[] colTypes;
