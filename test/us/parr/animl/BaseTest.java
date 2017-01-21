@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 public class BaseTest {
@@ -100,7 +101,7 @@ public class BaseTest {
 			// should be within small absolute error difference
 			String errMsg = String.format("Error rates %.5f, %.5f should be closer than %.4f",
 			                              scikitResult[1], error, tolerance);
-//			assertTrue(errMsg,Math.abs(scikitResult[1]-error)<tolerance);
+			assertTrue(errMsg,Math.abs(scikitResult[1]-error)<tolerance);
 		}
 	}
 

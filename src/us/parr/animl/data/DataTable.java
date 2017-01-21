@@ -11,7 +11,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
-import us.parr.lib.collections.CountingHashSet;
+import us.parr.lib.collections.CountingDenseIntSet;
 import us.parr.lib.collections.CountingSet;
 import us.parr.lib.collections.ParrtCollections;
 
@@ -97,6 +97,7 @@ public class DataTable implements Iterable<int[]> {
 	protected String[] colNames;
 	protected VariableType[] colTypes;
 	protected StringTable[] colStringToIntMap;
+	protected int[] colMaxes;
 
 	protected Set<Integer> cachedPredictionCategories;
 	protected int cachedMaxPredictionCategoryValue = -1;
@@ -104,24 +105,28 @@ public class DataTable implements Iterable<int[]> {
 	public DataTable() {
 	}
 
-	public DataTable(List<int[]> rows, VariableType[] colTypes, String[] colNames) {
-		this(rows, colTypes, colNames, null);
+	public DataTable(List<int[]> rows, VariableType[] colTypes, String[] colNames, int[] colMaxes) {
+		this(rows, colTypes, colNames, colMaxes, null);
 	}
 
-	public DataTable(List<int[]> rows, VariableType[] colTypes, String[] colNames, StringTable[] colStringToIntMap) {
+	public DataTable(List<int[]> rows, VariableType[] colTypes, String[] colNames, int[] colMaxes, StringTable[] colStringToIntMap) {
 		this.rows = rows;
+		this.colMaxes = colMaxes;
 		this.colNames = colNames;
 		this.colTypes = colTypes;
 		this.colStringToIntMap = colStringToIntMap;
+		if ( this.colMaxes==null ) {
+			computeColMaxes();
+		}
 	}
 
 	public static DataTable empty(VariableType[] colTypes, String[] colNames) {
-		return new DataTable(new ArrayList<>(), colTypes, colNames);
+		return new DataTable(new ArrayList<>(), colTypes, colNames, null, null);
 	}
 
 	/** Make a new table from an old table with a subset of rows */
 	public DataTable(DataTable old, List<int[]> rows) {
-		this(rows, old.colTypes, old.colNames, old.colStringToIntMap);
+		this(rows, old.colTypes, old.colNames, old.colMaxes, old.colStringToIntMap);
 	}
 
 	/** Make a new table from an old table with shallow copy of rows */
@@ -129,6 +134,7 @@ public class DataTable implements Iterable<int[]> {
 		this.rows = new ArrayList<>(old.rows.size());
 		this.rows.addAll(old.rows);
 		this.colNames = old.colNames;
+		System.arraycopy(old.colMaxes, 0, this.colMaxes, 0, old.colMaxes.length);
 		this.colTypes = old.colTypes;
 		this.colStringToIntMap = old.colStringToIntMap;
 	}
@@ -146,7 +152,7 @@ public class DataTable implements Iterable<int[]> {
 		if ( colNames==null ) {
 			colNames = getDefaultColNames(colTypes, dim);
 		}
-		return new DataTable(rows, colTypes, colNames);
+		return new DataTable(rows, colTypes, colNames, null);
 	}
 
 	public static DataTable fromStrings(List<String[]> rows) {
@@ -230,7 +236,7 @@ public class DataTable implements Iterable<int[]> {
 			}
 			rows2.add(rowAsInts);
 		}
-		DataTable t = new DataTable(rows2, colTypes, colNames);
+		DataTable t = new DataTable(rows2, colTypes, colNames, null);
 		t.colStringToIntMap = colStringToIntMap;
 		return t;
 	}
@@ -331,6 +337,20 @@ public class DataTable implements Iterable<int[]> {
 		return actualTypes;
 	}
 
+	public void computeColMaxes() {
+		this.colMaxes = new int[colNames.length];
+		for (int j = 0; j<getNumberOfColumns(); j++) {
+			VariableType colType = colTypes[j];
+			int max = 0;
+			for (int i = 0; i<size(); i++) {
+				int[] row = getRow(i);
+				if ( compare(row[j], max, colType)==1 ) {
+					max = row[j];
+				}
+			}
+			colMaxes[j] = max;
+		}
+	}
 
 	public int getMaxPredictionCategoryValue() {
 		if ( cachedMaxPredictionCategoryValue == -1 ) {
@@ -435,7 +455,7 @@ public class DataTable implements Iterable<int[]> {
 	 *  works on int-valued columns.
 	 */
 	public CountingSet<Integer> valueCountsInColumn(int colIndex) {
-		CountingSet<Integer> valueCounts = new CountingHashSet<>();
+		CountingSet<Integer> valueCounts = new CountingDenseIntSet(colMaxes[colIndex]);
 		if ( !(colTypes[colIndex]==NUMERICAL_INT ||
 			colTypes[colIndex]==CATEGORICAL_INT ||
 			colTypes[colIndex]==CATEGORICAL_STRING ||
@@ -491,7 +511,11 @@ public class DataTable implements Iterable<int[]> {
 	}
 
 	public float getAsFloat(int i, int j) {
-		return Float.intBitsToFloat(rows.get(i)[j]);
+		return getAsFloat(rows.get(i)[j]);
+	}
+
+	public static float getAsFloat(int a) {
+		return Float.intBitsToFloat(a);
 	}
 
 	public int[] getRow(int i) { return rows.get(i); }
@@ -523,6 +547,13 @@ public class DataTable implements Iterable<int[]> {
 		else {
 			throw new IllegalArgumentException("Column "+colName+" unknown");
 		}
+	}
+
+	public Number getColMax(int j) {
+		if ( colTypes[j]==NUMERICAL_FLOAT ) {
+			return getAsFloat(colMaxes[j]);
+		}
+		return colMaxes[j];
 	}
 
 	public Object getValue(int rowi, int colj) {
@@ -562,7 +593,8 @@ public class DataTable implements Iterable<int[]> {
 	}
 
 	public int compare(int rowi, int rowj, int colIndex) {
-		switch (colTypes[colIndex]) {
+		VariableType colType = colTypes[colIndex];
+		switch ( colType ) {
 			case CATEGORICAL_INT:
 			case NUMERICAL_INT:
 			case CATEGORICAL_STRING: // strings are encoded as ints
@@ -575,7 +607,25 @@ public class DataTable implements Iterable<int[]> {
 			case UNUSED_FLOAT :
 				return Float.compare(getAsFloat(rowi, colIndex), getAsFloat(rowj, colIndex));
 			default :
-				throw new IllegalArgumentException(colNames[colIndex]+" has invalid type: "+colTypes[colIndex]);
+				throw new IllegalArgumentException(colNames[colIndex]+" has invalid type: "+colType);
+		}
+	}
+
+	public int compare(int a, int b, VariableType colType) {
+		switch ( colType ) {
+			case CATEGORICAL_INT:
+			case NUMERICAL_INT:
+			case CATEGORICAL_STRING: // strings are encoded as ints
+			case TARGET_CATEGORICAL_STRING:
+			case TARGET_CATEGORICAL_INT:
+			case UNUSED_INT:
+			case UNUSED_STRING :
+				return Integer.compare(a, b);
+			case NUMERICAL_FLOAT:
+			case UNUSED_FLOAT :
+				return Float.compare(getAsFloat(a), getAsFloat(b));
+			default :
+				throw new IllegalArgumentException("invalid type: "+colType);
 		}
 	}
 

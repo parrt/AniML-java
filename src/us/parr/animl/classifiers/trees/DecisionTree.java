@@ -9,6 +9,7 @@ package us.parr.animl.classifiers.trees;
 import us.parr.animl.classifiers.ClassifierModel;
 import us.parr.animl.data.DataPair;
 import us.parr.animl.data.DataTable;
+import us.parr.lib.collections.CountingDenseIntSet;
 import us.parr.lib.collections.CountingHashSet;
 import us.parr.lib.collections.CountingSet;
 
@@ -158,7 +159,7 @@ public class DecisionTree implements ClassifierModel {
 			return t;
 		}
 		// we would gain nothing by splitting, make a leaf predicting majority vote
-		int majorityVote = data.valueCountsInColumn(yi).argmax();
+		int majorityVote = completeCategoryCounts.argmax();
 		if ( debug ) {
 			System.out.printf("FINAL no improvement; make leaf predicting %s\n",
 			                  DataTable.getValue(data,majorityVote,yi));
@@ -227,7 +228,8 @@ public class DecisionTree implements ClassifierModel {
 		// look for discontinuities (transitions) in predictor var values,
 		// recording prediction cat counts for each
 		LinkedHashMap<Double, CountingSet<Integer>> predictionCountSets = new LinkedHashMap<>(); // track key order of insertion
-		CountingSet<Integer> currentPredictionCounts = new CountingHashSet<>();
+		Integer colMaxValue = (Integer) data.getColMax(yi);
+		CountingSet<Integer> currentPredictionCounts = new CountingDenseIntSet(colMaxValue);
 		DataTable.VariableType colType = data.getColTypes()[j];
 		for (int i = 0; i<n; i++) { // walk all records, updating currentPredictionCounts
 			if ( i>0 && data.compare(i-1, i, j)<0 ) { // if row i-1 < row i, discontinuity in predictor var
@@ -285,9 +287,10 @@ public class DecisionTree implements ClassifierModel {
 		int n = data.size();
 		BestInfo best = new BestInfo();
 		Set<Integer> uniqueValues = data.getUniqueValues(j);
+		Integer catMaxValue = (Integer) data.getColMax(yi);
 		for (Integer splitCat : uniqueValues) { // for each unique category in col j
-			CountingSet<Integer> eq = new CountingHashSet<>();
-			CountingSet<Integer> noteq = new CountingHashSet<>();
+			CountingSet<Integer> eq = new CountingDenseIntSet(catMaxValue);
+			CountingSet<Integer> noteq = new CountingDenseIntSet(catMaxValue);
 			for (int i = 0; i<n; i++) { // walk all records, counting dep categories in two groups: indep cat equal and not-equal to splitCat
 				int currentCat = data.getAsInt(i, j);
 //				System.out.println(Arrays.toString(data.getRow(i))+", currentCat = "+currentCat+" @ "+i+","+j);
