@@ -7,7 +7,6 @@
 package us.parr.animl.classifiers.trees;
 
 import us.parr.animl.data.DataTable;
-import us.parr.lib.ParrtStats;
 import us.parr.lib.collections.CountingSet;
 
 import javax.json.Json;
@@ -33,7 +32,7 @@ public class DecisionLeafNode extends DecisionTreeNode {
 	public DecisionLeafNode(CountingSet<Integer> categoryCounts, int predictionVariable) {
 		this.prediction = categoryCounts.argmax();
 		this.predictionVariable = predictionVariable;
-		this.entropy = ParrtStats.entropy(categoryCounts.counts());
+		this.entropy = categoryCounts.entropy();
 		this.categoryCounts = categoryCounts;
 		this.numRecords = categoryCounts.total();
 		categoryProbabilities = new HashMap<>();

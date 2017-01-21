@@ -243,6 +243,15 @@ public class TestRFDataSets extends BaseTest {
 		rf.train(data);
 	}
 
+	@Test public void testRunConnect4() {
+		String fileName = "connect-4.data";
+		URL url = this.getClass().getClassLoader().getResource(fileName);
+		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
+//		DecisionTree.debug = true;
+		RandomForest rf = new RandomForest(50, 1);
+		rf.train(data);
+	}
+
 	// ---------------------------------
 
 	protected DataTable heartData() {

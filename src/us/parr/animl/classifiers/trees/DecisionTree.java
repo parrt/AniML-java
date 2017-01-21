@@ -9,7 +9,6 @@ package us.parr.animl.classifiers.trees;
 import us.parr.animl.classifiers.ClassifierModel;
 import us.parr.animl.data.DataPair;
 import us.parr.animl.data.DataTable;
-import us.parr.lib.ParrtStats;
 import us.parr.lib.collections.CountingSet;
 
 import javax.json.Json;
@@ -100,7 +99,7 @@ public class DecisionTree implements ClassifierModel {
 		// if all predict same category or only one row of data,
 		// create leaf predicting that
 		CountingSet<Integer> completeCategoryCounts = data.valueCountsInColumn(yi);
-		double complete_entropy = ParrtStats.entropy(completeCategoryCounts.counts());
+		double complete_entropy = completeCategoryCounts.entropy();
 		if ( completeCategoryCounts.size()==1 || data.size()<=minLeafSize ) {
 			DecisionTreeNode t = new DecisionLeafNode(completeCategoryCounts, yi);
 			t.data = data;
@@ -170,13 +169,13 @@ public class DecisionTree implements ClassifierModel {
 		return t;
 	}
 
-	protected static BestInfo bestNumericSplit(DataTable data, int j, int yi,
+	protected static BestInfo bestNumericSplit2(DataTable data, int j, int yi,
 	                                           CountingSet<Integer> completePredictionCounts,
 	                                           double complete_entropy)
 	{
 		BestInfo best = new BestInfo();
 		int n = data.size();
-		Set<Integer> uniqueValues = data.subset()
+		Set<Integer> uniqueValues = null;//data.subset()
 		for (Integer splitCat : uniqueValues) { // for each unique category in col j
 			CountingSet<Integer> lt = new CountingSet<>();
 			CountingSet<Integer> ge = new CountingSet<>();
@@ -215,7 +214,7 @@ public class DecisionTree implements ClassifierModel {
 		return best;
 	}
 
-	protected static BestInfo bestNumericSplit_old(DataTable data, int j, int yi,
+	protected static BestInfo bestNumericSplit(DataTable data, int j, int yi,
 	                                           CountingSet<Integer> completePredictionCounts,
 	                                           double complete_entropy)
 	{

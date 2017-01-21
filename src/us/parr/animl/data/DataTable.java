@@ -11,7 +11,6 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
-import us.parr.lib.ParrtStats;
 import us.parr.lib.collections.CountingSet;
 import us.parr.lib.collections.ParrtCollections;
 
@@ -358,7 +357,7 @@ public class DataTable implements Iterable<int[]> {
 
 	public double entropy(int colIndex) {
 		CountingSet<Integer> valueCounts = valueCountsInColumn(colIndex);
-		return ParrtStats.entropy(valueCounts.counts());
+		return valueCounts.entropy();
 	}
 
 	public List<Integer> getSubsetOfVarIndexes(int m, Random random) {
