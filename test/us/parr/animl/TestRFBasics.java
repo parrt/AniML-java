@@ -9,6 +9,7 @@ import us.parr.animl.data.DataTable;
 import us.parr.animl.validation.Validation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static junit.framework.TestCase.assertEquals;
@@ -56,9 +57,9 @@ public class TestRFBasics extends BaseTest {
 
 		int N = 20;
 		int[] missed = RF_leaveOneOutErrors(data, 1, N, MIN_LEAF_SIZE);
-//		System.out.println(Arrays.toString(missed));
+		System.out.println(Arrays.toString(missed));
 		int[] expected = new int[] {
-			2, 3, 1, 3, 4, 2, 2, 3, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 2, 1
+			2, 3, 0, 2, 2, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1
 		};
 		assertArrayEquals(expected, missed);
 	}
