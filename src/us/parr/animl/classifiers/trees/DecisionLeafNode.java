@@ -19,30 +19,34 @@ import static us.parr.lib.ParrtMath.isClose;
 
 public class DecisionLeafNode extends DecisionTreeNode {
 	/** The predicted category */
-	protected int prediction = INVALID_CATEGORY;
+	protected int targetCategory = INVALID_CATEGORY;
 
 	/** The predicted variable index */
-	protected int predictionVariable;
+	protected int targetVariable;
+
+	/** What kind of variable is the target variable? */
+	protected Object targetCategoryDisplayValue;
 
 	/** Track how many of each category we have in this leaf */
 	protected CountingSet<Integer> categoryCounts;
 
 	protected Map<Integer, Double> categoryProbabilities;
 
-	public DecisionLeafNode(CountingSet<Integer> categoryCounts, int predictionVariable) {
-		this.prediction = categoryCounts.argmax();
-		this.predictionVariable = predictionVariable;
+	public DecisionLeafNode(DataTable data, CountingSet<Integer> categoryCounts, int targetVariable) {
+		this.targetCategory = categoryCounts.argmax();
+		this.targetVariable = targetVariable;
 		this.entropy = categoryCounts.entropy();
 		this.categoryCounts = categoryCounts;
 		this.numRecords = categoryCounts.total();
 		categoryProbabilities = new HashMap<>();
 		for (Integer I : categoryCounts.keySet()) {
-			categoryProbabilities.put(I, categoryCounts.get(I).v / (double)numRecords);
+			categoryProbabilities.put(I, categoryCounts.count(I) / (double)numRecords);
 		}
+		targetCategoryDisplayValue = DataTable.getValue(data, targetCategory, targetVariable);
 	}
 
 	public int classify(int[] X) {
-		return prediction;
+		return targetCategory;
 	}
 
 	@Override
@@ -53,15 +57,14 @@ public class DecisionLeafNode extends DecisionTreeNode {
 	@Override
 	public JsonObjectBuilder getJSONData() {
 		JsonObjectBuilder builder =  Json.createObjectBuilder();
-		Object p = DataTable.getValue(data, prediction, predictionVariable);
-		if ( p instanceof Integer ) {
-			builder.add("predict", ((Integer)p));
+		if ( targetCategoryDisplayValue instanceof Integer ) {
+			builder.add("predict", ((Integer)targetCategoryDisplayValue));
 		}
-		else if ( p instanceof Float ) {
-			builder.add("predict", ((Float)p));
+		else if ( targetCategoryDisplayValue instanceof Float ) {
+			builder.add("predict", ((Float)targetCategoryDisplayValue));
 		}
 		else {
-			builder.add("predict", p.toString());
+			builder.add("predict", targetCategoryDisplayValue.toString());
 		}
 		builder.add("n", numRecords);
 		if ( !isClose(entropy,0.0) ) {
@@ -73,8 +76,7 @@ public class DecisionLeafNode extends DecisionTreeNode {
 	@Override
 	public String getDOTNodeDef() {
 		int id = System.identityHashCode(this);
-		Object p = DataTable.getValue(data, prediction, predictionVariable);
 		return String.format("n%d [shape=box, label=\"%s\\nn=%d\\nE=%.2f\"];",
-		                     id, p.toString(), numRecords, entropy);
+		                     id, targetCategoryDisplayValue, numRecords, entropy);
 	}
 }

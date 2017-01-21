@@ -47,13 +47,13 @@ public class TestTable extends BaseTest {
 
 	@Test public void testEmptyWithNamesAndTypes() {
 		DataTable t = DataTable.empty(colTypes3, colNames3);
-		assertEquals("a(cat), b(int), y(predicted)\n", t.toTestString());
+		assertEquals("a(cat), b(int), y(target)\n", t.toTestString());
 	}
 
 	@Test public void test1x3Row() {
 		DataTable t = DataTable.fromInts(rawData1x3, null, null);
 		String expected =
-			"x0(int), x1(int), y(predicted)\n"+
+			"x0(int), x1(int), y(target)\n"+
 			"1, 2, 3\n";
 		assertEquals(expected, t.toTestString());
 	}
@@ -61,7 +61,7 @@ public class TestTable extends BaseTest {
 	@Test public void test1x3RowWithTypes() {
 		DataTable t = DataTable.fromInts(rawData1x3, colTypes3, null);
 		String expected =
-			"x0(cat), x1(int), y(predicted)\n"+
+			"x0(cat), x1(int), y(target)\n"+
 			"1, 2, 3\n";
 		assertEquals(expected, t.toTestString());
 	}
@@ -69,7 +69,7 @@ public class TestTable extends BaseTest {
 	@Test public void test1x3RowWithNames() {
 		DataTable t = DataTable.fromInts(rawData1x3, null, colNames3);
 		String expected =
-			"a(int), b(int), y(predicted)\n"+
+			"a(int), b(int), y(target)\n"+
 			"1, 2, 3\n";
 		assertEquals(expected, t.toTestString());
 	}
@@ -77,7 +77,7 @@ public class TestTable extends BaseTest {
 	@Test public void test1x3RowWithNamesAndTypes() {
 		DataTable t = DataTable.fromInts(rawData1x3, colTypes3, colNames3);
 		String expected =
-			"a(cat), b(int), y(predicted)\n"+
+			"a(cat), b(int), y(target)\n"+
 			"1, 2, 3\n";
 		assertEquals(expected, t.toTestString());
 	}
@@ -108,7 +108,7 @@ public class TestTable extends BaseTest {
 		data.add(new String[]{"1", "9", "2"});
 		DataTable t = DataTable.fromStrings(data, null, null, false);
 		String expected =
-			"x0(int), x1(int), y(predicted)\n"+
+			"x0(int), x1(int), y(target)\n"+
 			"1, 9, 2\n";
 		assertEquals(expected, t.toTestString());
 	}
@@ -119,7 +119,7 @@ public class TestTable extends BaseTest {
 		data.add(new String[]{"1", "9", "2"});
 		DataTable t = DataTable.fromStrings(data, null, null, true);
 		String expected =
-			"A(int), B(int), Y(predicted)\n"+
+			"A(int), B(int), Y(target)\n"+
 			"1, 9, 2\n";
 		assertEquals(expected, t.toTestString());
 	}
@@ -138,7 +138,7 @@ public class TestTable extends BaseTest {
 		};
 		DataTable t = DataTable.fromStrings(data, colTypes, null, true);
 		String expected =
-			"A(string), B(string), Y(predicted-string)\n"+
+			"A(string), B(string), Y(target-string)\n"+
 			"yes, CA, go\n"+
 			"no, CO, stay\n"+
 			"yes, CO, stay\n"+
@@ -152,7 +152,7 @@ public class TestTable extends BaseTest {
 		data.add(new String[]{"1", "9", "2"});
 		DataTable t = DataTable.fromStrings(data, null, colNames3, true);
 		String expected =
-			"a(int), b(int), y(predicted)\n"+
+			"a(int), b(int), y(target)\n"+
 			"1, 9, 2\n";
 		assertEquals(expected, t.toTestString());
 	}
@@ -169,7 +169,7 @@ public class TestTable extends BaseTest {
 		};
 		DataTable t = DataTable.fromStrings(data, colTypes, null, true);
 		String expected =
-			"A(cat), B(float), Y(predicted)\n"+
+			"A(cat), B(float), Y(target)\n"+
 			"1000, 123.45, 2\n"+
 			"99, 0.123456, 2\n";
 		assertEquals(expected, t.toTestString());

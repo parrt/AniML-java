@@ -19,9 +19,15 @@ public class DecisionCategoricalSplitNode extends DecisionSplitNode {
 	/** Split according to what variable category? An unknown matches category yes or no */
 	protected int splitCategory;
 
-	public DecisionCategoricalSplitNode(int splitVariable, DataTable.VariableType colType, int splitCategory) {
+	protected Object splitCategoryDisplayValue;
+
+	protected String variableName;
+
+	public DecisionCategoricalSplitNode(DataTable data, int splitVariable, DataTable.VariableType colType, int splitCategory) {
 		super(splitVariable, colType);
 		this.splitCategory = splitCategory;
+		this.splitCategoryDisplayValue = DataTable.getValue(data, splitCategory, splitVariable);
+		this.variableName = data.getColNames()[splitVariable];
 	}
 
 	public int classify(int[] X) {
@@ -46,9 +52,8 @@ public class DecisionCategoricalSplitNode extends DecisionSplitNode {
 	@Override
 	public JsonObjectBuilder getJSONData() {
 		JsonObjectBuilder builder =  Json.createObjectBuilder();
-		builder.add("var", data.getColNames()[splitVariable]);
-		Object p = DataTable.getValue(data, splitCategory, splitVariable);
-		builder.add("cat", p.toString()); // has to be categorical
+		builder.add("var", variableName);
+		builder.add("cat", splitCategoryDisplayValue.toString()); // has to be categorical
 		builder.add("n", numRecords);
 		if ( !isClose(entropy,0.0) ) {
 			builder.add("E", String.format("%.2f",entropy));
@@ -59,21 +64,19 @@ public class DecisionCategoricalSplitNode extends DecisionSplitNode {
 	@Override
 	public String getDOTLeftEdge() {
 		int id = System.identityHashCode(this);
-		Object p = DataTable.getValue(data, splitCategory, splitVariable);
-		return String.format("n%s -> n%s [label=\"%s\"];", id, System.identityHashCode(left), p.toString());
+		return String.format("n%s -> n%s [label=\"%s\"];", id, System.identityHashCode(left), splitCategoryDisplayValue.toString());
 	}
 
 	@Override
 	public String getDOTRightEdge() {
 		int id = System.identityHashCode(this);
-		Object p = DataTable.getValue(data, splitCategory, splitVariable);
-		return String.format("n%s -> n%s [label=\"!%s\"];", id, System.identityHashCode(right), p.toString());
+		return String.format("n%s -> n%s [label=\"!%s\"];", id, System.identityHashCode(right), splitCategoryDisplayValue.toString());
 	}
 
 	@Override
 	public String getDOTNodeDef() {
 		int id = System.identityHashCode(this);
 		return String.format("n%d [label=\"%s\\nn=%d\\nE=%.2f\"];",
-		                     id, data.getColNames()[splitVariable], numRecords, entropy);
+		                     id, variableName, numRecords, entropy);
 	}
 }

@@ -9,6 +9,7 @@ package us.parr.animl.classifiers.trees;
 import us.parr.animl.classifiers.ClassifierModel;
 import us.parr.animl.data.DataPair;
 import us.parr.animl.data.DataTable;
+import us.parr.lib.collections.CountingHashSet;
 import us.parr.lib.collections.CountingSet;
 
 import javax.json.Json;
@@ -101,8 +102,7 @@ public class DecisionTree implements ClassifierModel {
 		CountingSet<Integer> completeCategoryCounts = data.valueCountsInColumn(yi);
 		double complete_entropy = completeCategoryCounts.entropy();
 		if ( completeCategoryCounts.size()==1 || data.size()<=minLeafSize ) {
-			DecisionTreeNode t = new DecisionLeafNode(completeCategoryCounts, yi);
-			t.data = data;
+			DecisionTreeNode t = new DecisionLeafNode(data, completeCategoryCounts, yi);
 			return t;
 		}
 
@@ -140,7 +140,7 @@ public class DecisionTree implements ClassifierModel {
 			if ( DataTable.isCategoricalVar(colType) ) {
 				// split is expensive, do it only after we get best var/val
 				split = categoricalSplit(data, best.var, best.cat);
-				t = new DecisionCategoricalSplitNode(best.var, colType, best.cat);
+				t = new DecisionCategoricalSplitNode(data, best.var, colType, best.cat);
 			}
 			else {
 				if ( colType==DataTable.VariableType.NUMERICAL_FLOAT ) {
@@ -149,11 +149,10 @@ public class DecisionTree implements ClassifierModel {
 				else {
 					split = numericalIntSplit(data, best.var, best.val);
 				}
-				t = new DecisionNumericalSplitNode(best.var, colType, best.val);
+				t = new DecisionNumericalSplitNode(data, best.var, colType, best.val);
 			}
 			t.numRecords = N;
 			t.entropy = complete_entropy;
-			t.data = data;
 			t.left = build(split.region1,  varsPerSplit, minLeafSize);
 			t.right = build(split.region2, varsPerSplit, minLeafSize);
 			return t;
@@ -164,8 +163,7 @@ public class DecisionTree implements ClassifierModel {
 			System.out.printf("FINAL no improvement; make leaf predicting %s\n",
 			                  DataTable.getValue(data,majorityVote,yi));
 		}
-		DecisionTreeNode t = new DecisionLeafNode(completeCategoryCounts, yi);
-		t.data = data;
+		DecisionTreeNode t = new DecisionLeafNode(data, completeCategoryCounts, yi);
 		return t;
 	}
 
@@ -177,8 +175,8 @@ public class DecisionTree implements ClassifierModel {
 		int n = data.size();
 		Set<Integer> uniqueValues = null;//data.subset()
 		for (Integer splitCat : uniqueValues) { // for each unique category in col j
-			CountingSet<Integer> lt = new CountingSet<>();
-			CountingSet<Integer> ge = new CountingSet<>();
+			CountingSet<Integer> lt = new CountingHashSet<>();
+			CountingSet<Integer> ge = new CountingHashSet<>();
 			for (int i = 0; i<n; i++) { // walk all records, counting dep categories in two groups: indep cat equal and not-equal to splitCat
 				int currentVal = data.getAsInt(i, j);
 //				System.out.println(Arrays.toString(data.getRow(i))+", currentVal = "+currentVal+" @ "+i+","+j);
@@ -229,7 +227,7 @@ public class DecisionTree implements ClassifierModel {
 		// look for discontinuities (transitions) in predictor var values,
 		// recording prediction cat counts for each
 		LinkedHashMap<Double, CountingSet<Integer>> predictionCountSets = new LinkedHashMap<>(); // track key order of insertion
-		CountingSet<Integer> currentPredictionCounts = new CountingSet<>();
+		CountingSet<Integer> currentPredictionCounts = new CountingHashSet<>();
 		DataTable.VariableType colType = data.getColTypes()[j];
 		for (int i = 0; i<n; i++) { // walk all records, updating currentPredictionCounts
 			if ( i>0 && data.compare(i-1, i, j)<0 ) { // if row i-1 < row i, discontinuity in predictor var
@@ -244,7 +242,7 @@ public class DecisionTree implements ClassifierModel {
 				else {
 					midpoint = (data.getAsFloat(i, j)+data.getAsFloat(i-1, j))/2.0;
 				}
-				predictionCountSets.put(midpoint, new CountingSet<>(currentPredictionCounts));
+				predictionCountSets.put(midpoint, new CountingHashSet<Integer>(currentPredictionCounts));
 			}
 			currentPredictionCounts.add(data.getAsInt(i, yi));
 		}
@@ -255,7 +253,7 @@ public class DecisionTree implements ClassifierModel {
 		// the predictor count set for values of column j < v
 		for (Double splitValue : predictionCountSets.keySet()) {
 			CountingSet<Integer> region1 = predictionCountSets.get(splitValue);
-			CountingSet<Integer> region2 = CountingSet.minus(completePredictionCounts, region1);
+			CountingSet<Integer> region2 = completePredictionCounts.minus(region1);
 
 			double r1_entropy = region1.entropy();
 			double r2_entropy = region2.entropy();
@@ -288,8 +286,8 @@ public class DecisionTree implements ClassifierModel {
 		BestInfo best = new BestInfo();
 		Set<Integer> uniqueValues = data.getUniqueValues(j);
 		for (Integer splitCat : uniqueValues) { // for each unique category in col j
-			CountingSet<Integer> eq = new CountingSet<>();
-			CountingSet<Integer> noteq = new CountingSet<>();
+			CountingSet<Integer> eq = new CountingHashSet<>();
+			CountingSet<Integer> noteq = new CountingHashSet<>();
 			for (int i = 0; i<n; i++) { // walk all records, counting dep categories in two groups: indep cat equal and not-equal to splitCat
 				int currentCat = data.getAsInt(i, j);
 //				System.out.println(Arrays.toString(data.getRow(i))+", currentCat = "+currentCat+" @ "+i+","+j);
@@ -328,10 +326,10 @@ public class DecisionTree implements ClassifierModel {
 		// no need to sort
 		// Map col j category value to target category counts
 		Map<Integer, CountingSet<Integer>> predictionCountSets = new HashMap<>();
-		CountingSet<Integer> currentPredictionCounts = new CountingSet<>();
+		CountingSet<Integer> currentPredictionCounts = new CountingHashSet<>();
 		for (int i = 0; i<n; i++) { // walk all records, updating currentPredictionCounts
 			int cat = data.getAsInt(n-1, j);
-			predictionCountSets.computeIfAbsent(cat, k -> new CountingSet<>());
+			predictionCountSets.computeIfAbsent(cat, k -> new CountingHashSet<>());
 			currentPredictionCounts.add(data.getAsInt(i, yi));
 		}
 

@@ -19,9 +19,12 @@ public class DecisionNumericalSplitNode extends DecisionSplitNode {
 	/** Split at what variable value? */
 	protected double splitValue;
 
-	public DecisionNumericalSplitNode(int splitVariable, DataTable.VariableType colType, double splitValue) {
+	protected String variableName;
+
+	public DecisionNumericalSplitNode(DataTable data, int splitVariable, DataTable.VariableType colType, double splitValue) {
 		super(splitVariable, colType);
 		this.splitValue = splitValue;
+		this.variableName = data.getColNames()[splitVariable];
 	}
 
 	public int classify(int[] X) {
@@ -61,7 +64,7 @@ public class DecisionNumericalSplitNode extends DecisionSplitNode {
 	@Override
 	public JsonObjectBuilder getJSONData() {
 		JsonObjectBuilder builder =  Json.createObjectBuilder();
-		builder.add("var", data.getColNames()[splitVariable]);
+		builder.add("var", variableName);
 		builder.add("val", splitValue);
 		builder.add("n", numRecords);
 		if ( !isClose(entropy,0.0) ) {
@@ -74,7 +77,7 @@ public class DecisionNumericalSplitNode extends DecisionSplitNode {
 	public String getDOTNodeDef() {
 		int id = System.identityHashCode(this);
 		return String.format("n%d [label=\"%s\\nn=%d\\nE=%.2f\"];",
-		                     id, data.getColNames()[splitVariable], numRecords, entropy);
+		                     id, variableName, numRecords, entropy);
 	}
 
 	@Override

@@ -11,6 +11,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
+import us.parr.lib.collections.CountingHashSet;
 import us.parr.lib.collections.CountingSet;
 import us.parr.lib.collections.ParrtCollections;
 
@@ -434,7 +435,7 @@ public class DataTable implements Iterable<int[]> {
 	 *  works on int-valued columns.
 	 */
 	public CountingSet<Integer> valueCountsInColumn(int colIndex) {
-		CountingSet<Integer> valueCounts = new CountingSet<>();
+		CountingSet<Integer> valueCounts = new CountingHashSet<>();
 		if ( !(colTypes[colIndex]==NUMERICAL_INT ||
 			colTypes[colIndex]==CATEGORICAL_INT ||
 			colTypes[colIndex]==CATEGORICAL_STRING ||
