@@ -265,11 +265,17 @@ public class TestRFDataSets extends BaseTest {
 
 	@Test public void testRunConnect4() {
 		String fileName = "connect-4.csv";
+		int n_estimators = 50;
 		URL url = this.getClass().getClassLoader().getResource(fileName);
 		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
 //		DecisionTree.debug = true;
-		RandomForest rf = new RandomForest(50, 1);
+		long start = System.nanoTime();
+		int minLeafSize = 20;
+		RandomForest rf = new RandomForest(n_estimators, minLeafSize);
 		rf.train(data);
+		long stop = System.nanoTime();
+		System.out.printf("Fitting %d estimators %d min leaf size %dms\n", n_estimators, minLeafSize,
+		                  (stop-start)/(1000*1000));
 	}
 
 	// ---------------------------------
