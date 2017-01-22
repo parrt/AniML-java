@@ -368,8 +368,11 @@ public class DataTable implements Iterable<int[]> {
 	}
 
 	public Set<Integer> getUniqueValues(int colIndex) {
-		CountingSet<Integer> valueCounts = valueCountsInColumn(colIndex);
-		return valueCounts.keySet();
+		Set<Integer> values = new HashSet<>();
+		for (int i = 0; i<size(); i++) { // for each row, count different values for col splitVariable
+			values.add( getAsInt(i,colIndex) ); // pretend everything is an int
+		}
+		return values;
 	}
 
 	public DataTable filter(Predicate<int[]> pred) {
@@ -606,7 +609,9 @@ public class DataTable implements Iterable<int[]> {
 				return Integer.compare(getAsInt(rowi, colIndex), getAsInt(rowj, colIndex));
 			case NUMERICAL_FLOAT:
 			case UNUSED_FLOAT :
-				return Float.compare(getAsFloat(rowi, colIndex), getAsFloat(rowj, colIndex));
+				float a = getAsFloat(rowi, colIndex);
+				float b = getAsFloat(rowj, colIndex);
+				return Float.compare(a, b);
 			default :
 				throw new IllegalArgumentException(colNames[colIndex]+" has invalid type: "+colType);
 		}
@@ -624,7 +629,9 @@ public class DataTable implements Iterable<int[]> {
 				return Integer.compare(a, b);
 			case NUMERICAL_FLOAT:
 			case UNUSED_FLOAT :
-				return Float.compare(getAsFloat(a), getAsFloat(b));
+				float af = getAsFloat(a);
+				float bf = getAsFloat(b);
+				return Float.compare(af, bf);
 			default :
 				throw new IllegalArgumentException("invalid type: "+colType);
 		}

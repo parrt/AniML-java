@@ -189,6 +189,7 @@ public class TestRFDataSets extends BaseTest {
 		String fileName = "iris.csv";
 		URL url = this.getClass().getClassLoader().getResource(fileName);
 		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
+		DecisionTree.debug = true;
 		int kfolds = 5;
 		int minLeafSize = MIN_LEAF_SIZE;
 		int[] sizes = {10, 50, 100, 200};

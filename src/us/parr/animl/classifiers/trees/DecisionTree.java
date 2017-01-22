@@ -123,7 +123,7 @@ public class DecisionTree implements ClassifierModel {
 				bestj = bestCategoricalSplit(data, j, yi, completeCategoryCounts, complete_entropy);
 			}
 			else {
-				bestj = bestNumericSplit(data, j, yi, completeCategoryCounts, complete_entropy);
+				bestj = bestNumericSplit2(data, j, yi, completeCategoryCounts, complete_entropy);
 			}
 			if ( bestj.gain > best.gain ) {
 				best = bestj;
@@ -174,15 +174,15 @@ public class DecisionTree implements ClassifierModel {
 	{
 		BestInfo best = new BestInfo();
 		int n = data.size();
-		Set<Integer> uniqueValues = null;//data.subset()
-		for (Integer splitCat : uniqueValues) { // for each unique category in col j
+		Set<Integer> uniqueValues = data.getUniqueValues(j);
+		for (Integer splitValue : uniqueValues) { // for each unique category in col j
 			CountingSet<Integer> lt = new CountingHashSet<>();
 			CountingSet<Integer> ge = new CountingHashSet<>();
-			for (int i = 0; i<n; i++) { // walk all records, counting dep categories in two groups: indep cat equal and not-equal to splitCat
-				int currentVal = data.getAsInt(i, j);
-//				System.out.println(Arrays.toString(data.getRow(i))+", currentVal = "+currentVal+" @ "+i+","+j);
+			for (int i = 0; i<n; i++) { // walk all records, counting dep categories in two groups: indep cat equal and not-equal to splitValue
+				int currentSplitVal = data.getAsInt(i, j);
+//				System.out.println(Arrays.toString(data.getRow(i))+", currentSplitVal = "+currentSplitVal+" @ "+i+","+j);
 				int currentTargetCat = data.getAsInt(i, yi);
-				if ( currentVal<splitCat ) {
+				if ( i>0 && data.compare(i-1, i, j)<0 ) { // if data[i-1][j] < row[i][j], add to lt
 					lt.add(currentTargetCat);
 				}
 				else {
@@ -200,11 +200,17 @@ public class DecisionTree implements ClassifierModel {
 			if ( gain>best.gain && n1>0 && n2>0 ) {
 				best.gain = gain;
 				best.var = j;
-				best.cat = splitCat;
+				Object v = DataTable.getValue(data, splitValue, j);
+				if ( v instanceof Integer ) {
+					best.val = splitValue;
+				}
+				else {
+					best.val = (Float)v;
+				}
 			}
 			if ( debug ) {
 				String var = data.getColNames()[j];
-				Object p = DataTable.getValue(data, splitCat, j);
+				Object p = DataTable.getValue(data, splitValue, j);
 				System.out.printf("Entropies var=%13s cat=%-13s r1=%2d/%3d*%.2f r2=%2d/%3d*%.2f, ExpEntropy=%.2f gain=%.2f\n",
 				                  var, p, n1, n1+n2, r1_entropy, n2, n1+n2, r2_entropy,
 				                  expectedEntropyValue, gain);
