@@ -339,7 +339,8 @@ public class DataTable implements Iterable<int[]> {
 	}
 
 	public void computeColMaxes() {
-		this.colMaxes = new int[colNames.length];
+		if ( colTypes==null ) return;;
+		this.colMaxes = new int[colTypes.length];
 		for (int j = 0; j<getNumberOfColumns(); j++) {
 			VariableType colType = colTypes[j];
 			int max = 0;

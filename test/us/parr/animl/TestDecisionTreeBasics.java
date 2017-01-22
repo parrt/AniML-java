@@ -109,13 +109,14 @@ public class TestDecisionTreeBasics extends BaseTest {
 
 	@Test public void testTwoVarsOneGoodOneBadSplitVarFlippedOrder() {
 		List<int[]> data = new ArrayList<>(); // 2nd var is perfect splitter, 1st is bad
-		data.add(new int[] {4,1,99});
-		data.add(new int[] {5,1,99});
-		data.add(new int[] {4,2,100});
-		data.add(new int[] {5,2,100});
+		data.add(new int[] {4,1,0});
+		data.add(new int[] {5,1,0});
+		data.add(new int[] {4,2,1});
+		data.add(new int[] {5,2,1});
 		DecisionTree tree = new DecisionTree();
+		DecisionTree.debug = true;
 		tree.train(DataTable.fromInts(data, null, null));
-		String expecting = "{'var':'x1','val':1.5,'n':4,'E':'1.00','left':{'predict':99,'n':2},'right':{'predict':100,'n':2}}";
+		String expecting = "{'var':'x1','val':1.5,'n':4,'E':'1.00','left':{'predict':0,'n':2},'right':{'predict':1,'n':2}}";
 		String result = toTestString(tree);
 		assertEquals(expecting, result);
 		checkPredictions(data, tree);

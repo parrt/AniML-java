@@ -233,7 +233,7 @@ public class DecisionTree implements ClassifierModel {
 		data.sortBy(j);
 		// look for discontinuities (transitions) in predictor var values,
 		// recording prediction cat counts for each
-		LinkedHashMap<Double, CountingSet<Integer>> predictionCountSets = new LinkedHashMap<>(); // track key order of insertion
+		LinkedHashMap<Double, CountingDenseIntSet> predictionCountSets = new LinkedHashMap<>(); // track key order of insertion
 		Integer colMaxValue = (Integer) data.getColMax(yi);
 		CountingSet<Integer> currentPredictionCounts = new CountingDenseIntSet(colMaxValue);
 		DataTable.VariableType colType = data.getColTypes()[j];
@@ -250,7 +250,7 @@ public class DecisionTree implements ClassifierModel {
 				else {
 					midpoint = (data.getAsFloat(i, j)+data.getAsFloat(i-1, j))/2.0;
 				}
-				predictionCountSets.put(midpoint, new CountingHashSet<Integer>(currentPredictionCounts));
+				predictionCountSets.put(midpoint, new CountingDenseIntSet(currentPredictionCounts));
 			}
 			currentPredictionCounts.add(data.getAsInt(i, yi));
 		}
