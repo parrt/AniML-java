@@ -123,7 +123,7 @@ public class DecisionTree implements ClassifierModel {
 				bestj = bestCategoricalSplit(data, j, yi, completeCategoryCounts, complete_entropy);
 			}
 			else {
-				bestj = bestNumericSplit2(data, j, yi, completeCategoryCounts, complete_entropy);
+				bestj = bestNumericSplit(data, j, yi, completeCategoryCounts, complete_entropy);
 			}
 			if ( bestj.gain > best.gain ) {
 				best = bestj;

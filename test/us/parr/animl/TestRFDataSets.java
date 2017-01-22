@@ -259,7 +259,7 @@ public class TestRFDataSets extends BaseTest {
 		String fileName = "iris.csv";
 		URL url = this.getClass().getClassLoader().getResource(fileName);
 		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
-//		DecisionTree.debug = true;
+		DecisionTree.debug = true;
 		RandomForest rf = new RandomForest(500, 1);
 		rf.train(data);
 	}
