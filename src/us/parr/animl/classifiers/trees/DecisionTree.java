@@ -153,7 +153,7 @@ public class DecisionTree implements ClassifierModel {
 				t = new DecisionNumericalSplitNode(data, best.var, colType, best.val);
 			}
 			t.numRecords = N;
-			t.entropy = complete_entropy;
+			t.entropy = (float)complete_entropy;
 			t.left = build(split.region1,  varsPerSplit, minLeafSize);
 			t.right = build(split.region2, varsPerSplit, minLeafSize);
 			return t;

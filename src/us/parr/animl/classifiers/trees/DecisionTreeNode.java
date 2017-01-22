@@ -14,7 +14,7 @@ import javax.json.JsonObjectBuilder;
 public abstract class DecisionTreeNode implements Classifier {
 	// for debugging, fields below
 	protected int numRecords;
-	protected double entropy;
+	protected float entropy;
 
 	public JsonObject toJSON() { return toJSON(this); }
 

@@ -30,18 +30,12 @@ public class DecisionLeafNode extends DecisionTreeNode {
 	/** Track how many of each category we have in this leaf */
 	protected CountingSet<Integer> categoryCounts;
 
-	protected Map<Integer, Double> categoryProbabilities;
-
 	public DecisionLeafNode(DataTable data, CountingSet<Integer> categoryCounts, int targetVariable) {
 		this.targetCategory = categoryCounts.argmax();
 		this.targetVariable = targetVariable;
-		this.entropy = categoryCounts.entropy();
+		this.entropy = (float)categoryCounts.entropy();
 		this.categoryCounts = categoryCounts;
 		this.numRecords = categoryCounts.total();
-		categoryProbabilities = new HashMap<>();
-		for (Integer I : categoryCounts.keySet()) {
-			categoryProbabilities.put(I, categoryCounts.count(I) / (double)numRecords);
-		}
 		targetCategoryDisplayValue = DataTable.getValue(data, targetCategory, targetVariable);
 	}
 
@@ -51,6 +45,10 @@ public class DecisionLeafNode extends DecisionTreeNode {
 
 	@Override
 	public Map<Integer, Double> classProbabilities(int[] X) {
+		Map<Integer, Double> categoryProbabilities = new HashMap<>();
+		for (Integer I : categoryCounts.keySet()) {
+			categoryProbabilities.put(I, categoryCounts.count(I) / (double)numRecords);
+		}
 		return categoryProbabilities;
 	}
 
