@@ -13,6 +13,7 @@ import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
 import us.parr.lib.collections.CountingDenseIntSet;
 import us.parr.lib.collections.CountingSet;
+import us.parr.lib.collections.DenseIntSet;
 import us.parr.lib.collections.ParrtCollections;
 
 import java.io.FileInputStream;
@@ -369,7 +370,7 @@ public class DataTable implements Iterable<int[]> {
 	}
 
 	public Set<Integer> getUniqueValues(int colIndex) {
-		Set<Integer> values = new HashSet<>();
+		DenseIntSet values = new DenseIntSet(colMaxes[colIndex]);
 		for (int i = 0; i<size(); i++) { // for each row, count different values for col splitVariable
 			values.add( getAsInt(i,colIndex) ); // pretend everything is an int
 		}

@@ -10,8 +10,8 @@ import us.parr.animl.classifiers.ClassifierModel;
 import us.parr.animl.data.DataPair;
 import us.parr.animl.data.DataTable;
 import us.parr.lib.collections.CountingDenseIntSet;
-import us.parr.lib.collections.CountingHashSet;
 import us.parr.lib.collections.CountingSet;
+import us.parr.lib.collections.DenseIntMap;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -168,57 +168,6 @@ public class DecisionTree implements ClassifierModel {
 		return t;
 	}
 
-	protected static BestInfo bestNumericSplit2(DataTable data, int j, int yi,
-	                                           CountingSet<Integer> completePredictionCounts,
-	                                           double complete_entropy)
-	{
-		BestInfo best = new BestInfo();
-		int n = data.size();
-		Set<Integer> uniqueValues = data.getUniqueValues(j);
-		for (Integer splitValue : uniqueValues) { // for each unique category in col j
-			CountingSet<Integer> lt = new CountingHashSet<>();
-			CountingSet<Integer> ge = new CountingHashSet<>();
-			for (int i = 0; i<n; i++) { // walk all records, counting dep categories in two groups: indep cat equal and not-equal to splitValue
-				int currentSplitVal = data.getAsInt(i, j);
-//				System.out.println(Arrays.toString(data.getRow(i))+", currentSplitVal = "+currentSplitVal+" @ "+i+","+j);
-				int currentTargetCat = data.getAsInt(i, yi);
-				if ( i>0 && data.compare(i-1, i, j)<0 ) { // if data[i-1][j] < row[i][j], add to lt
-					lt.add(currentTargetCat);
-				}
-				else {
-					ge.add(currentTargetCat);
-				}
-			}
-			double r1_entropy = lt.entropy();
-			double r2_entropy = ge.entropy();
-			int n1 = lt.total();
-			int n2 = ge.total();
-			double p1 = ((double) n1)/(n1+n2);
-			double p2 = ((double) n2)/(n1+n2);
-			double expectedEntropyValue = p1*r1_entropy + p2*r2_entropy;
-			double gain = complete_entropy - expectedEntropyValue;
-			if ( gain>best.gain && n1>0 && n2>0 ) {
-				best.gain = gain;
-				best.var = j;
-				Object v = DataTable.getValue(data, splitValue, j);
-				if ( v instanceof Integer ) {
-					best.val = splitValue;
-				}
-				else {
-					best.val = (Float)v;
-				}
-			}
-			if ( debug ) {
-				String var = data.getColNames()[j];
-				Object p = DataTable.getValue(data, splitValue, j);
-				System.out.printf("Entropies var=%13s cat=%-13s r1=%2d/%3d*%.2f r2=%2d/%3d*%.2f, ExpEntropy=%.2f gain=%.2f\n",
-				                  var, p, n1, n1+n2, r1_entropy, n2, n1+n2, r2_entropy,
-				                  expectedEntropyValue, gain);
-			}
-		}
-		return best;
-	}
-
 	protected static BestInfo bestNumericSplit(DataTable data, int j, int yi,
 	                                           CountingSet<Integer> completePredictionCounts,
 	                                           double complete_entropy)
@@ -288,90 +237,47 @@ public class DecisionTree implements ClassifierModel {
 
 	protected static BestInfo bestCategoricalSplit(DataTable data, int j, int yi,
 	                                               CountingSet<Integer> completePredictionCounts,
-	                                               double complete_entropy)
-	{
+	                                               double complete_entropy) {
 		int n = data.size();
 		BestInfo best = new BestInfo();
 		Set<Integer> uniqueValues = data.getUniqueValues(j);
 		Integer catMaxValue = (Integer) data.getColMax(yi);
-		for (Integer splitCat : uniqueValues) { // for each unique category in col j
-			CountingSet<Integer> eq = new CountingDenseIntSet(catMaxValue);
-			CountingSet<Integer> noteq = new CountingDenseIntSet(catMaxValue);
-			for (int i = 0; i<n; i++) { // walk all records, counting dep categories in two groups: indep cat equal and not-equal to splitCat
-				int currentCat = data.getAsInt(i, j);
-//				System.out.println(Arrays.toString(data.getRow(i))+", currentCat = "+currentCat+" @ "+i+","+j);
-				int currentTargetCat = data.getAsInt(i, yi);
-				if ( currentCat==splitCat ) {
-					eq.add(currentTargetCat);
-				}
-				else {
-					noteq.add(currentTargetCat);
-				}
-			}
-//			System.out.println("eq="+eq+", noteq="+noteq);
+		DenseIntMap<CountingSet<Integer>> colCatToTargetCounts = new DenseIntMap<>();
+		CountingSet<Integer> targetCounts = new CountingDenseIntSet(catMaxValue);
+		for (int i = 0; i<n; i++) { // walk all records, counting dep categories in two groups: indep cat equal and not-equal to splitCat
+			int currentColCat = data.getAsInt(i, j);
+			int currentTargetCat = data.getAsInt(i, yi);
+			targetCounts.add(currentTargetCat);
+			colCatToTargetCounts.computeIfAbsent(currentColCat, k -> new CountingDenseIntSet(catMaxValue));
+			CountingSet<Integer> countsForThisColCat = colCatToTargetCounts.get(currentColCat);
+			countsForThisColCat.add(currentTargetCat);
+//				System.out.println(Arrays.toString(data.getRow(i))+", currentColCat = "+currentColCat+" @ "+i+","+j);
+		}
+		colCatToTargetCounts.forEach((colCat,eq) -> {
+			CountingSet<Integer> notEq = targetCounts.minus(eq);
 			double r1_entropy = eq.entropy();
-			double r2_entropy = noteq.entropy();
+			double r2_entropy = notEq.entropy();
 			int n1 = eq.total();
-			int n2 = noteq.total();
-			double p1 = ((double) n1)/(n1+n2);
-			double p2 = ((double) n2)/(n1+n2);
-			double expectedEntropyValue = p1*r1_entropy + p2*r2_entropy;
-			double gain = complete_entropy - expectedEntropyValue;
-			if ( gain>best.gain && n1>0 && n2>0 ) {
-				best.gain = gain;
-				best.var = j;
-				best.cat = splitCat;
-			}
-			if ( debug ) {
-				String var = data.getColNames()[j];
-				Object p = DataTable.getValue(data, splitCat, j);
-				System.out.printf("Entropies var=%13s cat=%-13s r1=%2d/%3d*%.2f r2=%2d/%3d*%.2f, ExpEntropy=%.2f gain=%.2f\n",
-				                  var, p, n1, n1+n2, r1_entropy, n2, n1+n2, r2_entropy,
-				                  expectedEntropyValue, gain);
-			}
-		}
-		return best;
-		/*
-		// no need to sort
-		// Map col j category value to target category counts
-		Map<Integer, CountingSet<Integer>> predictionCountSets = new HashMap<>();
-		CountingSet<Integer> currentPredictionCounts = new CountingHashSet<>();
-		for (int i = 0; i<n; i++) { // walk all records, updating currentPredictionCounts
-			int cat = data.getAsInt(n-1, j);
-			predictionCountSets.computeIfAbsent(cat, k -> new CountingHashSet<>());
-			currentPredictionCounts.add(data.getAsInt(i, yi));
-		}
-
-		// Now, walk all possible col j category values and check count sets
-		// to find the split with the minimum entropy.
-		// predictionCountSets keys are the unique set of values from column j.
-		// predictionCountSets[v] is the predictor count set for values of column j == v
-		for (Integer splitValue : predictionCountSets.keySet()) {
-			CountingSet<Integer> region1 = predictionCountSets.get(splitValue);
-			CountingSet<Integer> region2 = CountingSet.minus(completePredictionCounts, region1);
-			double r1_entropy = ParrtStats.entropy(region1.counts());
-			double r2_entropy = ParrtStats.entropy(region2.counts());
-
-			int n1 = sum(region1.counts());
-			int n2 = sum(region2.counts());
+			int n2 = notEq.total();
 			double p1 = ((double) n1)/(n1+n2);
 			double p2 = ((double) n2)/(n1+n2);
 			double expectedEntropyValue = p1*r1_entropy+p2*r2_entropy;
 			double gain = complete_entropy-expectedEntropyValue;
-
 			if ( gain>best.gain && n1>0 && n2>0 ) {
 				best.gain = gain;
 				best.var = j;
-				best.cat = splitValue;
+				best.cat = colCat;
 			}
-			String var = data.getColNames()[j];
 			if ( debug ) {
-				System.out.printf("Entropies var=%13s val=%d r1=%d/%d*%.2f r2=%d/%d*%.2f, ExpEntropy=%.2f gain=%.2f\n",
-				                  var, splitValue, n1, n1+n2, r1_entropy, n2, n1+n2, r2_entropy, expectedEntropyValue, gain);
+				String var = data.getColNames()[j];
+				Object p = DataTable.getValue(data, colCat, j);
+				System.out.printf("Entropies var=%13s cat=%-13s r1=%2d/%3d*%.2f r2=%2d/%3d*%.2f, ExpEntropy=%.2f gain=%.2f\n",
+				                  var, p, n1, n1+n2, r1_entropy, n2, n1+n2, r2_entropy,
+				                  expectedEntropyValue, gain);
 			}
-		}
+		});
+
 		return best;
-		*/
 	}
 
 	public boolean isLeaf() { return root instanceof DecisionLeafNode; }
