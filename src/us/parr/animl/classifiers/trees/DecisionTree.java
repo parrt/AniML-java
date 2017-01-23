@@ -20,7 +20,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
 /** A classic CART decision tree but this implementation is suitable just for
  *  classification, not regression. I extended it to handle a subset of predictor
@@ -240,7 +239,6 @@ public class DecisionTree implements ClassifierModel {
 	                                               double complete_entropy) {
 		int n = data.size();
 		BestInfo best = new BestInfo();
-		Set<Integer> uniqueValues = data.getUniqueValues(j);
 		Integer catMaxValue = (Integer) data.getColMax(yi);
 		DenseIntMap<CountingSet<Integer>> colCatToTargetCounts = new DenseIntMap<>();
 		CountingSet<Integer> targetCounts = new CountingDenseIntSet(catMaxValue);
@@ -298,6 +296,20 @@ public class DecisionTree implements ClassifierModel {
 		DataTable a = X.filter(x -> x[splitVariable] == splitCategory);
 		DataTable b = X.filter(x -> x[splitVariable] != splitCategory);
 		return new DataPair(a,b);
+
+		/* This code is surprisingly a bit slower than the above simple code.
+		List<int[]> eq = new ArrayList<>();
+		List<int[]> notEq = new ArrayList<>();
+		for (int[] row : X.getRows()) {
+			if ( row[splitVariable] == splitCategory ) {
+				eq.add(row);
+			}
+			else {
+				notEq.add(row);
+			}
+		}
+		return new DataPair(new DataTable(X, eq), new DataTable(X, notEq));
+		*/
 	}
 
 	public JsonObject toJSON() { return root!=null ? root.toJSON() : Json.createObjectBuilder().build(); }
