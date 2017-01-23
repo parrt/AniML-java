@@ -241,18 +241,17 @@ public class DecisionTree implements ClassifierModel {
 		BestInfo best = new BestInfo();
 		Integer catMaxValue = (Integer) data.getColMax(yi);
 		DenseIntMap<CountingSet<Integer>> colCatToTargetCounts = new DenseIntMap<>();
-		CountingSet<Integer> targetCounts = new CountingDenseIntSet(catMaxValue);
 		for (int i = 0; i<n; i++) { // walk all records, counting dep categories in two groups: indep cat equal and not-equal to splitCat
 			int currentColCat = data.getAsInt(i, j);
 			int currentTargetCat = data.getAsInt(i, yi);
-			targetCounts.add(currentTargetCat);
 			colCatToTargetCounts.computeIfAbsent(currentColCat, k -> new CountingDenseIntSet(catMaxValue));
 			CountingSet<Integer> countsForThisColCat = colCatToTargetCounts.get(currentColCat);
 			countsForThisColCat.add(currentTargetCat);
 //				System.out.println(Arrays.toString(data.getRow(i))+", currentColCat = "+currentColCat+" @ "+i+","+j);
 		}
+		// TODO: this creates like 1G of lambda objects.
 		colCatToTargetCounts.forEach((colCat,eq) -> {
-			CountingSet<Integer> notEq = targetCounts.minus(eq);
+			CountingSet<Integer> notEq = completePredictionCounts.minus(eq);
 			double r1_entropy = eq.entropy();
 			double r2_entropy = notEq.entropy();
 			int n1 = eq.total();
