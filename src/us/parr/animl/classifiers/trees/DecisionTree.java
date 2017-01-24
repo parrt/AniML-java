@@ -16,7 +16,6 @@ import us.parr.lib.collections.CountingSet;
 import javax.json.Json;
 import javax.json.JsonObject;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -183,40 +182,46 @@ public class DecisionTree implements ClassifierModel {
 		data.sortBy(j);
 		// look for discontinuities (transitions) in predictor var values,
 		// recording prediction cat counts for each
-		LinkedHashMap<Double, CountingDenseIntSet> predictionCountSets = new LinkedHashMap<>(); // track key order of insertion
-		Integer colMaxValue = (Integer) data.getColMax(yi);
-		CountingSet<Integer> currentPredictionCounts = new CountingDenseIntSet(colMaxValue);
 		DataTable.VariableType colType = data.getColTypes()[j];
+		Integer targetCatMaxValue = (Integer) data.getColMax(yi);
+		List<int[]> splitValueTargetCatCounts = new ArrayList<>();
+		int[] overallTargetCounts = new int[targetCatMaxValue+1];
 		for (int i = 0; i<n; i++) { // walk all records, updating currentPredictionCounts
 			if ( i>0 && data.compare(i-1, i, j)<0 ) { // if row i-1 < row i, discontinuity in predictor var
-				// Take snapshot of current predictor counts, associate with current/new value as split point
-				// Don't include new value in this snapshot
-				// as split value, choose midway between previous and current value as it's likely more general.
-				// it's unlikely that split value is exactly the current value
-				double midpoint;
-				if ( colType==DataTable.VariableType.NUMERICAL_INT ) {
-					midpoint = (data.getAsInt(i, j)+data.getAsInt(i-1, j))/2.0;
-				}
-				else {
-					midpoint = (data.getAsFloat(i, j)+data.getAsFloat(i-1, j))/2.0;
-				}
-				predictionCountSets.put(midpoint, new CountingDenseIntSet(currentPredictionCounts));
+				int[] counts = new int[1+targetCatMaxValue+1];
+				counts[counts.length-1] = i; // which row is this count snapshot for?
+				System.arraycopy(overallTargetCounts, 0, counts, 0, overallTargetCounts.length);
+				splitValueTargetCatCounts.add(counts); // track as (snapshot, rowi with value) tuple in splitValueTargetCatCounts
 			}
-			currentPredictionCounts.add(data.getAsInt(i, yi));
+			int targetCat = data.getAsInt(i, yi);
+			overallTargetCounts[targetCat]++;
 		}
 
-		// Now, walk all possible prediction count sets to find the split
+		// Now, walk all possible splitValue count sets to find the split
 		// with the minimum entropy. predictionCountSets keys are the
-		// unique set of values from column j. predictionCountSets[v] is
-		// the predictor count set for values of column j < v
-		for (Double splitValue : predictionCountSets.keySet()) {
-			CountingSet<Integer> region1 = predictionCountSets.get(splitValue);
-			CountingSet<Integer> region2 = completePredictionCounts.minus(region1);
+		// unique set of values from column j. splitValueTargetCatCounts[ci] is
+		// the target cat count set for values of column j < v where v
+		// is the value of the discontinuity.
+		int[] notEqCounts = new int[targetCatMaxValue+1];
+		for (int ci = 0; ci<splitValueTargetCatCounts.size(); ci++) {
+			int[] currentValueCounts = splitValueTargetCatCounts.get(ci); // last element is the rowi of discontinuity
+			int rowi = currentValueCounts[currentValueCounts.length-1];
+			currentValueCounts[currentValueCounts.length-1] = 0; // wack it so it doesn't mess up entropy
+			// choose midway between previous and current value as it's likely more general.
+			// it's unlikely that split value is exactly the current value
+			double midpoint;
+			if ( colType==DataTable.VariableType.NUMERICAL_INT ) {
+				midpoint = (data.getAsInt(rowi, j)+data.getAsInt(rowi-1, j))/2.0; // assumes col j sorted!
+			}
+			else {
+				midpoint = (data.getAsFloat(rowi, j)+data.getAsFloat(rowi-1, j))/2.0;
+			}
 
-			double r1_entropy = region1.entropy();
-			double r2_entropy = region2.entropy();
-			int n1 = region1.total();
-			int n2 = region2.total();
+			ParrtStats.minus(overallTargetCounts, currentValueCounts, notEqCounts);
+			double r1_entropy = ParrtStats.entropy(currentValueCounts);
+			double r2_entropy = ParrtStats.entropy(notEqCounts);
+			int n1 = sum(currentValueCounts);
+			int n2 = sum(notEqCounts);
 			double p1 = ((double) n1)/(n1+n2);
 			double p2 = ((double) n2)/(n1+n2);
 			double expectedEntropyValue = p1*r1_entropy + p2*r2_entropy;
@@ -225,14 +230,15 @@ public class DecisionTree implements ClassifierModel {
 			if ( gain>best.gain && n1>0 && n2>0 ) {
 				best.gain = gain;
 				best.var = j;
-				best.val = splitValue;
+				best.val = midpoint;
 			}
 			String var = data.getColNames()[j];
 			if ( debug ) {
 				System.out.printf("Entropies var=%13s val=%.2f r1=%d/%d*%.2f r2=%d/%d*%.2f, ExpEntropy=%.2f gain=%.2f\n",
-				                  var, splitValue, n1, n1+n2, r1_entropy, n2, n1+n2, r2_entropy, expectedEntropyValue, gain);
+				                  var, midpoint, n1, n1+n2, r1_entropy, n2, n1+n2, r2_entropy, expectedEntropyValue, gain);
 			}
 		}
+
 		return best;
 	}
 
@@ -251,9 +257,9 @@ public class DecisionTree implements ClassifierModel {
 //				System.out.println(Arrays.toString(data.getRow(i))+", currentColCat = "+currentColCat+" @ "+i+","+j);
 		}
 		int[] notEqCounts = new int[targetCatMaxValue+1];
+		int[] allCounts = completePredictionCounts.toDenseArray();
 		for (int colCat = 0; colCat<catCounts.length; colCat++) {
 			int[] currentCatCounts = catCounts[colCat];
-			int[] allCounts = completePredictionCounts.toDenseArray();
 			ParrtStats.minus(allCounts, currentCatCounts, notEqCounts);
 			double r1_entropy = ParrtStats.entropy(currentCatCounts);
 			double r2_entropy = ParrtStats.entropy(notEqCounts);
