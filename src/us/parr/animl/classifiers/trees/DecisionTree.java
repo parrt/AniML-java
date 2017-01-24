@@ -248,12 +248,14 @@ public class DecisionTree implements ClassifierModel {
 			double r1_entropy = ParrtStats.entropy(currentCatCounts);
 			double r2_entropy = ParrtStats.entropy(notEqCounts);
 			int n1 = sum(currentCatCounts);
+			// category values are not necessarily contiguous; ignore col category values w/o observations
+			if ( n1==0 ) continue;
 			int n2 = sum(notEqCounts);
 			double p1 = ((double) n1)/(n1+n2);
 			double p2 = ((double) n2)/(n1+n2);
 			double expectedEntropyValue = p1*r1_entropy+p2*r2_entropy;
 			double gain = complete_entropy-expectedEntropyValue;
-			if ( gain>best.gain && n1>0 && n2>0 ) {
+			if ( gain>best.gain ) {
 				best.gain = gain;
 				best.var = j;
 				best.cat = colCat;
