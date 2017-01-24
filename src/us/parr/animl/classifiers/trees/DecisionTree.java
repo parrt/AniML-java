@@ -202,14 +202,14 @@ public class DecisionTree implements ClassifierModel {
 				ParrtStats.minus(allCounts, lessThanCounts, greaterThanCounts);
 				double r1_entropy = ParrtStats.entropy(lessThanCounts);
 				double r2_entropy = ParrtStats.entropy(greaterThanCounts);
-				int n1 = sum(lessThanCounts);
-				int n2 = sum(greaterThanCounts);
+				int n1 = i; // how many observations less than current discontinuity value
+				int n2 = n - i;
 				double p1 = ((double) n1)/(n1+n2);
 				double p2 = ((double) n2)/(n1+n2);
 				double expectedEntropyValue = p1*r1_entropy + p2*r2_entropy;
 				double gain = complete_entropy - expectedEntropyValue;
 
-				if ( gain>best.gain && n1>0 && n2>0 ) {
+				if ( gain>best.gain ) {
 					best.gain = gain;
 					best.var = j;
 					best.val = splitValue;
