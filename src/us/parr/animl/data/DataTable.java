@@ -49,7 +49,8 @@ import static us.parr.lib.collections.ParrtCollections.join;
 import static us.parr.lib.collections.ParrtCollections.map;
 
 public class DataTable implements Iterable<int[]> {
-	public static final Pattern floatPattern = Pattern.compile("[0-9]+\\.[0-9]*|\\.[0-9]+");
+	public static final Pattern floatPattern = Pattern.compile("-?[0-9]+\\.[0-9]*|\\.[0-9]+");
+	public static final Pattern intPattern = Pattern.compile("-?[0-9]+");
 
 	/** Input sometimes has NA or blanks for unknown values */
 	public static final Set<String> UNKNOWN_VALUE_STRINGS = new HashSet<String>() {{
@@ -311,7 +312,7 @@ public class DataTable implements Iterable<int[]> {
 		}
 		for (String[] row : rows) {
 			for (int j = 0; j<numCols; j++) {
-				if ( StringUtils.isNumeric(row[j]) ) {
+				if ( intPattern.matcher(row[j]).find() ) {
 					if ( actualTypes[j]==INVALID ) { // only choose int if first type seen
 						actualTypes[j] = NUMERICAL_INT;
 					}

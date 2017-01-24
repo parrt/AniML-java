@@ -237,6 +237,17 @@ public class TestRFDataSets extends BaseTest {
 		RF_kFoldCrossErrors(fileName, data, sizes, kfolds, minLeafSize, 0.03);
 	}
 
+	@Test public void testShuttlekFoldCrossErrors() {
+		String fileName = "shuttle.csv";
+		URL url = this.getClass().getClassLoader().getResource(fileName);
+		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
+//		DecisionTree.debug = true;
+		int kfolds = 5;
+		int minLeafSize = MIN_LEAF_SIZE;
+		int[] sizes = {10, 50, 100, 200};
+		RF_kFoldCrossErrors(fileName, data, sizes, kfolds, minLeafSize, 0.03);
+	}
+
 	@Test public void testRunWine() {
 		String fileName = "wine.csv";
 		URL url = this.getClass().getClassLoader().getResource(fileName);
@@ -277,6 +288,15 @@ public class TestRFDataSets extends BaseTest {
 		long stop = System.nanoTime();
 		System.out.printf("Fitting %d estimators %d min leaf size %dms\n", n_estimators, minLeafSize,
 		                  (stop-start)/(1000*1000));
+	}
+
+	@Test public void testRunShuttle() {
+		String fileName = "shuttle.csv";
+		URL url = this.getClass().getClassLoader().getResource(fileName);
+		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
+//		DecisionTree.debug = true;
+		RandomForest rf = new RandomForest(500, 1);
+		rf.train(data);
 	}
 
 	// ---------------------------------
