@@ -240,7 +240,6 @@ public class DecisionTree implements ClassifierModel {
 			int currentTargetCat = data.getAsInt(i, yi);
 			catCounts[currentColCat][currentTargetCat]++;
 		}
-		// TODO: embed in previous loop like numerical?
 		int[] notEqCounts = new int[targetCatMaxValue+1];
 		int[] allCounts = completePredictionCounts.toDenseArray();
 		for (int colCat = 0; colCat<catCounts.length; colCat++) {
