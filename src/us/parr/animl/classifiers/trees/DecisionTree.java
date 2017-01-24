@@ -199,16 +199,11 @@ public class DecisionTree implements ClassifierModel {
 					splitValue = (data.getAsFloat(i, j)+data.getAsFloat(i-1, j))/2.0;
 				}
 				int[] lessThanCounts = currentCounts;
-				ParrtStats.minus(allCounts, lessThanCounts, greaterThanCounts);
-				double r1_entropy = ParrtStats.entropy(lessThanCounts);
-				double r2_entropy = ParrtStats.entropy(greaterThanCounts);
 				int n1 = i; // how many observations less than current discontinuity value
 				int n2 = n - i;
-				double p1 = ((double) n1)/(n1+n2);
-				double p2 = ((double) n2)/(n1+n2);
-				double expectedEntropyValue = p1*r1_entropy + p2*r2_entropy;
+				ParrtStats.minus(allCounts, lessThanCounts, greaterThanCounts);
+				double expectedEntropyValue = expectedEntropy(lessThanCounts, n1, greaterThanCounts, n2);
 				double gain = complete_entropy - expectedEntropyValue;
-
 				if ( gain>best.gain ) {
 					best.gain = gain;
 					best.var = j;
@@ -216,6 +211,8 @@ public class DecisionTree implements ClassifierModel {
 				}
 				String var = data.getColNames()[j];
 				if ( debug ) {
+					double r1_entropy = ParrtStats.entropy(lessThanCounts);
+					double r2_entropy = ParrtStats.entropy(greaterThanCounts);
 					System.out.printf("Entropies var=%13s val=%.2f r1=%d/%d*%.2f r2=%d/%d*%.2f, ExpEntropy=%.2f gain=%.2f\n",
 					                  var, splitValue, n1, n1+n2, r1_entropy, n2, n1+n2, r2_entropy, expectedEntropyValue, gain);
 				}
@@ -244,16 +241,12 @@ public class DecisionTree implements ClassifierModel {
 		int[] allCounts = completePredictionCounts.toDenseArray();
 		for (int colCat = 0; colCat<catCounts.length; colCat++) {
 			int[] currentCatCounts = catCounts[colCat];
-			ParrtStats.minus(allCounts, currentCatCounts, notEqCounts);
-			double r1_entropy = ParrtStats.entropy(currentCatCounts);
-			double r2_entropy = ParrtStats.entropy(notEqCounts);
 			int n1 = sum(currentCatCounts);
 			// category values are not necessarily contiguous; ignore col category values w/o observations
 			if ( n1==0 ) continue;
+			ParrtStats.minus(allCounts, currentCatCounts, notEqCounts);
 			int n2 = sum(notEqCounts);
-			double p1 = ((double) n1)/(n1+n2);
-			double p2 = ((double) n2)/(n1+n2);
-			double expectedEntropyValue = p1*r1_entropy+p2*r2_entropy;
+			double expectedEntropyValue = expectedEntropy(currentCatCounts, n1, notEqCounts, n2);
 			double gain = complete_entropy-expectedEntropyValue;
 			if ( gain>best.gain ) {
 				best.gain = gain;
@@ -261,6 +254,8 @@ public class DecisionTree implements ClassifierModel {
 				best.cat = colCat;
 			}
 			if ( debug ) {
+				double r1_entropy = ParrtStats.entropy(currentCatCounts);
+				double r2_entropy = ParrtStats.entropy(notEqCounts);
 				String var = data.getColNames()[j];
 				Object p = DataTable.getValue(data, colCat, j);
 				System.out.printf("Entropies var=%13s cat=%-13s r1=%2d/%3d*%.2f r2=%2d/%3d*%.2f, ExpEntropy=%.2f gain=%.2f\n",
@@ -270,6 +265,16 @@ public class DecisionTree implements ClassifierModel {
 		}
 
 		return best;
+	}
+
+	public static double expectedEntropy(int[] region1CatCounts, int n1,
+	                                     int[] region2CatCounts, int n2)
+	{
+		double r1_entropy = ParrtStats.entropy(region1CatCounts);
+		double r2_entropy = ParrtStats.entropy(region2CatCounts);
+		double p1 = ((double) n1)/(n1+n2);
+		double p2 = ((double) n2)/(n1+n2);
+		return p1*r1_entropy+p2*r2_entropy;
 	}
 
 	public boolean isLeaf() { return root instanceof DecisionLeafNode; }
