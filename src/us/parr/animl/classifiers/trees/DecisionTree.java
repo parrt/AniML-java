@@ -9,9 +9,9 @@ package us.parr.animl.classifiers.trees;
 import us.parr.animl.classifiers.ClassifierModel;
 import us.parr.animl.data.DataPair;
 import us.parr.animl.data.DataTable;
+import us.parr.lib.ParrtStats;
 import us.parr.lib.collections.CountingDenseIntSet;
 import us.parr.lib.collections.CountingSet;
-import us.parr.lib.collections.DenseIntMap;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -20,6 +20,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+
+import static us.parr.lib.ParrtStats.sum;
 
 /** A classic CART decision tree but this implementation is suitable just for
  *  classification, not regression. I extended it to handle a subset of predictor
@@ -99,7 +101,7 @@ public class DecisionTree implements ClassifierModel {
 		int yi = data.getPredictedCol(); // last index is usually the target variable
 		// if all predict same category or only one row of data,
 		// create leaf predicting that
-		CountingSet<Integer> completeCategoryCounts = data.valueCountsInColumn(yi);
+		CountingDenseIntSet completeCategoryCounts = (CountingDenseIntSet)data.valueCountsInColumn(yi);
 		double complete_entropy = completeCategoryCounts.entropy();
 		if ( completeCategoryCounts.size()==1 || data.size()<=minLeafSize ) {
 			DecisionTreeNode t = new DecisionLeafNode(data, completeCategoryCounts, yi);
@@ -235,27 +237,28 @@ public class DecisionTree implements ClassifierModel {
 	}
 
 	protected static BestInfo bestCategoricalSplit(DataTable data, int j, int yi,
-	                                               CountingSet<Integer> completePredictionCounts,
+	                                               CountingDenseIntSet completePredictionCounts,
 	                                               double complete_entropy) {
 		int n = data.size();
 		BestInfo best = new BestInfo();
-		Integer catMaxValue = (Integer) data.getColMax(yi);
-		DenseIntMap<CountingSet<Integer>> colCatToTargetCounts = new DenseIntMap<>();
+		Integer targetCatMaxValue = (Integer) data.getColMax(yi);
+		Integer colCatMaxValue = (Integer) data.getColMax(j);
+		int[][] catCounts = new int[colCatMaxValue+1][targetCatMaxValue+1];
 		for (int i = 0; i<n; i++) { // walk all records, counting dep categories in two groups: indep cat equal and not-equal to splitCat
 			int currentColCat = data.getAsInt(i, j);
 			int currentTargetCat = data.getAsInt(i, yi);
-			colCatToTargetCounts.computeIfAbsent(currentColCat, k -> new CountingDenseIntSet(catMaxValue));
-			CountingSet<Integer> countsForThisColCat = colCatToTargetCounts.get(currentColCat);
-			countsForThisColCat.add(currentTargetCat);
+			catCounts[currentColCat][currentTargetCat]++;
 //				System.out.println(Arrays.toString(data.getRow(i))+", currentColCat = "+currentColCat+" @ "+i+","+j);
 		}
-		// TODO: this creates like 1G of lambda objects.
-		colCatToTargetCounts.forEach((colCat,eq) -> {
-			CountingSet<Integer> notEq = completePredictionCounts.minus(eq);
-			double r1_entropy = eq.entropy();
-			double r2_entropy = notEq.entropy();
-			int n1 = eq.total();
-			int n2 = notEq.total();
+		int[] notEqCounts = new int[targetCatMaxValue+1];
+		for (int colCat = 0; colCat<catCounts.length; colCat++) {
+			int[] currentCatCounts = catCounts[colCat];
+			int[] allCounts = completePredictionCounts.toDenseArray();
+			ParrtStats.minus(allCounts, currentCatCounts, notEqCounts);
+			double r1_entropy = ParrtStats.entropy(currentCatCounts);
+			double r2_entropy = ParrtStats.entropy(notEqCounts);
+			int n1 = sum(currentCatCounts);
+			int n2 = sum(notEqCounts);
 			double p1 = ((double) n1)/(n1+n2);
 			double p2 = ((double) n2)/(n1+n2);
 			double expectedEntropyValue = p1*r1_entropy+p2*r2_entropy;
@@ -272,7 +275,7 @@ public class DecisionTree implements ClassifierModel {
 				                  var, p, n1, n1+n2, r1_entropy, n2, n1+n2, r2_entropy,
 				                  expectedEntropyValue, gain);
 			}
-		});
+		}
 
 		return best;
 	}
