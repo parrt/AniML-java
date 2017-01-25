@@ -219,6 +219,8 @@ public class DecisionTree implements ClassifierModel {
 		return best;
 	}
 
+//	static int[][] catCounts = new int[20][20]; // seems to help but not by much
+
 	protected static BestInfo bestCategoricalSplit(DataTable data, int j, int yi,
 	                                               CountingDenseIntSet completePredictionCounts,
 	                                               double complete_entropy) {
@@ -226,6 +228,9 @@ public class DecisionTree implements ClassifierModel {
 		BestInfo best = new BestInfo();
 		Integer targetCatMaxValue = (Integer) data.getColMax(yi);
 		Integer colCatMaxValue = (Integer) data.getColMax(j);
+//		for (int i = 0; i<20; i++) { // walk all records, counting dep categories in two groups: indep cat equal and not-equal to splitCat
+//			Arrays.fill(catCounts[i], 0);
+//		}
 		int[][] catCounts = new int[colCatMaxValue+1][targetCatMaxValue+1];
 		for (int i = 0; i<n; i++) { // walk all records, counting dep categories in two groups: indep cat equal and not-equal to splitCat
 			int currentColCat = data.getAsInt(i, j);

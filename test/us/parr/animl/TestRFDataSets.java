@@ -277,7 +277,7 @@ public class TestRFDataSets extends BaseTest {
 
 	@Test public void testRunConnect4() {
 		String fileName = "connect-4.csv";
-		int n_estimators = 50;
+		int n_estimators = 100;
 		int minLeafSize = 20;
 		URL url = this.getClass().getClassLoader().getResource(fileName);
 		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
