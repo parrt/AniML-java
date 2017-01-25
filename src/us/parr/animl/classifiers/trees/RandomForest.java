@@ -30,6 +30,9 @@ public class RandomForest implements ClassifierModel {
 
 	protected int minLeafSize;
 
+	/** How much of data to examine at each node to find split point */
+	protected int nodeSampleSize = 20;
+
 	/** The forest of trees */
 	protected List<DecisionTree> trees;
 
@@ -58,7 +61,7 @@ public class RandomForest implements ClassifierModel {
 			List<int[]> bootstrap = ParrtStats.bootstrapWithRepl(data.getRows(), outOfBagSamples);
 			DataTable table = new DataTable(data, bootstrap);
 //			System.out.println("bootstrap:\n"+table.toString());
-			DecisionTree tree = new DecisionTree(m, minLeafSize);
+			DecisionTree tree = new DecisionTree(m, minLeafSize, nodeSampleSize);
 			tree.train(table);
 			trees.add(tree);
 			treeOutOfBagSampleIndexes.add(outOfBagSamples);

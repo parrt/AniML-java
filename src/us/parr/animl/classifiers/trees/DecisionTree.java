@@ -54,11 +54,19 @@ public class DecisionTree implements ClassifierModel {
 
 	protected int minLeafSize;
 
-	public DecisionTree() { this(0, 1); }
+	/** How much of data to examine at each node to find split point */
+	protected int nodeSampleSize = 20;
+
+	public DecisionTree() { this(0, 1, 20); }
 
 	public DecisionTree(int varsPerSplit, int minLeafSize) {
+		this(varsPerSplit, minLeafSize, 20);
+	}
+
+	public DecisionTree(int varsPerSplit, int minLeafSize, int nodeSampleSize) {
 		this.varsPerSplit = varsPerSplit;
 		this.minLeafSize = minLeafSize;
+		this.nodeSampleSize = nodeSampleSize;
 	}
 
 	public int classify(int[] X) { return root.classify(X); };
@@ -67,19 +75,6 @@ public class DecisionTree implements ClassifierModel {
 	public Map<Integer, Double> classProbabilities(int[] X) {
 		return root.classProbabilities(X);
 	}
-
-	/** Conversion routine from separate X -> Y vectors to single augmented data vector */
-//	public static DecisionTree build(List<int[]> X, List<Integer> Y) {
-//		List<int[]> data = new ArrayList<>(X.size());
-//		for (int i = 0; i<X.size(); i++) {
-//			int[] row = X.get(i);
-//			int[] augmented = new int[row.length+1];
-//			System.arraycopy(row, 0, augmented, 0, row.length);
-//			augmented[row.length] = Y.get(i);
-//			data.add(augmented);
-//		}
-//		return build(data);
-//	}
 
 	/** Build a decision tree starting with arg data and recursively
 	 *  build up children. data_i is the ith observation and the (usually) last column of
@@ -90,10 +85,10 @@ public class DecisionTree implements ClassifierModel {
 	 *  If varsPerSplit>0, select split var from random subset of size m from all variable set.
 	 */
 	public void train(DataTable data) {
-		root = build(data, varsPerSplit, minLeafSize);
+		root = build(data, varsPerSplit, minLeafSize, nodeSampleSize);
 	}
 
-	protected static DecisionTreeNode build(DataTable data, int varsPerSplit, int minLeafSize) {
+	protected static DecisionTreeNode build(DataTable data, int varsPerSplit, int minLeafSize, int nodeSampleSize) {
 		if ( data==null || data.size()==0 ) { return null; }
 		int N = data.size();
 		int yi = data.getPredictedCol(); // last index is usually the target variable
@@ -153,8 +148,8 @@ public class DecisionTree implements ClassifierModel {
 			}
 			t.numRecords = N;
 			t.entropy = (float)complete_entropy;
-			t.left = build(split.region1,  varsPerSplit, minLeafSize);
-			t.right = build(split.region2, varsPerSplit, minLeafSize);
+			t.left = build(split.region1,  varsPerSplit, minLeafSize, nodeSampleSize);
+			t.right = build(split.region2, varsPerSplit, minLeafSize, nodeSampleSize);
 			return t;
 		}
 		// we would gain nothing by splitting, make a leaf predicting majority vote
