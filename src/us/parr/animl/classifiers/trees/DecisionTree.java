@@ -90,8 +90,15 @@ public class DecisionTree implements ClassifierModel {
 
 	protected static DecisionTreeNode build(DataTable data, int varsPerSplit, int minLeafSize, int nodeSampleSize) {
 		if ( data==null || data.size()==0 ) { return null; }
+
+		// sample from data to get subset for this node
+		if ( nodeSampleSize>0 ) {
+			data = data.randomSubset(Math.min(nodeSampleSize, data.size()));
+		}
+
 		int N = data.size();
 		int yi = data.getPredictedCol(); // last index is usually the target variable
+
 		// if all predict same category or only one row of data,
 		// create leaf predicting that
 		CountingDenseIntSet completeCategoryCounts = (CountingDenseIntSet)data.valueCountsInColumn(yi);
@@ -150,6 +157,9 @@ public class DecisionTree implements ClassifierModel {
 			t.entropy = (float)complete_entropy;
 			t.left = build(split.region1,  varsPerSplit, minLeafSize, nodeSampleSize);
 			t.right = build(split.region2, varsPerSplit, minLeafSize, nodeSampleSize);
+			if ( t.right==null ) {
+				System.out.println("what?");
+			}
 			return t;
 		}
 		// we would gain nothing by splitting, make a leaf predicting majority vote

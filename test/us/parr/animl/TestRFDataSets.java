@@ -223,7 +223,7 @@ public class TestRFDataSets extends BaseTest {
 		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
 		int kfolds = 5;
 		int minLeafSize = MIN_LEAF_SIZE;
-		int[] sizes = {20, 100, 200};
+		int[] sizes = {10, 20, 50, 75, 100, 200};
 		RF_kFoldCrossErrors(fileName, data, sizes, kfolds, minLeafSize, 0.03);
 	}
 
@@ -279,11 +279,12 @@ public class TestRFDataSets extends BaseTest {
 		String fileName = "connect-4.csv";
 		int n_estimators = 100;
 		int minLeafSize = 20;
+		int nodeSampleSize = 40;
 		URL url = this.getClass().getClassLoader().getResource(fileName);
 		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
-//		DecisionTree.debug = true;
+		DecisionTree.debug = true;
 		long start = System.nanoTime();
-		RandomForest rf = new RandomForest(n_estimators, minLeafSize);
+		RandomForest rf = new RandomForest(n_estimators, minLeafSize, nodeSampleSize);
 		rf.train(data);
 		long stop = System.nanoTime();
 		System.out.printf("Fitting %d estimators %d min leaf size %dms\n", n_estimators, minLeafSize,

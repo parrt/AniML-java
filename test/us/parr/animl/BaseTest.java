@@ -93,7 +93,7 @@ public class BaseTest {
 			double[] scikitResult = scikit_rf_error(fileName, n_estimators, minLeafSize, kfolds);
 //			double[] scikitResult = {0.0,0.0};
 			// Now mine
-			RandomForest rf = new RandomForest(n_estimators, minLeafSize);
+			RandomForest rf = new RandomForest(n_estimators, minLeafSize, 50);
 			rf.train(data);
 			double error = Validation.kFoldCross(rf, kfolds, data);
 			System.out.println(scikitResult[1]+" vs "+error);

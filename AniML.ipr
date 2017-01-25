@@ -274,13 +274,13 @@
     </library>
     <library name="Maven: us.parr:parrtlib:0.1-SNAPSHOT">
       <CLASSES>
-        <root url="jar://$MAVEN_REPOSITORY$/us/parr/parrtlib/0.1-SNAPSHOT/parrtlib-0.1-20170124.200023-27.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/us/parr/parrtlib/0.1-SNAPSHOT/parrtlib-0.1-SNAPSHOT.jar!/" />
       </CLASSES>
       <JAVADOC>
-        <root url="jar://$MAVEN_REPOSITORY$/us/parr/parrtlib/0.1-SNAPSHOT/parrtlib-0.1-20170124.200023-27-javadoc.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/us/parr/parrtlib/0.1-SNAPSHOT/parrtlib-0.1-SNAPSHOT-javadoc.jar!/" />
       </JAVADOC>
       <SOURCES>
-        <root url="jar://$MAVEN_REPOSITORY$/us/parr/parrtlib/0.1-SNAPSHOT/parrtlib-0.1-20170124.200023-27-sources.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/us/parr/parrtlib/0.1-SNAPSHOT/parrtlib-0.1-SNAPSHOT-sources.jar!/" />
       </SOURCES>
     </library>
   </component>

@@ -11,6 +11,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
+import us.parr.lib.ParrtStats;
 import us.parr.lib.collections.CountingDenseIntSet;
 import us.parr.lib.collections.CountingSet;
 import us.parr.lib.collections.DenseIntSet;
@@ -435,6 +436,13 @@ public class DataTable implements Iterable<int[]> {
 		lessOne.addAll(rows);
 		lessOne.remove(i);
 		return new DataTable(this, lessOne);
+	}
+
+	/** Get a random subset of size n from the rows (with replacement)
+	 *  and return new DataTable.
+	 */
+	public DataTable randomSubset(int n) {
+		return new DataTable(this, ParrtStats.bootstrapWithRepl(this.rows, n));
 	}
 
 	public int getNumberOfPredictorVar() { return getSubsetOfVarIndexes(getNumberOfColumns(), null).size(); }

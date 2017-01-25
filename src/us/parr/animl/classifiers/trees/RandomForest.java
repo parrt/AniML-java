@@ -42,10 +42,16 @@ public class RandomForest implements ClassifierModel {
 	/** Constructors for classifiers / regressors should capture all parameters
 	 *  needed to train except for the actual data, which could vary.
 	 */
-	public RandomForest(int numEstimators, int minLeafSize) {
+	public RandomForest(int numEstimators, int minLeafSize, int nodeSampleSize) {
 		this.numEstimators = numEstimators;
 		this.minLeafSize = minLeafSize;
+		this.nodeSampleSize = nodeSampleSize;
 	}
+
+	public RandomForest(int numEstimators, int minLeafSize) {
+		this(numEstimators, minLeafSize, 20);
+	}
+
 
 	/** Train on this data. Wipe out any existing trees etc... */
 	public void train(DataTable data) {
@@ -58,7 +64,7 @@ public class RandomForest implements ClassifierModel {
 		for (int i = 1; i<=numEstimators; i++) {
 			if ( DecisionTree.debug ) System.out.println("Estimator "+i+" ------------------");
 			Set<Integer> outOfBagSamples = new HashSet<>(); // gets filled in
-			List<int[]> bootstrap = ParrtStats.bootstrapWithRepl(data.getRows(), outOfBagSamples);
+			List<int[]> bootstrap = ParrtStats.bootstrapWithRepl(data.getRows(), data.size(), outOfBagSamples);
 			DataTable table = new DataTable(data, bootstrap);
 //			System.out.println("bootstrap:\n"+table.toString());
 			DecisionTree tree = new DecisionTree(m, minLeafSize, nodeSampleSize);
