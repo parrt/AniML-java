@@ -292,11 +292,9 @@ public class DecisionTree implements ClassifierModel {
 	}
 
 	public static DataPair categoricalSplit(DataTable X, int splitVariable, int splitCategory) {
-		DataTable a = X.filter(x -> x[splitVariable] == splitCategory);
-		DataTable b = X.filter(x -> x[splitVariable] != splitCategory);
-		return new DataPair(a,b);
-
-		/* This code is surprisingly a bit slower than the above simple code.
+//		DataTable a = X.filter(x -> x[splitVariable] == splitCategory);
+//		DataTable b = X.filter(x -> x[splitVariable] != splitCategory);
+//		return new DataPair(a,b);
 		List<int[]> eq = new ArrayList<>();
 		List<int[]> notEq = new ArrayList<>();
 		for (int[] row : X.getRows()) {
@@ -308,7 +306,6 @@ public class DecisionTree implements ClassifierModel {
 			}
 		}
 		return new DataPair(new DataTable(X, eq), new DataTable(X, notEq));
-		*/
 	}
 
 	public JsonObject toJSON() { return root!=null ? root.toJSON() : Json.createObjectBuilder().build(); }
