@@ -107,6 +107,25 @@ public class BaseTest {
 		}
 	}
 
+	protected static void python_RF_kFoldCrossErrors(String fileName,
+	                                                 int[] sizes, int kfolds,
+	                                                 int minLeafSize)
+	{
+//		double[] results = new double[sizes.length];
+		int dot = fileName.lastIndexOf(".csv");
+		String name = fileName.substring(0, dot);
+		name = name.replaceAll("-", "_");
+		System.out.print("double[] "+String.format("%-20s",name+"_kfold")+" = {");
+		for (int i = 0; i<sizes.length; i++) {
+			// Check data scikit-learn
+			int n_estimators = sizes[i];
+			double[] scikitResult = scikit_rf_error(fileName, n_estimators, minLeafSize, kfolds);
+			if ( i>0 ) System.out.print(", ");
+			System.out.printf("%.5f",scikitResult[1]);
+		}
+		System.out.println("};");
+	}
+
 	/** For 1..n (num trees), compute k-fold errors */
 	protected double[] RF_kFoldCrossErrors(DataTable data, int minEstimators, int maxEstimators, int folds, int minLeafSize) {
 		double[] errors = new double[maxEstimators-minEstimators+1];
