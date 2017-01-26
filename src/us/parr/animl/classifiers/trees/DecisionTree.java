@@ -66,7 +66,7 @@ public class DecisionTree implements ClassifierModel {
 	public DecisionTree(int varsPerSplit, int minLeafSize, int nodeSampleSize) {
 		this.varsPerSplit = varsPerSplit;
 		this.minLeafSize = minLeafSize;
-		this.nodeSampleSize = nodeSampleSize;
+		this.nodeSampleSize = Math.max(nodeSampleSize, minLeafSize+1); // can't be smaller than min node or we get a single root node
 	}
 
 	public int classify(int[] X) { return root.classify(X); };

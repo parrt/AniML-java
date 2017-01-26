@@ -6,6 +6,7 @@
 
 package us.parr.animl;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import us.parr.animl.classifiers.trees.DecisionTree;
 import us.parr.animl.classifiers.trees.RandomForest;
@@ -37,7 +38,7 @@ public class TestRFDataSets extends BaseTest {
 
 	public static final int MIN_LEAF_SIZE = 20;
 
-	@Test public void testRestaurantOnTrainingSet() {
+	@Ignore @Test public void testRestaurantOnTrainingSet() {
 		DataTable data = DataTable.fromStrings(Arrays.asList(TestDataSets.restaurant));
 		int N = 50; // try from 1 to 50 estimators
 		int[] missed = trainingDataMisclassifications(data, N, MIN_LEAF_SIZE);
@@ -50,7 +51,7 @@ public class TestRFDataSets extends BaseTest {
 		assertArrayEquals(expected, missed);
 	}
 
-	@Test public void testRestaurantLeaveOneOutError() {
+	@Ignore @Test public void testRestaurantLeaveOneOutError() {
 		DataTable data = DataTable.fromStrings(Arrays.asList(TestDataSets.restaurant));
 		int N = 50;
 		int[] missed = RF_leaveOneOutErrors(data, 1, N, MIN_LEAF_SIZE);
@@ -63,7 +64,7 @@ public class TestRFDataSets extends BaseTest {
 		assertArrayEquals(expected, missed);
 	}
 
-	@Test public void testRestaurantOOBError() {
+	@Ignore @Test public void testRestaurantOOBError() {
 		DataTable data = DataTable.fromStrings(Arrays.asList(TestDataSets.restaurant));
 //		RandomForest rf = RandomForest.train(data, 200, MIN_NODE_SIZE);
 //		double result = rf.getErrorEstimate(data);
@@ -77,7 +78,7 @@ public class TestRFDataSets extends BaseTest {
 		}
 	}
 
-	@Test public void testWebsiteSignups() {
+	@Ignore @Test public void testWebsiteSignups() {
 		DataTable data = DataTable.fromStrings(Arrays.asList(TestDataSets.signups));
 		DecisionTree tree = new DecisionTree(0, MIN_LEAF_SIZE);
 		tree.train(data);
@@ -90,7 +91,7 @@ public class TestRFDataSets extends BaseTest {
 		checkPredictions(data.getRows(), tree);
 	}
 
-	@Test public void testHeart() {
+	@Ignore @Test public void testHeart() {
 		DataTable data = heartData();
 		int m = 4; // sqrt(13) columns
 		DecisionTree tree = new DecisionTree(0, MIN_LEAF_SIZE);
@@ -110,7 +111,7 @@ public class TestRFDataSets extends BaseTest {
 //		checkPredictions(data.getRows(), tree);
 	}
 
-	@Test public void testHeartOnTrainingSet() {
+	@Ignore @Test public void testHeartOnTrainingSet() {
 		DataTable data = heartData();
 		int N = 50;
 		int[] missed = trainingDataMisclassifications(data, N, MIN_LEAF_SIZE);
@@ -124,7 +125,7 @@ public class TestRFDataSets extends BaseTest {
 		assertArrayEquals(expected, missed);
 	}
 
-	@Test public void testHeartLeaveOneOutErrors() {
+	@Ignore @Test public void testHeartLeaveOneOutErrors() {
 		DataTable data = heartData();
 		int N = 50;
 		int[] missed = RF_leaveOneOutErrors(data, 1, N, MIN_LEAF_SIZE);
@@ -145,7 +146,7 @@ public class TestRFDataSets extends BaseTest {
 		RF_kFoldCrossErrors(Heart_wo_NA_kfold, fileName, data, sizes, kfolds, minLeafSize, 0.015);
 	}
 
-	@Test public void testHeartOOBError() {
+	@Ignore @Test public void testHeartOOBError() {
 		DataTable data = heartData();
 		int N = 50;
 		double[] missed = new double[N];
@@ -157,7 +158,7 @@ public class TestRFDataSets extends BaseTest {
 		}
 	}
 
-	@Test public void testIrisLeaveOneOut() {
+	@Ignore @Test public void testIrisLeaveOneOut() {
 		URL url = this.getClass().getClassLoader().getResource("iris.csv");
 		DataTable data = DataTable.loadCSV(url.getFile().toString(), null, null, null, true);
 		int N = 50;
@@ -183,7 +184,7 @@ public class TestRFDataSets extends BaseTest {
 		RF_kFoldCrossErrors(iris_kfold, fileName, data, sizes, kfolds, minLeafSize, 0.03);
 	}
 
-	@Test public void testIrisOOBError() {
+	@Ignore @Test public void testIrisOOBError() {
 		DataTable data = DataTable.fromStrings(Arrays.asList(TestDataSets.restaurant));
 		int N = 50;
 		for (int k = 1; k<=N; k++) {
@@ -231,7 +232,7 @@ public class TestRFDataSets extends BaseTest {
 		RF_kFoldCrossErrors(shuttle_kfold, fileName, data, scikit_sizes, kfolds, minLeafSize, 0.03);
 	}
 
-	@Test public void testRunWine() {
+	@Ignore @Test public void testRunWine() {
 		String fileName = "wine.csv";
 		URL url = this.getClass().getClassLoader().getResource(fileName);
 		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
@@ -240,7 +241,7 @@ public class TestRFDataSets extends BaseTest {
 		rf.train(data);
 	}
 
-	@Test public void testRunHeart() {
+	@Ignore @Test public void testRunHeart() {
 		String fileName = "Heart-wo-NA.csv";
 		URL url = this.getClass().getClassLoader().getResource(fileName);
 		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
@@ -249,7 +250,7 @@ public class TestRFDataSets extends BaseTest {
 		rf.train(data);
 	}
 
-	@Test public void testRunIris() {
+	@Ignore @Test public void testRunIris() {
 		String fileName = "iris.csv";
 		URL url = this.getClass().getClassLoader().getResource(fileName);
 		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
@@ -258,13 +259,14 @@ public class TestRFDataSets extends BaseTest {
 		rf.train(data);
 	}
 
-	@Test public void testRunConnect4() {
+	@Ignore @Test public void testRunConnect4() {
 		String fileName = "connect-4.csv";
 		int n_estimators = 100;
 		int minLeafSize = 20;
 		URL url = this.getClass().getClassLoader().getResource(fileName);
 		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
 		int nodeSampleSize = (int)(0.1 * data.size());
+		nodeSampleSize = 111;
 //		DecisionTree.debug = true;
 		long start = System.nanoTime();
 		RandomForest rf = new RandomForest(n_estimators, minLeafSize, nodeSampleSize);
@@ -274,7 +276,7 @@ public class TestRFDataSets extends BaseTest {
 		                  (stop-start)/(1000*1000));
 	}
 
-	@Test public void testRunShuttle() {
+	@Ignore @Test public void testRunShuttle() {
 		String fileName = "shuttle.csv";
 		int n_estimators = 100;
 		int minLeafSize = 20;
