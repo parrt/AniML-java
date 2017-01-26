@@ -84,16 +84,18 @@ public class BaseTest {
 		return missed;
 	}
 
-	protected void RF_kFoldCrossErrors(String fileName, DataTable data,
+	protected void RF_kFoldCrossErrors(double[] scikitResult,
+	                                   String fileName, DataTable data,
 	                                   int[] sizes, int kfolds,
 	                                   int minLeafSize, double tolerance)
 	{
 		for (int n_estimators : sizes) {
 			// Check data scikit-learn
-			double[] scikitResult = scikit_rf_error(fileName, n_estimators, minLeafSize, kfolds);
+//			double[] scikitResult = scikit_rf_error(fileName, n_estimators, minLeafSize, kfolds);
 //			double[] scikitResult = {0.0,0.0};
 			// Now mine
-			RandomForest rf = new RandomForest(n_estimators, minLeafSize, 50);
+			int nodeSampleSize = (int)(0.20 * data.size());
+			RandomForest rf = new RandomForest(n_estimators, minLeafSize, nodeSampleSize);
 			rf.train(data);
 			double error = Validation.kFoldCross(rf, kfolds, data);
 			System.out.println(scikitResult[1]+" vs "+error);
