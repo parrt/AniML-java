@@ -93,7 +93,7 @@ public class DecisionTree implements ClassifierModel {
 
 		// sample from data to get subset for this node
 		if ( nodeSampleSize>0 ) {
-			data = data.randomSubset(Math.min(nodeSampleSize, data.size()));
+//			data = data.randomSubset(Math.min(nodeSampleSize, data.size()));
 		}
 
 		int N = data.size();
@@ -115,6 +115,11 @@ public class DecisionTree implements ClassifierModel {
 		// a generalization
 		List<Integer> indexes = data.getSubsetOfVarIndexes(varsPerSplit, random); // consider all or a subset of M variables
 		for (Integer j : indexes) { // for each variable i
+//			CountingSet<Integer> colValueCounts = data.getColValueCounts(j);
+//			if ( colValueCounts.size()==1 ) {
+//				continue;
+//			}
+
 			// The goal is to find the lowest expected entropy for all possible
 			// values of predictor variable j.  Then we compare best for j against
 			// best for any variable

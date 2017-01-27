@@ -50,8 +50,11 @@ public class Validation {
 			}
 			DataTable subset = data.subsetNot(start, stop);
 			DataTable leftOut = data.subset(start, stop);
+			long t0 = System.nanoTime();
 			classifier.train(subset); // wipes old data, retrains
+			long t1 = System.nanoTime();
 			int missPerFold = 0;
+			long c0 = System.nanoTime();
 			for (int[] row : leftOut) {
 				int cat = classifier.classify(row);
 				int trueCat = row[data.getPredictedCol()];
@@ -59,7 +62,11 @@ public class Validation {
 					missPerFold++;
 				}
 			}
+			long c1 = System.nanoTime();
 			errors.add(((double)missPerFold) / (stop-start+1));
+			System.out.printf("train %dms, classify %d records %dms\n",
+			                  (t1-t0)/(1000*1000),
+			                  leftOut.size(), (c1-c0)/(1000*1000));
 		}
 //		System.out.println("missed in fold "+errors+"; mu="+mean(errors));
 		return mean(errors);
