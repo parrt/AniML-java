@@ -95,7 +95,7 @@ public class BaseTest {
 //			double[] scikitResult = {0.0,0.0};
 			// Now mine
 			int nodeSampleSize = (int)(0.15 * data.size());
-//			nodeSampleSize = 5110;
+			nodeSampleSize = 111;
 			RandomForest rf = new RandomForest(n_estimators, minLeafSize, nodeSampleSize);
 			double error = Validation.kFoldCross(rf, kfolds, data);
 			System.out.println(scikitResult[1]+" vs "+error);
@@ -105,7 +105,7 @@ public class BaseTest {
 			if ( Math.abs(scikitResult[1]-error)>=tolerance ) {
 				System.err.println(errMsg);
 			}
-//			assertTrue(errMsg,Math.abs(scikitResult[1]-error)<tolerance);
+//			assertTrue(errMsg, error < scikitResult[1] || error-scikitResult[1]<tolerance);
 		}
 	}
 

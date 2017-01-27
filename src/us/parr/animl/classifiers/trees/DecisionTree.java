@@ -91,9 +91,12 @@ public class DecisionTree implements ClassifierModel {
 	protected static DecisionTreeNode build(DataTable data, int varsPerSplit, int minLeafSize, int nodeSampleSize) {
 		if ( data==null || data.size()==0 ) { return null; }
 
-		// sample from data to get subset for this node
+		// sample from data to get subset for finding best split at this node;
+		// track original though as that is what we split and use to build
+		// the left/right children.
+		DataTable original = data;
 		if ( nodeSampleSize>0 ) {
-//			data = data.randomSubset(Math.min(nodeSampleSize, data.size()));
+			data = data.randomSubset(Math.min(nodeSampleSize, data.size()));
 		}
 
 		int N = data.size();
@@ -101,12 +104,16 @@ public class DecisionTree implements ClassifierModel {
 
 		// if all predict same category or only one row of data,
 		// create leaf predicting that
+		// TODO: valueCountsInColumn() is another O(n) walk of all data rows! try to remove
 		CountingDenseIntSet completeCategoryCounts = (CountingDenseIntSet)data.valueCountsInColumn(yi);
-		double complete_entropy = completeCategoryCounts.entropy();
 		if ( completeCategoryCounts.size()==1 || data.size()<=minLeafSize ) {
 			DecisionTreeNode t = new DecisionLeafNode(data, completeCategoryCounts, yi);
 			return t;
 		}
+
+		// When subsetting, make sure that we compare gains in bestCategoricalSplit()
+		// and bestNumericSplit() to the same overall entropy.
+		double complete_entropy = completeCategoryCounts.entropy();
 
 		if ( debug ) System.out.printf("entropy of all %d values = %.2f\n", N, complete_entropy);
 		BestInfo best = new BestInfo();
@@ -115,17 +122,13 @@ public class DecisionTree implements ClassifierModel {
 		// a generalization
 		List<Integer> indexes = data.getSubsetOfVarIndexes(varsPerSplit, random); // consider all or a subset of M variables
 		for (Integer j : indexes) { // for each variable i
-//			CountingSet<Integer> colValueCounts = data.getColValueCounts(j);
-//			if ( colValueCounts.size()==1 ) {
-//				continue;
-//			}
-
 			// The goal is to find the lowest expected entropy for all possible
 			// values of predictor variable j.  Then we compare best for j against
 			// best for any variable
 			DataTable.VariableType colType = data.getColTypes()[j];
 			BestInfo bestj;
 			if ( DataTable.isCategoricalVar(colType) ) {
+				// TODO: only do if <= 5 levels else treat as numeric int
 				bestj = bestCategoricalSplit(data, j, yi, completeCategoryCounts, complete_entropy);
 			}
 			else {
@@ -139,41 +142,41 @@ public class DecisionTree implements ClassifierModel {
 		if ( best.gain>0.0 ) {
 			if ( debug ) {
 				System.out.printf("FINAL best is var %s val %s gain=%.2f\n",
-				                  data.getColNames()[best.var], best.val, best.gain);
+				                  original.getColNames()[best.var], best.val, best.gain);
 			}
 			DataPair split;
 			DecisionSplitNode t;
-			DataTable.VariableType colType = data.getColTypes()[best.var];
+			DataTable.VariableType colType = original.getColTypes()[best.var];
 			if ( DataTable.isCategoricalVar(colType) ) {
 				// split is expensive, do it only after we get best var/val
-				split = categoricalSplit(data, best.var, best.cat);
-				t = new DecisionCategoricalSplitNode(data, best.var, colType, best.cat);
+				split = categoricalSplit(original, best.var, best.cat);
+				t = new DecisionCategoricalSplitNode(original, best.var, colType, best.cat);
 			}
 			else {
 				if ( colType==DataTable.VariableType.NUMERICAL_FLOAT ) {
-					split = numericalFloatSplit(data, best.var, best.val);
+					split = numericalFloatSplit(original, best.var, best.val);
 				}
 				else {
-					split = numericalIntSplit(data, best.var, best.val);
+					split = numericalIntSplit(original, best.var, best.val);
 				}
-				t = new DecisionNumericalSplitNode(data, best.var, colType, best.val);
+				t = new DecisionNumericalSplitNode(original, best.var, colType, best.val);
 			}
 			t.numRecords = N;
 			t.entropy = (float)complete_entropy;
-			t.left = build(split.region1,  varsPerSplit, minLeafSize, nodeSampleSize);
-			t.right = build(split.region2, varsPerSplit, minLeafSize, nodeSampleSize);
-			if ( t.right==null ) {
+			if ( split.region2.size()==0 ) {
 				System.out.println("what?");
 			}
+			t.left = build(split.region1,  varsPerSplit, minLeafSize, nodeSampleSize);
+			t.right = build(split.region2, varsPerSplit, minLeafSize, nodeSampleSize);
 			return t;
 		}
 		// we would gain nothing by splitting, make a leaf predicting majority vote
 		int majorityVote = completeCategoryCounts.argmax();
 		if ( debug ) {
 			System.out.printf("FINAL no improvement; make leaf predicting %s\n",
-			                  DataTable.getValue(data,majorityVote,yi));
+			                  DataTable.getValue(original,majorityVote,yi));
 		}
-		DecisionTreeNode t = new DecisionLeafNode(data, completeCategoryCounts, yi);
+		DecisionTreeNode t = new DecisionLeafNode(original, completeCategoryCounts, yi);
 		return t;
 	}
 
@@ -239,7 +242,8 @@ public class DecisionTree implements ClassifierModel {
 
 	protected static BestInfo bestCategoricalSplit(DataTable data, int j, int yi,
 	                                               CountingDenseIntSet completePredictionCounts,
-	                                               double complete_entropy) {
+	                                               double complete_entropy)
+	{
 		int n = data.size();
 		BestInfo best = new BestInfo();
 		Integer targetCatMaxValue = (Integer) data.getColMax(yi);
@@ -269,6 +273,7 @@ public class DecisionTree implements ClassifierModel {
 			// that all catCounts[*] but this one are empty
 			// We don't want to split on this data for col j so don't set a best
 			if ( gain>best.gain && n2>0 ) {
+//				System.out.println("set best "+gain+" n1 "+n1+", n2 "+n2);
 				best.gain = gain;
 				best.var = j;
 				best.cat = colCat;

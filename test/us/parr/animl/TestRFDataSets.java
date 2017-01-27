@@ -201,7 +201,7 @@ public class TestRFDataSets extends BaseTest {
 		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
 		int kfolds = 5;
 		int minLeafSize = 20;
-		RF_kFoldCrossErrors(wine_kfold, fileName, data, scikit_sizes, kfolds, minLeafSize, 0.03);
+		RF_kFoldCrossErrors(wine_kfold, fileName, data, scikit_sizes, kfolds, minLeafSize, 0.05);
 	}
 
 	@Ignore @Test public void testConnect4kFoldCrossErrors() {
@@ -210,7 +210,7 @@ public class TestRFDataSets extends BaseTest {
 		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
 		int kfolds = 5;
 		int minLeafSize = 20;
-		RF_kFoldCrossErrors(connect_4_kfold, fileName, data, scikit_sizes, kfolds, minLeafSize, 0.03);
+		RF_kFoldCrossErrors(connect_4_kfold, fileName, data, scikit_sizes, kfolds, minLeafSize, 0.035);
 	}
 
 	@Test public void testHouseVoteskFoldCrossErrors() {
