@@ -200,6 +200,7 @@ public class DecisionTree implements ClassifierModel {
 		int[] currentCounts = new int[targetCatMaxValue+1];
 		int[] greaterThanCounts = new int[targetCatMaxValue+1]; // allocate this just once
 		for (int i = 0; i<n; i++) { // walk all records, updating currentCounts
+			// note; if all values in col j are the same, then we don't enter this IF and return zeroed best
 			if ( i>0 && data.compare(i-1, i, j)<0 ) { // if row i-1 < row i, discontinuity in predictor var
 				double splitValue; // midpoint between new value and previous
 				if ( colType==DataTable.VariableType.NUMERICAL_INT ) {
@@ -263,7 +264,11 @@ public class DecisionTree implements ClassifierModel {
 			int n2 = sum(notEqCounts);
 			double expectedEntropyValue = expectedEntropy(currentCatCounts, n1, notEqCounts, n2);
 			double gain = complete_entropy-expectedEntropyValue;
-			if ( gain>best.gain ) {
+			// It's possible that all values in col j are the same, which would
+			// leave n2 as 0 (and n1 should be data.size()). That would imply
+			// that all catCounts[*] but this one are empty
+			// We don't want to split on this data for col j so don't set a best
+			if ( gain>best.gain && n2>0 ) {
 				best.gain = gain;
 				best.var = j;
 				best.cat = colCat;
