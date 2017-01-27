@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_INT;
@@ -29,6 +30,86 @@ public class TestTable extends BaseTest {
 	public static final List<int[]> rawData1x3 = new ArrayList<int[]>() {{
 		add(new int[] {1,2,3});
 	}};
+
+	@Test public void testCatPartition1() {
+		List<int[]> rows = new ArrayList<>();
+		rows.add(new int[] {1});
+		DataTable.categoricalPartition(rows, 0, 1, 0, rows.size()-1);
+		DataTable data = DataTable.fromInts(rows, null, null);
+		int[] colValues = data.getColValues(0);
+		assertEquals("[1]", Arrays.toString(colValues));
+	}
+
+	@Test public void testCatPartition2() {
+		List<int[]> rows = new ArrayList<>();
+		rows.add(new int[] {1});
+		rows.add(new int[] {2});
+		DataTable.categoricalPartition(rows, 0, 2, 0, rows.size()-1);
+		DataTable data = DataTable.fromInts(rows, null, null);
+		int[] colValues = data.getColValues(0);
+		assertEquals("[2, 1]", Arrays.toString(colValues));
+
+		DataTable.categoricalPartition(rows, 0, 1, 0, rows.size()-1);
+		data = DataTable.fromInts(rows, null, null);
+		colValues = data.getColValues(0);
+		assertEquals("[1, 2]", Arrays.toString(colValues));
+	}
+
+	@Test public void testCatPartition3() {
+		List<int[]> rows = new ArrayList<>();
+		rows.add(new int[] {1});
+		rows.add(new int[] {2});
+		rows.add(new int[] {3});
+		DataTable.categoricalPartition(rows, 0, 1, 0, rows.size()-1);
+		DataTable data = DataTable.fromInts(rows, null, null);
+		int[] colValues = data.getColValues(0);
+		assertEquals("[1, 2, 3]", Arrays.toString(colValues));
+
+		DataTable.categoricalPartition(rows, 0, 2, 0, rows.size()-1);
+		data = DataTable.fromInts(rows, null, null);
+		colValues = data.getColValues(0);
+		assertEquals("[2, 1, 3]", Arrays.toString(colValues));
+
+		DataTable.categoricalPartition(rows, 0, 3, 0, rows.size()-1);
+		data = DataTable.fromInts(rows, null, null);
+		colValues = data.getColValues(0);
+		assertEquals("[3, 1, 2]", Arrays.toString(colValues));
+	}
+
+	@Test public void testCatPartitionHeartData() {
+		URL url = this.getClass().getClassLoader().getResource("Heart.csv");
+		DataTable t = DataTable.loadCSV(url.getFile().toString(), "excel", null, null, true);
+		int splitCategory = 0;
+		int splitIndex = DataTable.categoricalPartition(t.getRows(), 3, splitCategory, 0, t.getRows().size()-1);
+		int[] colValues = t.getColValues(3);
+		checkCats(splitCategory, splitIndex, colValues);
+
+		splitCategory = 1;
+		splitIndex = DataTable.categoricalPartition(t.getRows(), 3, splitCategory, 0, t.getRows().size()-1);
+		colValues = t.getColValues(3);
+		checkCats(splitCategory, splitIndex, colValues);
+
+		splitCategory = 2;
+		splitIndex = DataTable.categoricalPartition(t.getRows(), 3, splitCategory, 0, t.getRows().size()-1);
+		colValues = t.getColValues(3);
+		checkCats(splitCategory, splitIndex, colValues);
+
+		splitCategory = 3;
+		splitIndex = DataTable.categoricalPartition(t.getRows(), 3, splitCategory, 0, t.getRows().size()-1);
+		colValues = t.getColValues(3);
+		checkCats(splitCategory, splitIndex, colValues);
+	}
+
+	public void checkCats(int splitCategory, int splitIndex, int[] colValues) {
+		for (int i = 0; i<colValues.length; i++) {
+			if ( i<splitIndex ) {
+				assertTrue(colValues[i]==splitCategory);
+			}
+			else {
+				assertTrue(colValues[i]!=splitCategory);
+			}
+		}
+	}
 
 	@Test public void testEmpty() {
 		DataTable t = DataTable.empty(null, null);

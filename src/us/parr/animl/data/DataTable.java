@@ -387,6 +387,14 @@ public class DataTable implements Iterable<int[]> {
 		return values;
 	}
 
+	public int[] getColValues(int colIndex) {
+		int[] values = new int[size()];
+		for (int i = 0; i<size(); i++) {
+			values[i] = getAsInt(i,colIndex);
+		}
+		return values;
+	}
+
 	public DataTable filter(Predicate<int[]> pred) {
 		List<int[]> filtered = ParrtCollections.filter(rows, pred);
 		return new DataTable(this, filtered);
@@ -419,6 +427,40 @@ public class DataTable implements Iterable<int[]> {
 		indexes = indexes.subList(0, m);
 		Collections.sort(indexes);
 		return indexes;
+	}
+
+	/** Partition rows in-place per splitVariable and splitCategory. Use
+	 *  left/right cursors moving in from edges until they cross. Return
+	 *  the index of the first element not in category. Everthing to left
+	 *  is == to splitCategory and everthing >= that index is != splitCategory.
+	 *
+	 *  https://en.wikipedia.org/wiki/Quicksort#Hoare_partition_scheme
+	 *
+	 *  says
+	 *
+	 *  "The original partition scheme described by C.A.R. Hoare uses two indices that
+	 *  start at the ends of the array being partitioned, then move toward each other,
+	 *  until they detect an inversion: a pair of elements, one greater or equal than
+	 *  the pivot, one lesser or equal, that are in the wrong order relative to each
+	 *  other. The inverted elements are then swapped.[16] When the indices meet,
+	 *  the algorithm stops and returns the final index."
+	 */
+	public static int categoricalPartition(List<int[]> rows,
+	                                       int splitVariable, int splitCategory,
+	                                       int low, int high)
+	{
+		int i = low-1;
+		int j = high+1;
+		int n = rows.size();
+		while ( true ) {
+			do { i++; } while ( i<n && rows.get(i)[splitVariable]==splitCategory );
+			do { j--; } while ( j>=0 && rows.get(j)[splitVariable]!=splitCategory );
+			if ( i >= j ) { return i; }
+			// swap elements at i and j
+			int[] savei = rows.get(i);
+			rows.set(i, rows.get(j));
+			rows.set(j, savei);
+		}
 	}
 
 	/** Return new table with [i1..i2] inclusive in new table */
