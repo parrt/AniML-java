@@ -204,7 +204,7 @@ public class TestRFDataSets extends BaseTest {
 		RF_kFoldCrossErrors(wine_kfold, fileName, data, scikit_sizes, kfolds, minLeafSize, 0.03);
 	}
 
-	@Test public void testConnect4kFoldCrossErrors() {
+	@Ignore @Test public void testConnect4kFoldCrossErrors() {
 		String fileName = "connect-4.csv";
 		URL url = this.getClass().getClassLoader().getResource(fileName);
 		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
@@ -217,6 +217,7 @@ public class TestRFDataSets extends BaseTest {
 		String fileName = "house-votes-84.csv";
 		URL url = this.getClass().getClassLoader().getResource(fileName);
 		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
+//		DecisionTree.debug = true;
 		int kfolds = 5;
 		int minLeafSize = MIN_LEAF_SIZE;
 		RF_kFoldCrossErrors(house_votes_84_kfold, fileName, data, scikit_sizes, kfolds, minLeafSize, 0.03);
@@ -261,7 +262,7 @@ public class TestRFDataSets extends BaseTest {
 
 	@Ignore @Test public void testRunConnect4() {
 		String fileName = "connect-4.csv";
-		int n_estimators = 100;
+		int n_estimators = 50;
 		int minLeafSize = 20;
 		URL url = this.getClass().getClassLoader().getResource(fileName);
 		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);

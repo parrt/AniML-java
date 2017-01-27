@@ -379,6 +379,14 @@ public class DataTable implements Iterable<int[]> {
 		return values;
 	}
 
+	public CountingSet<Integer> getColValueCounts(int colIndex) {
+		CountingDenseIntSet values = new CountingDenseIntSet(colMaxes[colIndex]);
+		for (int i = 0; i<size(); i++) { // for each row, count different values for col splitVariable
+			values.add( getAsInt(i,colIndex) ); // pretend everything is an int
+		}
+		return values;
+	}
+
 	public DataTable filter(Predicate<int[]> pred) {
 		List<int[]> filtered = ParrtCollections.filter(rows, pred);
 		return new DataTable(this, filtered);
