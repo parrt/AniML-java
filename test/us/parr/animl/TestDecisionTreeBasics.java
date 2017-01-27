@@ -31,6 +31,20 @@ public class TestDecisionTreeBasics extends BaseTest {
 		checkPredictions(data, tree);
 	}
 
+	@Test public void testMultiRowsSameColValue() {
+		List<int[]> data = new ArrayList<>();
+		data.add(new int[] {1,99});
+		data.add(new int[] {1,100});
+		data.add(new int[] {1,101});
+		data.add(new int[] {1,102});
+		DecisionTree tree = new DecisionTree();
+		DecisionTree.debug = true;
+		tree.train(DataTable.fromInts(data, null, null));
+		String expecting = "{'predict':99,'n':4,'E':'2.00'}";
+		String result = toTestString(tree);
+		assertEquals(expecting, result);
+	}
+
 	@Test public void testTwoRowsSameCat() {
 		List<int[]> data = new ArrayList<>();
 		data.add(new int[] {1,99}); // 1 row with 1 var of value 1 predicting category 99
