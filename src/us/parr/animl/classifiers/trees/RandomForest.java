@@ -64,7 +64,8 @@ public class RandomForest implements ClassifierModel {
 		for (int i = 1; i<=numEstimators; i++) {
 			if ( DecisionTree.debug ) System.out.println("Estimator "+i+" ------------------");
 			Set<Integer> outOfBagSamples = new HashSet<>(); // gets filled in
-			List<int[]> bootstrap = ParrtStats.bootstrapWithRepl(data.getRows(), data.size(), outOfBagSamples);
+//			List<int[]> bootstrap = ParrtStats.bootstrapWithRepl(data.getRows(), data.size(), outOfBagSamples);
+			List<int[]> bootstrap = ParrtStats.bootstrapWithRepl(data.getRows(), data.size());
 			DataTable table = new DataTable(data, bootstrap);
 //			System.out.println("bootstrap:\n"+table.toString());
 			DecisionTree tree = new DecisionTree(m, minLeafSize, nodeSampleSize);

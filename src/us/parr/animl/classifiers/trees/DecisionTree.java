@@ -333,6 +333,14 @@ public class DecisionTree implements ClassifierModel {
 		return new DataPair(new DataTable(X, eq), new DataTable(X, notEq));
 	}
 
+	public static DataPair categoricalSplit_new(DataTable X, int splitVariable, int splitCategory) {
+		List<int[]> rows = X.getRows();
+		int splitIndex = DataTable.categoricalPartition(rows, splitVariable, splitCategory, 0, X.size()-1);
+		List<int[]> eq = rows.subList(0, splitIndex);
+		List<int[]> notEq = rows.subList(splitIndex, rows.size());
+		return new DataPair(new DataTable(X, eq), new DataTable(X, notEq));
+	}
+
 	public JsonObject toJSON() { return root!=null ? root.toJSON() : Json.createObjectBuilder().build(); }
 
 	public String toDOT() {

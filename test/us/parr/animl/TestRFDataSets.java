@@ -267,7 +267,7 @@ public class TestRFDataSets extends BaseTest {
 		URL url = this.getClass().getClassLoader().getResource(fileName);
 		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
 		int nodeSampleSize = (int)(0.15 * data.size());
-//		nodeSampleSize = 111;
+		nodeSampleSize = 111;
 //		DecisionTree.debug = true;
 		long start = System.nanoTime();
 		RandomForest rf = new RandomForest(n_estimators, minLeafSize, nodeSampleSize);
