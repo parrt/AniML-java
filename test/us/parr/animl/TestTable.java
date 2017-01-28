@@ -205,6 +205,17 @@ public class TestTable extends BaseTest {
 		assertEquals(expected, t.toTestString());
 	}
 
+	@Test public void testFloatFormat() {
+		List<String[]> data = new ArrayList<>();
+		data.add(new String[]{"A", "B", "Y"});
+		data.add(new String[]{"1.4", "9.000000234234e+01", "1.0234234e-02"});
+		DataTable t = DataTable.fromStrings(data);
+		String expected =
+			"A(float), B(float), Y(float)\n"+
+			"1.4, 90.0, 0.010234234\n";
+		assertEquals(expected, t.toTestString());
+	}
+
 	@Test public void testStringCategories() {
 		List<String[]> data = new ArrayList<>();
 		data.add(new String[]{"A", "B", "Y"});

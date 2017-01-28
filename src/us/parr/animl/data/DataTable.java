@@ -50,7 +50,8 @@ import static us.parr.lib.collections.ParrtCollections.join;
 import static us.parr.lib.collections.ParrtCollections.map;
 
 public class DataTable implements Iterable<int[]> {
-	public static final Pattern floatPattern = Pattern.compile("^-?[0-9]+\\.[0-9]*|\\.[0-9]+$");
+	// 9.466524720191955566e-01
+	public static final Pattern floatPattern = Pattern.compile("^-?[0-9]+\\.[0-9]*|\\.[0-9]+[eE][+-][0-9]+$");
 	public static final Pattern intPattern = Pattern.compile("^-?[0-9]+$");
 
 	/** Input sometimes has NA or blanks for unknown values */
@@ -306,7 +307,7 @@ public class DataTable implements Iterable<int[]> {
 		}
 	}
 
-	private static VariableType[] computeColTypes(List<String[]> rows, int numCols) {
+	protected static VariableType[] computeColTypes(List<String[]> rows, int numCols) {
 		VariableType[] actualTypes = new VariableType[numCols];
 		for (int j = 0; j<numCols; j++) {
 			actualTypes[j] = INVALID;
@@ -497,7 +498,7 @@ public class DataTable implements Iterable<int[]> {
 
 	public int getNumberOfPredictorVar() { return getSubsetOfVarIndexes(getNumberOfColumns(), null).size(); }
 
-	public int getNumberOfColumns() { return rows.get(0).length; }
+	public int getNumberOfColumns() { return colTypes.length; }
 
 	public static boolean isPredictorVar(VariableType colType) {
 		return
