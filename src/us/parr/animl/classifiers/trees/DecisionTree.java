@@ -129,14 +129,10 @@ public class DecisionTree implements ClassifierModel {
 			BestInfo bestj;
 			if ( DataTable.isCategoricalVar(colType) ) {
 				// TODO: only do if <= 5 levels else treat as numeric int
-				bestj = bestCategoricalSplit(data, j, yi, completeCategoryCounts, complete_entropy);
+				bestCategoricalSplit(data, j, yi, completeCategoryCounts, complete_entropy, best);
 			}
 			else {
-				bestj = bestNumericSplit(data, j, yi, completeCategoryCounts, complete_entropy);
-			}
-			if ( bestj.gain > best.gain ) {
-				best = bestj;
-				if ( debug ) System.out.printf("Best is now var %s val %s gain=%.2f\n", data.getColNames()[best.var], best.val, best.gain);
+				bestNumericSplit(data, j, yi, completeCategoryCounts, complete_entropy, best);
 			}
 		}
 		if ( best.gain>0.0 ) {
@@ -182,10 +178,10 @@ public class DecisionTree implements ClassifierModel {
 
 	protected static BestInfo bestNumericSplit(DataTable data, int j, int yi,
 	                                           CountingDenseIntSet completePredictionCounts,
-	                                           double complete_entropy)
+	                                           double complete_entropy,
+	                                           BestInfo best)
 	{
 		int n = data.size();
-		BestInfo best = new BestInfo();
 		// Rather than splitting the data table for each unique value of this variable
 		// (which would be O(n^2)), we sort on this variable and then
 		// walk the data records, keeping track of the predicted category counts.
@@ -242,10 +238,10 @@ public class DecisionTree implements ClassifierModel {
 
 	protected static BestInfo bestCategoricalSplit(DataTable data, int j, int yi,
 	                                               CountingDenseIntSet completePredictionCounts,
-	                                               double complete_entropy)
+	                                               double complete_entropy,
+	                                               BestInfo best)
 	{
 		int n = data.size();
-		BestInfo best = new BestInfo();
 		Integer targetCatMaxValue = (Integer) data.getColMax(yi);
 		Integer colCatMaxValue = (Integer) data.getColMax(j);
 //		for (int i = 0; i<20; i++) { // walk all records, counting dep categories in two groups: indep cat equal and not-equal to splitCat
