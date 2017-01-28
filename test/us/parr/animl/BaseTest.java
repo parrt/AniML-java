@@ -96,7 +96,8 @@ public class BaseTest {
 			// Now mine
 			int nodeSampleSize = (int)(0.15 * data.size());
 			nodeSampleSize = 111;
-			RandomForest rf = new RandomForest(n_estimators, minLeafSize, nodeSampleSize);
+			double bootstrapSampleRate = 0.5;
+			RandomForest rf = new RandomForest(n_estimators, minLeafSize, nodeSampleSize, bootstrapSampleRate);
 			double error = Validation.kFoldCross(rf, kfolds, data);
 			System.out.println(scikitResult[1]+" vs "+error);
 			// should be within small absolute error difference

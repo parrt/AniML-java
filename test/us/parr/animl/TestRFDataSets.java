@@ -264,13 +264,14 @@ public class TestRFDataSets extends BaseTest {
 		String fileName = "connect-4.csv";
 		int n_estimators = 50;
 		int minLeafSize = 20;
+		double bootstrapSampleRate = 0.5;
 		URL url = this.getClass().getClassLoader().getResource(fileName);
 		DataTable data = DataTable.loadCSV(url.getFile(), null, null, null, true);
 		int nodeSampleSize = (int)(0.15 * data.size());
 		nodeSampleSize = 111;
 //		DecisionTree.debug = true;
 		long start = System.nanoTime();
-		RandomForest rf = new RandomForest(n_estimators, minLeafSize, nodeSampleSize);
+		RandomForest rf = new RandomForest(n_estimators, minLeafSize, nodeSampleSize, bootstrapSampleRate);
 		rf.train(data);
 		long stop = System.nanoTime();
 		System.out.printf("Fitting %d estimators %d min leaf size %dms\n", n_estimators, minLeafSize,

@@ -33,6 +33,11 @@ public class RandomForest implements ClassifierModel {
 	/** How much of data to examine at each node to find split point */
 	protected int nodeSampleSize = 20;
 
+	/** From 0..1, how many observations to sample from table for each tree. 1.0 implies all.
+	 *  0.5 implies bootstrap a sample of size .5 * data.size().
+	 */
+	protected double bootstrapSampleRate = 1.0;
+
 	/** The forest of trees */
 	protected List<DecisionTree> trees;
 
@@ -42,14 +47,15 @@ public class RandomForest implements ClassifierModel {
 	/** Constructors for classifiers / regressors should capture all parameters
 	 *  needed to train except for the actual data, which could vary.
 	 */
-	public RandomForest(int numEstimators, int minLeafSize, int nodeSampleSize) {
+	public RandomForest(int numEstimators, int minLeafSize, int nodeSampleSize, double bootstrapSampleRate) {
 		this.numEstimators = numEstimators;
 		this.minLeafSize = minLeafSize;
 		this.nodeSampleSize = Math.max(nodeSampleSize, minLeafSize+1); // can't be smaller than min node or we get a single root node
+		this.bootstrapSampleRate = bootstrapSampleRate;
 	}
 
 	public RandomForest(int numEstimators, int minLeafSize) {
-		this(numEstimators, minLeafSize, 20);
+		this(numEstimators, minLeafSize, 20, 1.0);
 	}
 
 
@@ -64,8 +70,9 @@ public class RandomForest implements ClassifierModel {
 		for (int i = 1; i<=numEstimators; i++) {
 			if ( DecisionTree.debug ) System.out.println("Estimator "+i+" ------------------");
 			Set<Integer> outOfBagSamples = new HashSet<>(); // gets filled in
-//			List<int[]> bootstrap = ParrtStats.bootstrapWithRepl(data.getRows(), data.size(), outOfBagSamples);
-			List<int[]> bootstrap = ParrtStats.bootstrapWithRepl(data.getRows(), data.size());
+			int sampleSize = (int)(bootstrapSampleRate * data.size());
+//			List<int[]> bootstrap = ParrtStats.bootstrapWithRepl(data.getRows(), sampleSize, outOfBagSamples);
+			List<int[]> bootstrap = ParrtStats.bootstrapWithRepl(data.getRows(), sampleSize);
 			DataTable table = new DataTable(data, bootstrap);
 //			System.out.println("bootstrap:\n"+table.toString());
 			DecisionTree tree = new DecisionTree(m, minLeafSize, nodeSampleSize);
