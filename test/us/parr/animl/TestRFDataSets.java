@@ -293,6 +293,23 @@ public class TestRFDataSets extends BaseTest {
 		                  (stop-start)/(1000*1000));
 	}
 
+	@Ignore @Test public void testRunHiggs() {
+		String fileName = "/Users/parrt/data/higgs.csv"; // too big to add to resources; intellij copies to target
+		int n_estimators = 50;
+		int minLeafSize = 20;
+		long lstart = System.nanoTime();
+		DataTable data = DataTable.loadCSV(fileName, null, null, null, true);
+		long lstop = System.nanoTime();
+		System.out.printf("Load time %dms\n", (lstop-lstart)/(1000*1000));
+//		DecisionTree.debug = true;
+		long start = System.nanoTime();
+		RandomForest rf = new RandomForest(n_estimators, minLeafSize);
+		rf.train(data);
+		long stop = System.nanoTime();
+		System.out.printf("Fitting %d estimators %d min leaf size %dms\n", n_estimators, minLeafSize,
+		                  (stop-start)/(1000*1000));
+	}
+
 	public static void genPythonResults() {
 		String[] fileNames =
 			{
