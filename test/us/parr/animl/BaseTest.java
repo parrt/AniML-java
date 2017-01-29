@@ -89,7 +89,9 @@ public class BaseTest {
 	                                   int[] sizes, int kfolds,
 	                                   int minLeafSize, double tolerance)
 	{
-		for (int n_estimators : sizes) {
+		for (int si = 0; si<sizes.length; si++) {
+			int n_estimators = sizes[si];
+			System.out.println("n_estimators="+n_estimators+", size="+data.size()+" rows");
 			// Check data scikit-learn
 //			double[] scikitResult = scikit_rf_error(fileName, n_estimators, minLeafSize, kfolds);
 //			double[] scikitResult = {0.0,0.0};
@@ -99,11 +101,11 @@ public class BaseTest {
 			double bootstrapSampleRate = 0.5;
 			RandomForest rf = new RandomForest(n_estimators, minLeafSize, nodeSampleSize, bootstrapSampleRate);
 			double error = Validation.kFoldCross(rf, kfolds, data);
-			System.out.println(scikitResult[1]+" vs "+error);
+			System.out.println(scikitResult[si]+" vs "+error);
 			// should be within small absolute error difference
-			String errMsg = String.format("Error rates %.5f, %.5f should be closer than %.4f",
-			                              scikitResult[1], error, tolerance);
-			if ( Math.abs(scikitResult[1]-error)>=tolerance ) {
+			String errMsg = String.format("Error rates %.5f, %.5f for n_estimators=%d should be closer than %.4f",
+			                              scikitResult[si], error, n_estimators, tolerance);
+			if ( Math.abs(scikitResult[si]-error)>=tolerance ) {
 				System.err.println(errMsg);
 			}
 //			assertTrue(errMsg, error < scikitResult[1] || error-scikitResult[1]<tolerance);

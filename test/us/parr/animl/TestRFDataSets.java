@@ -36,6 +36,7 @@ public class TestRFDataSets extends BaseTest {
 	double[] shuttle_kfold        = {0.00189, 0.00184, 0.00184, 0.00184};
 	double[] wine_kfold           = {0.05587, 0.03365, 0.03381, 0.03381};
 	double[] house_votes_84_kfold = {0.08046, 0.05977, 0.06437, 0.06667};
+	double[] higgs_kfold          = {0.08046, 0.05977, 0.06437, 0.06667}; // fake
 	// END GENERATED CODE
 
 	public static final int MIN_LEAF_SIZE = 20;
@@ -233,6 +234,23 @@ public class TestRFDataSets extends BaseTest {
 		int kfolds = 5;
 		int minLeafSize = MIN_LEAF_SIZE;
 		RF_kFoldCrossErrors(shuttle_kfold, fileName, data, scikit_sizes, kfolds, minLeafSize, 0.03);
+	}
+
+	@Ignore @Test public void testHiggskFoldCrossErrors() {
+		int kfolds = 5;
+
+		String fileName = "/Users/parrt/data/higgs.csv"; // too big to add to resources; intellij copies to target
+		int minLeafSize = 20;
+		DataTable.VariableType[] colTypes = new DataTable.VariableType[28+1];
+		for (int i = 0; i<colTypes.length-1; i++) {
+			colTypes[i] = NUMERICAL_FLOAT;
+		}
+		colTypes[colTypes.length-1] = TARGET_CATEGORICAL_INT;
+		DataTable data = DataTable.loadCSV(fileName, colTypes, true);
+
+		int[] sizes = {1, 5, 10, 20};
+//		int[] sizes = scikit_sizes;
+		RF_kFoldCrossErrors(higgs_kfold, fileName, data, sizes, kfolds, minLeafSize, 0.015);
 	}
 
 	@Ignore @Test public void testRunWine() {

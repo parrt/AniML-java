@@ -43,11 +43,13 @@ n_estimators = int(sys.argv[1])
 min_samples_leaf = int(sys.argv[2])
 
 start = time.clock()
-clf = RandomForestClassifier(n_estimators=n_estimators, oob_score=False,
+clf = RandomForestClassifier(n_estimators=n_estimators, oob_score=True,
                              max_features="sqrt", bootstrap=True,
                              min_samples_leaf=min_samples_leaf, criterion="entropy",
                              random_state=random)
 clf = clf.fit(X, y)
 stop = time.clock()
+oob_error = 1 - clf.oob_score_
+print "oob %.5f" % oob_error
 
 print "Fitting %d estimators %d min leaf size %f seconds\n" % (n_estimators,min_samples_leaf,stop-start)
