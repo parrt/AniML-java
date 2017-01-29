@@ -11,13 +11,16 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
+import sun.misc.FloatingDecimal;
 import us.parr.lib.ParrtStats;
 import us.parr.lib.collections.CountingDenseIntSet;
 import us.parr.lib.collections.CountingSet;
 import us.parr.lib.collections.DenseIntSet;
 import us.parr.lib.collections.ParrtCollections;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -306,6 +309,68 @@ public class DataTable implements Iterable<int[]> {
 			throw new IllegalArgumentException("Can't open and/or read "+fileName, e);
 		}
 	}
+
+	public static DataTable loadCSV(String fileName, VariableType[] colTypes, boolean hasHeaderRow) {
+		int numCols = colTypes.length;
+		try {
+			final FileInputStream fis = new FileInputStream(fileName);
+			final Reader r = new InputStreamReader(new BOMInputStream(fis), "UTF-8");
+			final BufferedReader bf = new BufferedReader(r);
+			List<int[]> rows = new ArrayList<>();
+			String line;
+			String[] colNames = null;
+			if ( hasHeaderRow ) {
+				line=bf.readLine();
+				if ( line!=null ) {
+					line = line.trim();
+					if ( line.length()>0 ) {
+						colNames = line.split(",");
+						for (int i = 0; i<colNames.length; i++) {
+							colNames[i] = colNames[i].trim();
+						}
+					}
+				}
+			}
+			int n = 0;
+			while ( (line=bf.readLine())!=null ) {
+				if ( n % 10000 == 0 ) System.out.println(n);
+				line = line.trim();
+				if ( line.length()==0 ) continue;
+				int[] row = new int[numCols];
+				int comma = line.indexOf(',', 0);
+				int prev = 0;
+				int col = 0;
+				while ( comma>=0 ) {
+					String v = line.substring(prev, comma);
+					if ( colTypes[col]==NUMERICAL_FLOAT ) {
+						row[col] = Float.floatToIntBits(FloatingDecimal.parseFloat(v));
+//						System.out.print(Float.intBitsToFloat(row[col]));
+					}
+					else if ( colTypes[col]==NUMERICAL_INT ) {
+						row[col] = Integer.valueOf(v);
+//						System.out.print(row[col]);
+					}
+					else {
+						throw new UnsupportedOperationException("can't handle strings yet");
+					}
+
+					prev = comma+1;
+					comma = line.indexOf(',', comma+1);
+					col++;
+				}
+//				System.out.println();
+				rows.add(row);
+				n++;
+			}
+
+			DataTable data = new DataTable(rows, colTypes, colNames, null);
+			return data;
+		}
+		catch (IOException ioe) {
+			throw new IllegalArgumentException("Can't open and/or read "+fileName, ioe);
+		}
+	}
+
 
 	protected static VariableType[] computeColTypes(List<String[]> rows, int numCols) {
 		VariableType[] actualTypes = new VariableType[numCols];

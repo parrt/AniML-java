@@ -20,6 +20,8 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_INT;
 import static us.parr.animl.data.DataTable.VariableType.CATEGORICAL_STRING;
+import static us.parr.animl.data.DataTable.VariableType.NUMERICAL_FLOAT;
+import static us.parr.animl.data.DataTable.VariableType.TARGET_CATEGORICAL_INT;
 import static us.parr.animl.data.DataTable.VariableType.TARGET_CATEGORICAL_STRING;
 import static us.parr.animl.data.DataTable.VariableType.UNUSED_INT;
 import static us.parr.lib.collections.ParrtCollections.join;
@@ -295,10 +297,16 @@ public class TestRFDataSets extends BaseTest {
 
 	@Ignore @Test public void testRunHiggs() {
 		String fileName = "/Users/parrt/data/higgs.csv"; // too big to add to resources; intellij copies to target
+//		String fileName = "/Users/parrt/github/AniML/data/small_higgs.csv";
 		int n_estimators = 50;
 		int minLeafSize = 20;
 		long lstart = System.nanoTime();
-		DataTable data = DataTable.loadCSV(fileName, null, null, null, true);
+		DataTable.VariableType[] colTypes = new DataTable.VariableType[28+1];
+		for (int i = 0; i<colTypes.length-1; i++) {
+			colTypes[i] = NUMERICAL_FLOAT;
+		}
+		colTypes[colTypes.length-1] = TARGET_CATEGORICAL_INT;
+		DataTable data = DataTable.loadCSV(fileName, colTypes, true);
 		long lstop = System.nanoTime();
 		System.out.printf("Load time %dms\n", (lstop-lstart)/(1000*1000));
 //		DecisionTree.debug = true;
