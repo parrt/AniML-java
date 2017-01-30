@@ -342,22 +342,16 @@ public class DataTable implements Iterable<int[]> {
 				int col = 0;
 				while ( comma>=0 ) {
 					String v = line.substring(prev, comma);
-					if ( colTypes[col]==NUMERICAL_FLOAT ) {
-						row[col] = Float.floatToIntBits(FloatingDecimal.parseFloat(v));
-//						System.out.print(Float.intBitsToFloat(row[col]));
-					}
-					else if ( colTypes[col]==NUMERICAL_INT ) {
-						row[col] = Integer.valueOf(v);
-//						System.out.print(row[col]);
-					}
-					else {
-						throw new UnsupportedOperationException("can't handle strings yet");
-					}
+					row[col] = getValue(colTypes[col], v);
 
 					prev = comma+1;
 					comma = line.indexOf(',', comma+1);
 					col++;
 				}
+				// grab last element after last comma
+				String lastv = line.substring(prev, line.length());
+				row[col] = getValue(colTypes[col], lastv);
+
 //				System.out.println();
 				rows.add(row);
 				n++;
@@ -368,6 +362,20 @@ public class DataTable implements Iterable<int[]> {
 		}
 		catch (IOException ioe) {
 			throw new IllegalArgumentException("Can't open and/or read "+fileName, ioe);
+		}
+	}
+
+	protected static int getValue(VariableType colType, String v) {
+		switch ( colType ) {
+			case NUMERICAL_FLOAT :
+				return Float.floatToIntBits(FloatingDecimal.parseFloat(v));
+//						System.out.print(Float.intBitsToFloat(row[col]));
+			case NUMERICAL_INT :
+			case TARGET_CATEGORICAL_INT :
+				return Integer.valueOf(v);
+//						System.out.print(row[col]);
+			default :
+				throw new UnsupportedOperationException("can't handle strings yet");
 		}
 	}
 

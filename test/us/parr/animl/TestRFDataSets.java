@@ -36,7 +36,7 @@ public class TestRFDataSets extends BaseTest {
 	double[] shuttle_kfold        = {0.00189, 0.00184, 0.00184, 0.00184};
 	double[] wine_kfold           = {0.05587, 0.03365, 0.03381, 0.03381};
 	double[] house_votes_84_kfold = {0.08046, 0.05977, 0.06437, 0.06667};
-	double[] higgs_kfold          = {0.08046, 0.05977, 0.06437, 0.06667}; // fake
+	double[] higgs_kfold          = {0.0, 0.0, 0.25551, 0.0}; // fake 'cept for 50
 	// END GENERATED CODE
 
 	public static final int MIN_LEAF_SIZE = 20;
@@ -248,8 +248,8 @@ public class TestRFDataSets extends BaseTest {
 		colTypes[colTypes.length-1] = TARGET_CATEGORICAL_INT;
 		DataTable data = DataTable.loadCSV(fileName, colTypes, true);
 
-		int[] sizes = {1, 5, 10, 20};
-//		int[] sizes = scikit_sizes;
+//		int[] sizes = {1, 5, 10, 20};
+		int[] sizes = scikit_sizes;
 		RF_kFoldCrossErrors(higgs_kfold, fileName, data, sizes, kfolds, minLeafSize, 0.015);
 	}
 
