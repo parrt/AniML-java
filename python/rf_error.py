@@ -34,6 +34,7 @@ data[[targetcol]] = data[[targetcol]].apply(lambda x : pandas.factorize(x)[0]) #
 # one hot encode other strings
 dummied_data = pandas.get_dummies(data[cvt])
 data = pandas.concat([dummied_data, data[[targetcol]]], axis=1) # put party on the end
+print data
 
 data = data.values
 dim = data.shape[1]

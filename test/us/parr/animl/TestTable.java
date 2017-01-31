@@ -18,7 +18,7 @@ import static us.parr.animl.data.DataTable.VariableType.NUMERICAL_INT;
 import static us.parr.animl.data.DataTable.VariableType.TARGET_CATEGORICAL_INT;
 import static us.parr.animl.data.DataTable.VariableType.TARGET_CATEGORICAL_STRING;
 import static us.parr.animl.data.DataTable.VariableType.UNUSED_INT;
-import static us.parr.lib.collections.ParrtCollections.join;
+import static us.parr.lib.ParrtCollections.join;
 
 public class TestTable extends BaseTest {
 	public static final String[] colNames3 = {"a", "b", "y"};

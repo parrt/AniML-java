@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import static us.parr.lib.ParrtMath.minus;
 import static us.parr.lib.ParrtStats.sum;
 
 /** A classic CART decision tree but this implementation is suitable just for
@@ -211,7 +212,7 @@ public class DecisionTree implements ClassifierModel {
 				int[] lessThanCounts = currentCounts;
 				int n1 = i; // how many observations less than current discontinuity value
 				int n2 = n - i;
-				ParrtStats.minus(allCounts, lessThanCounts, greaterThanCounts);
+				minus(allCounts, lessThanCounts, greaterThanCounts);
 				double expectedEntropyValue = expectedEntropy(lessThanCounts, n1, greaterThanCounts, n2);
 				double gain = complete_entropy - expectedEntropyValue;
 				if ( gain>best.gain ) {
@@ -260,7 +261,7 @@ public class DecisionTree implements ClassifierModel {
 			int n1 = sum(currentCatCounts);
 			// category values are not necessarily contiguous; ignore col category values w/o observations
 			if ( n1==0 ) continue;
-			ParrtStats.minus(allCounts, currentCatCounts, notEqCounts);
+			minus(allCounts, currentCatCounts, notEqCounts);
 			int n2 = sum(notEqCounts);
 			double expectedEntropyValue = expectedEntropy(currentCatCounts, n1, notEqCounts, n2);
 			double gain = complete_entropy-expectedEntropyValue;

@@ -12,11 +12,11 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
 import sun.misc.FloatingDecimal;
+import us.parr.lib.ParrtCollections;
 import us.parr.lib.ParrtStats;
 import us.parr.lib.collections.CountingDenseIntSet;
 import us.parr.lib.collections.CountingSet;
 import us.parr.lib.collections.DenseIntSet;
-import us.parr.lib.collections.ParrtCollections;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -48,9 +48,9 @@ import static us.parr.animl.data.DataTable.VariableType.TARGET_CATEGORICAL_STRIN
 import static us.parr.animl.data.DataTable.VariableType.UNUSED_FLOAT;
 import static us.parr.animl.data.DataTable.VariableType.UNUSED_INT;
 import static us.parr.animl.data.DataTable.VariableType.UNUSED_STRING;
-import static us.parr.lib.collections.ParrtCollections.indexOf;
-import static us.parr.lib.collections.ParrtCollections.join;
-import static us.parr.lib.collections.ParrtCollections.map;
+import static us.parr.lib.ParrtCollections.indexOf;
+import static us.parr.lib.ParrtCollections.join;
+import static us.parr.lib.ParrtCollections.map;
 
 public class DataTable implements Iterable<int[]> {
 	// 9.466524720191955566e-01
