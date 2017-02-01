@@ -301,19 +301,19 @@ public class DecisionTree implements ClassifierModel {
 
 	public boolean isLeaf() { return root instanceof DecisionLeafNode; }
 
-	public static DataPair numericalIntSplit(DataTable X, int splitVariable, double splitValue) {
+	public static DataPair numericalIntSplit_old(DataTable X, int splitVariable, double splitValue) {
 		DataTable a = X.filter(x -> x[splitVariable] < splitValue);
 		DataTable b = X.filter(x -> x[splitVariable] >= splitValue);
 		return new DataPair(a,b);
 	}
 
-	public static DataPair numericalFloatSplit(DataTable X, int splitVariable, double splitValue) {
+	public static DataPair numericalFloatSplit_old(DataTable X, int splitVariable, double splitValue) {
 		DataTable a = X.filter(x -> Float.intBitsToFloat(x[splitVariable]) < splitValue);
 		DataTable b = X.filter(x -> Float.intBitsToFloat(x[splitVariable]) >= splitValue);
 		return new DataPair(a,b);
 	}
 
-	public static DataPair categoricalSplit(DataTable X, int splitVariable, int splitCategory) {
+	public static DataPair categoricalSplit_old(DataTable X, int splitVariable, int splitCategory) {
 //		DataTable a = X.filter(x -> x[splitVariable] == splitCategory);
 //		DataTable b = X.filter(x -> x[splitVariable] != splitCategory);
 //		return new DataPair(a,b);
@@ -330,7 +330,23 @@ public class DecisionTree implements ClassifierModel {
 		return new DataPair(new DataTable(X, eq), new DataTable(X, notEq));
 	}
 
-	public static DataPair categoricalSplit_new(DataTable X, int splitVariable, int splitCategory) {
+	public static DataPair numericalIntSplit(DataTable X, int splitVariable, double splitValue) {
+		List<int[]> rows = X.getRows();
+		int splitIndex = DataTable.numericalIntPartition(rows, splitVariable, splitValue, 0, X.size()-1);
+		List<int[]> less = rows.subList(0, splitIndex);
+		List<int[]> greater = rows.subList(splitIndex, rows.size());
+		return new DataPair(new DataTable(X, less), new DataTable(X, greater));
+	}
+
+	public static DataPair numericalFloatSplit(DataTable X, int splitVariable, double splitValue) {
+		List<int[]> rows = X.getRows();
+		int splitIndex = DataTable.numericalFloatPartition(rows, splitVariable, splitValue, 0, X.size()-1);
+		List<int[]> less = rows.subList(0, splitIndex);
+		List<int[]> greater = rows.subList(splitIndex, rows.size());
+		return new DataPair(new DataTable(X, less), new DataTable(X, greater));
+	}
+
+	public static DataPair categoricalSplit(DataTable X, int splitVariable, int splitCategory) {
 		List<int[]> rows = X.getRows();
 		int splitIndex = DataTable.categoricalPartition(rows, splitVariable, splitCategory, 0, X.size()-1);
 		List<int[]> eq = rows.subList(0, splitIndex);

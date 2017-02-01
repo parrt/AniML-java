@@ -240,7 +240,7 @@ public class TestRFDataSets extends BaseTest {
 	@Ignore @Test public void testHiggskFoldCrossErrors() {
 		int kfolds = 5;
 
-		String fileName = "/Users/parrt/data/higgs.csv"; // too big to add to resources; intellij copies to target
+		String fileName = "/Users/parrt/data/higgs10000.csv"; // too big to add to resources; intellij copies to target
 		int minLeafSize = 20;
 		DataTable.VariableType[] colTypes = new DataTable.VariableType[28+1];
 		for (int i = 0; i<colTypes.length-1; i++) {
@@ -325,7 +325,7 @@ public class TestRFDataSets extends BaseTest {
 	}
 
 	@Ignore @Test public void testRunHiggs() {
-		String fileName = "/Users/parrt/data/higgs.csv"; // too big to add to resources; intellij copies to target
+		String fileName = "/Users/parrt/data/higgs400000.csv"; // too big to add to resources; intellij copies to target
 //		String fileName = "/Users/parrt/github/AniML/data/small_higgs.csv";
 		int n_estimators = 50;
 		int minLeafSize = 20;

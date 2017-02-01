@@ -537,6 +537,42 @@ public class DataTable implements Iterable<int[]> {
 		}
 	}
 
+	public static int numericalFloatPartition(List<int[]> rows,
+	                                          int splitVariable, double splitValue,
+	                                          int low, int high)
+	{
+		int i = low-1;
+		int j = high+1;
+		int n = rows.size();
+		while ( true ) {
+			do { i++; } while ( i<n && Float.intBitsToFloat(rows.get(i)[splitVariable])<splitValue );
+			do { j--; } while ( j>=0 && Float.intBitsToFloat(rows.get(j)[splitVariable])>=splitValue );
+			if ( i >= j ) { return i; }
+			// swap elements at i and j
+			int[] savei = rows.get(i);
+			rows.set(i, rows.get(j));
+			rows.set(j, savei);
+		}
+	}
+
+	public static int numericalIntPartition(List<int[]> rows,
+	                                        int splitVariable, double splitValue,
+	                                        int low, int high)
+	{
+		int i = low-1;
+		int j = high+1;
+		int n = rows.size();
+		while ( true ) {
+			do { i++; } while ( i<n && rows.get(i)[splitVariable]<splitValue );
+			do { j--; } while ( j>=0 && rows.get(j)[splitVariable]>=splitValue );
+			if ( i >= j ) { return i; }
+			// swap elements at i and j
+			int[] savei = rows.get(i);
+			rows.set(i, rows.get(j));
+			rows.set(j, savei);
+		}
+	}
+
 	/** Return new table with [i1..i2] inclusive in new table */
 	public DataTable subset(int i1, int i2) {
 		return new DataTable(this, rows.subList(i1, i2+1));
