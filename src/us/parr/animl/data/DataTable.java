@@ -333,7 +333,7 @@ public class DataTable implements Iterable<int[]> {
 			}
 			int n = 0;
 			while ( (line=bf.readLine())!=null ) {
-				if ( n % 10000 == 0 ) System.out.println(n);
+				if ( n>0 && n % 10000 == 0 ) System.out.println(n);
 				line = line.trim();
 				if ( line.length()==0 ) continue;
 				int[] row = new int[numCols];
