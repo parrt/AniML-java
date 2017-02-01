@@ -338,6 +338,7 @@ public class TestRFDataSets extends BaseTest {
 		DataTable data = DataTable.loadCSV(fileName, colTypes, true);
 		long lstop = System.nanoTime();
 		System.out.printf("Load time %dms\n", (lstop-lstart)/(1000*1000));
+		try {Thread.sleep(5000);} catch (Exception e) { }
 //		DecisionTree.debug = true;
 		long start = System.nanoTime();
 		RandomForest rf = new RandomForest(n_estimators, minLeafSize);

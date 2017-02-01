@@ -67,12 +67,13 @@ public class RandomForest implements ClassifierModel {
 		int M = data.getNumberOfPredictorVar();
 		// Number of variables to select at random at each decision node to find best split
 		int m = (int)Math.round(Math.sqrt(M));
+		List<int[]> bootstrap = new ArrayList<>(data.size()); // reuse for each tree
 		for (int i = 1; i<=numEstimators; i++) {
 			if ( DecisionTree.debug ) System.out.println("Estimator "+i+" ------------------");
 			Set<Integer> outOfBagSamples = new HashSet<>(); // gets filled in
 			int sampleSize = (int)(bootstrapSampleRate * data.size());
 //			List<int[]> bootstrap = ParrtStats.bootstrapWithRepl(data.getRows(), sampleSize, outOfBagSamples);
-			List<int[]> bootstrap = ParrtStats.bootstrapWithRepl(data.getRows(), sampleSize);
+			ParrtStats.bootstrapWithRepl(data.getRows(), sampleSize, bootstrap, null);
 			DataTable table = new DataTable(data, bootstrap);
 //			System.out.println("bootstrap:\n"+table.toString());
 			DecisionTree tree = new DecisionTree(m, minLeafSize, nodeSampleSize);
