@@ -325,7 +325,7 @@ public class TestRFDataSets extends BaseTest {
 	}
 
 	@Ignore @Test public void testRunHiggs() {
-		String fileName = "/Users/parrt/data/higgs100000.csv"; // too big to add to resources; intellij copies to target
+		String fileName = "/Users/parrt/data/higgs400000.csv"; // too big to add to resources; intellij copies to target
 //		String fileName = "/Users/parrt/github/AniML/data/small_higgs.csv";
 		int n_estimators = 50;
 		int minLeafSize = 20;

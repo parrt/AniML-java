@@ -97,6 +97,9 @@ public class DecisionTree implements ClassifierModel {
 		// the left/right children.
 		DataTable original = data;
 		if ( nodeSampleSize>0 ) {
+//			List<int[]> out = new ArrayList<>(nodeSampleSize);
+//			ParrtStats.bootstrapWithRepl(data.getRows(), out, null);
+//			data = new DataTable(data, );
 			data = data.randomSubset(Math.min(nodeSampleSize, data.size()));
 		}
 
