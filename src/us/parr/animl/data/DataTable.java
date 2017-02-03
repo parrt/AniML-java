@@ -479,30 +479,6 @@ public class DataTable implements Iterable<int[]> {
 		return valueCounts.entropy();
 	}
 
-	public List<Integer> getSubsetOfVarIndexes(int m, Random random) {
-		// create set of all predictor vars
-		List<Integer> indexes = new ArrayList<>(colTypes.length);
-		for (int i = 0; i<colTypes.length; i++) {
-			if ( isPredictorVar(colTypes[i]) ) {
-				indexes.add(i);
-			}
-		}
-		int M = indexes.size(); // number of usable predictor variables M
-		if ( m<=0 ) m = M;
-		if ( m>M ) m = M;
-		if ( m==M ) {
-			// don't bother to shuffle then sort
-			return indexes;
-		}
-		if ( random==null ) {
-			random = new Random();
-		}
-		Collections.shuffle(indexes, random);
-		indexes = indexes.subList(0, m);
-		Collections.sort(indexes);
-		return indexes;
-	}
-
 	/** Partition rows in-place per splitVariable and splitCategory. Use
 	 *  left/right cursors moving in from edges until they cross. Return
 	 *  the index of the first element not in category. Everthing to left
@@ -605,7 +581,17 @@ public class DataTable implements Iterable<int[]> {
 		return new DataTable(this, ParrtStats.bootstrapWithRepl(this.rows, n));
 	}
 
-	public int getNumberOfPredictorVar() { return getSubsetOfVarIndexes(getNumberOfColumns(), null).size(); }
+	public int getNumberOfPredictorVar() {
+		int n = 0;
+		for (int i = 0; i<colTypes.length; i++) {
+			if ( colTypes[i]!=TARGET_CATEGORICAL_INT &&
+				 colTypes[i]!=TARGET_CATEGORICAL_STRING )
+			{
+				n++;
+			}
+		}
+		return n;
+	}
 
 	public int getNumberOfColumns() { return colTypes.length; }
 
@@ -729,6 +715,10 @@ public class DataTable implements Iterable<int[]> {
 			return getAsFloat(colMaxes[j]);
 		}
 		return colMaxes[j];
+	}
+
+	public int[] getColMaxes() {
+		return colMaxes;
 	}
 
 	public Object getValue(int rowi, int colj) {

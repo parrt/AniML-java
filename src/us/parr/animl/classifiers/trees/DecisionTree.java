@@ -15,6 +15,8 @@ import us.parr.lib.collections.CountingDenseIntSet;
 import javax.json.Json;
 import javax.json.JsonObject;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -58,6 +60,16 @@ public class DecisionTree implements ClassifierModel {
 	/** How much of data to examine at each node to find split point */
 	protected int nodeSampleSize = 20;
 
+	// Shared memory for bestNumericSplit()
+	protected int[] currentCounts;
+	protected int[] greaterThanCounts;
+	// end
+
+	// Shared memory for
+	List<Integer> indexes;
+	List<Integer> indexesSubset;
+	// end
+
 	public DecisionTree() { this(0, 1, 20); }
 
 	public DecisionTree(int varsPerSplit, int minLeafSize) {
@@ -86,10 +98,28 @@ public class DecisionTree implements ClassifierModel {
 	 *  If varsPerSplit>0, select split var from random subset of size m from all variable set.
 	 */
 	public void train(DataTable data) {
+		int yi = data.getPredictedCol(); // last index is usually the target variable
+		int targetCatMaxValue = (Integer) data.getColMax(yi);
+
+		// init shared memory for methods used during training
+		currentCounts = new int[targetCatMaxValue+1];
+		greaterThanCounts = new int[targetCatMaxValue+1]; // allocate this just once
+		indexes = new ArrayList<>(data.getColTypes().length);
+		indexesSubset = new ArrayList<>(data.getColTypes().length);
+		for (int i = 0; i<data.getColTypes().length; i++) {
+			if ( DataTable.isPredictorVar(data.getColTypes()[i]) ) {
+				indexes.add(i);
+			}
+		}
+
 		root = build(data, varsPerSplit, minLeafSize, nodeSampleSize);
 	}
 
-	protected static DecisionTreeNode build(DataTable data, int varsPerSplit, int minLeafSize, int nodeSampleSize) {
+	protected DecisionTreeNode build(DataTable data,
+	                                 int varsPerSplit,
+	                                 int minLeafSize,
+	                                 int nodeSampleSize)
+	{
 		if ( data==null || data.size()==0 ) { return null; }
 
 		// sample from data to get subset for finding best split at this node;
@@ -124,7 +154,7 @@ public class DecisionTree implements ClassifierModel {
 		// Non-random forest decision trees do just: for (int i=0; i<M; i++) {
 		// but RF must use a subset m << M of predictor variables so this is
 		// a generalization
-		List<Integer> indexes = data.getSubsetOfVarIndexes(varsPerSplit, random); // consider all or a subset of M variables
+		List<Integer> indexes = getSubsetOfVarIndexes(varsPerSplit, random); // consider all or a subset of M variables
 		for (Integer j : indexes) { // for each variable i
 			// The goal is to find the lowest expected entropy for all possible
 			// values of predictor variable j.  Then we compare best for j against
@@ -180,10 +210,10 @@ public class DecisionTree implements ClassifierModel {
 		return t;
 	}
 
-	protected static BestInfo bestNumericSplit(DataTable data, int j, int yi,
-	                                           CountingDenseIntSet completePredictionCounts,
-	                                           double complete_entropy,
-	                                           BestInfo best)
+	protected BestInfo bestNumericSplit(DataTable data, int j, int yi,
+	                                    CountingDenseIntSet completePredictionCounts,
+	                                    double complete_entropy,
+	                                    BestInfo best)
 	{
 		int n = data.size();
 		// Rather than splitting the data table for each unique value of this variable
@@ -198,10 +228,9 @@ public class DecisionTree implements ClassifierModel {
 		// look for discontinuities (transitions) in predictor var values,
 		// computing less than, greater than entropy for each from target cat counts;
 		// track best split
+		Arrays.fill(currentCounts, 0);
+		Arrays.fill(greaterThanCounts, 0);
 		DataTable.VariableType colType = data.getColTypes()[j];
-		int targetCatMaxValue = (Integer) data.getColMax(yi);
-		int[] currentCounts = new int[targetCatMaxValue+1];
-		int[] greaterThanCounts = new int[targetCatMaxValue+1]; // allocate this just once
 		for (int i = 0; i<n; i++) { // walk all records, updating currentCounts
 			// note; if all values in col j are the same, then we don't enter this IF and return zeroed best
 			if ( i>0 && data.compare(i-1, i, j)<0 ) { // if row i-1 < row i, discontinuity in predictor var
@@ -290,6 +319,26 @@ public class DecisionTree implements ClassifierModel {
 		}
 
 		return best;
+	}
+
+	public List<Integer> getSubsetOfVarIndexes(int m, Random random) {
+		int M = indexes.size(); // number of usable predictor variables M
+		if ( m<=0 ) m = M;
+		if ( m>M ) m = M;
+		if ( m==M ) {
+			// don't bother to shuffle then sort
+			return indexes;
+		}
+		if ( random==null ) {
+			random = new Random();
+		}
+		Collections.shuffle(indexes, random);
+		indexesSubset.clear();
+		for (int i = 0; i<m; i++) {
+			indexesSubset.add(indexes.get(i));
+		}
+		Collections.sort(indexesSubset);
+		return indexesSubset;
 	}
 
 	public static double expectedEntropy(int[] region1CatCounts, int n1,
