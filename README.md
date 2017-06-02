@@ -5,6 +5,8 @@ decided that this might be the start of a nice little machine learning
 library in Java. My emphasis will be on easy to understand code rather than
 performance.
 
+Damn thing seems pretty good. Same or better accuracy on my tests than scikit-learn but infinitely easier to understand. Also faster on bigger data sets.
+
 ## Random Forest(tm) in Java
 
 [codebuff](https://github.com/antlr/codebuff) could really use a random forest so I'm playing with an implementation here.
