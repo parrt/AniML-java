@@ -7,6 +7,8 @@ performance.
 
 Damn thing seems pretty good. Same or better accuracy on my tests than scikit-learn but infinitely easier to understand. Also faster on bigger data sets.
 
+I'm going to start a series of clustering routines for fun. k-means, k-mediod, mean shift, mediod shift.  Then I can use random forests to transform input space and cluster that with traditional methods.
+
 ## Random Forest(tm) in Java
 
 [codebuff](https://github.com/antlr/codebuff) could really use a random forest so I'm playing with an implementation here.
