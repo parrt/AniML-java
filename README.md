@@ -5,7 +5,7 @@ decided that this might be the start of a nice little machine learning
 library in Java. My emphasis will be on easy to understand code rather than
 performance.
 
-Damn thing seems pretty good. Same or better accuracy on my tests than scikit-learn but infinitely easier to understand. Also faster on bigger data sets.
+Damn thing seems pretty good. Same or better accuracy on my tests than scikit-learn but infinitely easier to understand. Also faster on bigger elements sets.
 
 I'm going to start a series of clustering routines for fun. k-means, k-mediod, mean shift, mediod shift.  Then I can use random forests to transform input space and cluster that with traditional methods.
 
@@ -47,7 +47,7 @@ for discrete, try all (or treat as continuous)
 for continuous variables, sort by that variable and choose those split points at each unique value. each split has low variance of dependent variable
 
 I'm going to try encoding floats as int so int[] can always
-be the data type of a row.
+be the elements type of a row.
 
 <img src="whiteboard.jpg" width=300>
 
@@ -55,7 +55,7 @@ More Jeremy notes from Jan 17, 2017:
 
 * Sorting is a huge bottleneck so choose perhaps 20 elements from the complete list associated with a particular node. make it a parameter.
 * Map dependent variable categories to 0..n-1 contiguous category encodings a priori; this lets us use a simple array for counting sets per category.
-* Don't need to sort actual data; you can divide a column of independent variables into those values that are less than and greater than equal to the split. As you scan the column, can move values to the appropriate region. Hmm... still sounds like modifying the data but Jeremy claims that you can do this with one array holding the column values all the way through building a decision tree.
+* Don't need to sort actual elements; you can divide a column of independent variables into those values that are less than and greater than equal to the split. As you scan the column, can move values to the appropriate region. Hmm... still sounds like modifying the elements but Jeremy claims that you can do this with one array holding the column values all the way through building a decision tree.
 * use min leaf size of like 20 (as it's about where t-distribution looks gaussian)
 * definitely use category probabilities when making ensemble classification; ok to average probabilities and pick one
 * don't worry about optimizations that help with creating nodes near top of tree; there are few of them. worry about leaves and last decision layer
@@ -91,7 +91,7 @@ of positive and negative examples on each side of the split point.
 
 From *An Introduction to Statistical Learning* (Gareth James, Daniela Witten, Trevor Hastie, Robert Tibshirani)
 
-1st RF tweak to decision trees. The following explains why we bootstrap a new data set for each tree in forest (*bagging*): 
+1st RF tweak to decision trees. The following explains why we bootstrap a new elements set for each tree in forest (*bagging*): 
 
 > Hence a natural way to reduce the variance and hence increase the prediction
 accuracy of a statistical learning method is to take many training sets
@@ -103,7 +103,7 @@ The 2nd RF tweak over decision trees is to use a subset of the possible variable
 > ... each time a split in a tree is considered, a random sample of
 m predictors is chosen as split candidates from the full set of p predictors.
 The split is allowed to use only one of those m predictors. ... Suppose
-that there is one very strong predictor in the data set, along with a number
+that there is one very strong predictor in the elements set, along with a number
 of other moderately strong predictors. Then in the collection of bagged 
 trees, most or all of the trees will use this strong predictor in the top split.
 Consequently, all of the bagged trees will look quite similar to each other.
