@@ -11,7 +11,9 @@ I'm going to start a series of clustering routines for fun. k-means, k-mediod, m
 
 To learn [Kotlin](https://kotlinlang.org), I'm building some of the code in Kotlin.
 
-## Random Forest(tm) in Java
+## Notes
+
+### Random Forest(tm) in Java
 
 [codebuff](https://github.com/antlr/codebuff) could really use a random forest so I'm playing with an implementation here.
 
@@ -107,3 +109,62 @@ that there is one very strong predictor in the elements set, along with a number
 of other moderately strong predictors. Then in the collection of bagged 
 trees, most or all of the trees will use this strong predictor in the top split.
 Consequently, all of the bagged trees will look quite similar to each other.
+
+### Mean shift
+
+In my mind, it's an expensive but straightforward algorithm that associates cluster centroids with density function maxima. We use kernel density estimation with a Gaussian kernel, derived from the original data, and fix that for all time. Now launch a swarm of particles on the surface that seek maxima. Where do you start the particles? At each data original point. The algorithm terminates when no particle is making much progress, possibly oscillating around a maximum.
+
+The problem with gradient ascent/descent is that we need the partial derivatives of the surface function in each dimension, which can get hairy for complex kernels. Fortunately, we can ignore the density estimate itself and go straight to the gradient per [Mean Shift: A robust approach toward future space analysis](http://web.eecs.umich.edu/~silvio/teaching/EECS598/papers/mean_shift.pdf). They show that a "shadow kernel" is proportional to the gradient of the kernel used for kernel density estimation. And the good news is that the shadow of a Gaussian kernel is a Gaussian kernel.  If we choose a "top hat" flat/uniform kernel for the density estimate, we use a Epanichnikov kernel function as an estimate of the gradient. Note: the Comaniciu and Meer paper appears to have a boo-boo cut-and-paste error. Their equation (20) on page 606 says y<sub>j+1</sub> = blah where blah is not a function of y<sub>j</sub>. As the plain x in blah is not defined, I assume this should be y<sub>j</sub>. That formula blah is a cut-and-paste of (17) so likely they forgot to update it.
+
+**Problem**: do we update original data points or use separate particles that shift?
+
+I've been looking at a lot of algorithms and a few bits of code to implement mean shift. The majority of people compute mean shift vectors based upon the means, the "mean" particles that move through the data space. In another words they compute distance from the current mean to X points but then update X for the next iteration. It's unclear to me that it gets the same clusters that a simple gradient ascent on the kernel density estimate would get. It seems like one should keep the density estimate fixed and compute the difference between a "mean particle" that moves around to the *original* data points, not the other particles.  
+
+I looked at [Saravanan Thirumuruganathan's blog](https://saravananthirumuruganathan.wordpress.com/2010/04/01/introduction-to-mean-shift-algorithm/), which fits with my intuition about the algorithm.  Then I noticed that his code actually does do what I would expect.  Quoting the blog here:
+
+1. Fix a window around each data point. 
+2. Compute the mean of data within the window. 
+3. Shift the window to the mean and repeat till convergence.
+
+Notice that it says it's computing the meaning of the data within the window not the meaning of the means. His Matlab code confirms:
+
+```matlab
+	function [origDataPoints,dataPoints] = doMeanShift(dataPoints,useKNNToGetH)
+		[numSamples,numFeatures] = size(dataPoints);
+
+		origDataPoints = dataPoints;
+
+		for i = 1:numSamples
+			diffBetweenIterations = 10;
+
+			while (diffBetweenIterations > threshold)
+				curDataPoint = dataPoints(i,:);
+				euclideanDist = sqdist(curDataPoint',origDataPoints');
+				bandwidth = getBandWith(origDataPoints(i,:),origDataPoints,euclideanDist,useKNNToGetH);
+				kernelDist = exp(-euclideanDist ./ (bandwidth^2));
+				numerator = kernelDist * origDataPoints;
+				denominator = sum(kernelDist);
+				newDataPoint = numerator/denominator;
+				dataPoints(i,:) = newDataPoint;
+				diffBetweenIterations = abs(curDataPoint - newDataPoint);
+			end
+		end
+		
+		[clusterCentroids,pointsToClusters] = getClusters(origDataPoints,dataPoints);
+		plotPoints(clusterCentroids,pointsToClusters,origDataPoints);
+	end
+```
+
+I note that the [formula in this stackexchange.com answer](https://stats.stackexchange.com/questions/61743/understanding-the-mean-shift-algorithm-with-gaussian-kernel) also computes the next particle location using the original data, not the particles.
+
+Ah! In [Mean Shift, Mode Seeking, and Clustering](https://members.loria.fr/MOBerger/Enseignement/Master2/Exposes/meanShiftCluster.pdf), I see that they move the data points, not a separate set of particles. But, they go on to say (T are the particles and S are the data points):
+
+> When T is S, the mean shift algorithm is called a blurring process, indicating the successive blurring of the data set, S. The original mean shift process proposed in [1], [3] is a blurring process, in which T = S. In Definition 2, it is generalized so that T and S may be separate sets with S fixed through the process, although the initial T may be a copy of S.
+
+where [1] is the original work on mean shift [The estimation of the gradient of a density function, with applications in pattern recognition](https://www.researchgate.net/publication/3082499_Hostetler_LD_The_estimation_of_the_gradient_of_a_density_function_with_applications_in_pattern_recognition_IEEE_Transactions_on_Information_Theory_IT-21_32-40) and [3] is [Conceptual clustering in knowledge organization](https://www.ncbi.nlm.nih.gov/pubmed/21869296).
+
+In [A review of mean-shift algorithms for clustering](https://pdfs.semanticscholar.org/399e/00c8a1cc5c3d98d3ce76747d3e0fe57c88f5.pdf), we see: "*Clustering by blurring mean-shift (BMS): smooth the data Here, each point x<sub>m</sub> of the dataset actually moves to the point f(x<sub>m</sub>)*...". It looks like his figure 2 has the blurring on the wrong algorithm. haha. Also in that paper the author says:
+
+> As will be shown below, Gaussian BMS [blurred mean shift] can be seen as an iterated filtering (in the signal processing sense) that **eventually leads to a dataset with all points coincident for any starting dataset and bandwidth.** However, before that happens, the dataset quickly collapses into meaningful, tight clusters which depend on σ (see fig. 6), and then these point-like clusters continue to move towards each other relatively slowly.
+
+In other words, the blurred mean shift would *not* converge and stop at the density function maxima. After we think it is found the maxima, we have to artificially stop the iteration.
