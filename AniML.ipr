@@ -40,8 +40,7 @@
     <version value="1.0" />
   </component>
   <component name="KotlinCommonCompilerArguments">
-    <option name="languageVersion" value="1.1" />
-    <option name="apiVersion" value="1.1" />
+    <option name="coroutinesWarn" value="false" />
   </component>
   <component name="MavenProjectsManager">
     <option name="originalFiles">
@@ -199,6 +198,17 @@
         <root url="jar://$MAVEN_REPOSITORY$/commons-io/commons-io/2.5/commons-io-2.5-sources.jar!/" />
       </SOURCES>
     </library>
+    <library name="Maven: de.erichseifert.vectorgraphics2d:VectorGraphics2D:0.11">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/de/erichseifert/vectorgraphics2d/VectorGraphics2D/0.11/VectorGraphics2D-0.11.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/de/erichseifert/vectorgraphics2d/VectorGraphics2D/0.11/VectorGraphics2D-0.11-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/de/erichseifert/vectorgraphics2d/VectorGraphics2D/0.11/VectorGraphics2D-0.11-sources.jar!/" />
+      </SOURCES>
+    </library>
     <library name="Maven: junit:junit:4.12">
       <CLASSES>
         <root url="jar://$MAVEN_REPOSITORY$/junit/junit/4.12/junit-4.12.jar!/" />
@@ -331,15 +341,37 @@
         <root url="jar://$MAVEN_REPOSITORY$/org/jetbrains/annotations/13.0/annotations-13.0-sources.jar!/" />
       </SOURCES>
     </library>
-    <library name="Maven: us.parr:parrtlib:0.2-SNAPSHOT">
+    <library name="Maven: org.knowm.xchart:xchart-demo:3.3.1">
       <CLASSES>
-        <root url="jar://$MAVEN_REPOSITORY$/us/parr/parrtlib/0.2-SNAPSHOT/parrtlib-0.2-20170311.232542-20.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/knowm/xchart/xchart-demo/3.3.1/xchart-demo-3.3.1.jar!/" />
       </CLASSES>
       <JAVADOC>
-        <root url="jar://$MAVEN_REPOSITORY$/us/parr/parrtlib/0.2-SNAPSHOT/parrtlib-0.2-20170311.232542-20-javadoc.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/knowm/xchart/xchart-demo/3.3.1/xchart-demo-3.3.1-javadoc.jar!/" />
       </JAVADOC>
       <SOURCES>
-        <root url="jar://$MAVEN_REPOSITORY$/us/parr/parrtlib/0.2-SNAPSHOT/parrtlib-0.2-20170311.232542-20-sources.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/knowm/xchart/xchart-demo/3.3.1/xchart-demo-3.3.1-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.knowm.xchart:xchart:3.3.1">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/knowm/xchart/xchart/3.3.1/xchart-3.3.1.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/knowm/xchart/xchart/3.3.1/xchart-3.3.1-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/knowm/xchart/xchart/3.3.1/xchart-3.3.1-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: us.parr:parrtlib:0.5">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/us/parr/parrtlib/0.5/parrtlib-0.5.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/us/parr/parrtlib/0.5/parrtlib-0.5-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/us/parr/parrtlib/0.5/parrtlib-0.5-sources.jar!/" />
       </SOURCES>
     </library>
   </component>

@@ -26,7 +26,7 @@
 		<dependency>
 			<groupId>us.parr</groupId>
 			<artifactId>parrtlib</artifactId>
-			<version>0.2-SNAPSHOT</version>
+			<version>0.5</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
@@ -87,6 +87,17 @@
 			<artifactId>kotlin-test</artifactId>
 			<version>${kotlin.version}</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+		    <groupId>org.knowm.xchart</groupId>
+		    <artifactId>xchart</artifactId>
+		    <version>3.3.1</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.knowm.xchart/xchart-demo -->
+		<dependency>
+		    <groupId>org.knowm.xchart</groupId>
+		    <artifactId>xchart-demo</artifactId>
+		    <version>3.3.1</version>
 		</dependency>
 	</dependencies>
 
