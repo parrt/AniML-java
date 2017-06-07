@@ -48,7 +48,7 @@ class FloatVector {
         return sum
     }
 
-    infix fun plus(b:FloatVector) : FloatVector {
+    operator infix fun plus(b:FloatVector) : FloatVector {
         val r = FloatVector(b)
         for(i in elements.indices) {
             r.elements[i] = elements[i] + b.elements[i]
@@ -56,7 +56,7 @@ class FloatVector {
         return r
     }
 
-    infix fun minus(b:FloatVector) : FloatVector {
+    operator infix fun minus(b:FloatVector) : FloatVector {
         val r = FloatVector(b)
         for(i in elements.indices) {
             r.elements[i] = elements[i] - b.elements[i]
@@ -118,6 +118,8 @@ fun main(args: Array<String>) {
     for (i in 0..9) x.elements[i] = i.toFloat()
     val y = FloatVector(10)
     for (i in 0..9) y.elements[i] = i.toFloat()
-    val z = x plus y
-    print(z)
+    val z = x + y
+    println(z)
+    println(z - y)
+    println(z dot y)
 }
