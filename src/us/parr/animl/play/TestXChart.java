@@ -10,24 +10,12 @@ import org.knowm.xchart.SwingWrapper;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries;
-import org.knowm.xchart.demo.charts.ExampleChart;
 import org.knowm.xchart.style.Styler;
 
 import static us.parr.lib.ParrtStats.normal;
 
-public class TestXChart implements ExampleChart<XYChart> {
-
+public class TestXChart {
 	public static void main(String[] args) {
-
-		ExampleChart<XYChart> exampleChart = new TestXChart();
-		XYChart chart = exampleChart.getChart();
-		new SwingWrapper<>(chart).displayChart();
-	}
-
-	@Override
-	public XYChart getChart() {
-
-		// Create Chart
 		XYChart chart = new XYChartBuilder().width(800).height(600).build();
 
 		// Customize Chart
@@ -41,11 +29,9 @@ public class TestXChart implements ExampleChart<XYChart> {
 		chart.getStyler().setMarkerSize(2);
 
 		// Series
-		double[] xData = normal(0, 2.5, 1000);
+		double[] xData = normal(0, 1, 1000);
 		double[] yData = normal(0, 1, 1000);
 		chart.addSeries("Gaussian Blob", xData, yData);
-
-		return chart;
+		new SwingWrapper<>(chart).displayChart();
 	}
-
 }

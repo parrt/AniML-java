@@ -21,7 +21,7 @@ class DoubleVector {
             elements[i] = x[i].toDouble()
         }
     }
-    constructor(x : DoubleArray) {
+    constructor(vararg x : Double) {
         elements = x.copyOf()
     }
 
