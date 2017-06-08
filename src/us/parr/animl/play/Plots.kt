@@ -48,7 +48,7 @@ fun plot2Gaussian() {
     chart.styler.xAxisMin = -3.0
     chart.styler.yAxisMax = 9.0
     chart.styler.yAxisMin = -3.0
-    chart.styler.markerSize = 5
+    chart.styler.markerSize = 10
 
     val n = 1000
     val cluster1: List<DoubleVector> = (1..n).map { DoubleVector(normal(0.0, 1.0), normal(0.0, 1.0)) }

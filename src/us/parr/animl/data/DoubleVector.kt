@@ -85,6 +85,11 @@ fun sum(v : DoubleVector) = v.sum()
 
 fun mean(v : DoubleVector) = v.sum() / v.size()
 
+/** Return L2 euclidean distance between scalars or vectors x and y */
+fun euclidean_distance(x : DoubleVector, y : DoubleVector) : Double {
+    return Math.sqrt(sum((x - y) map { it * it }))
+}
+
 /** Using logic from https://www.python.org/dev/peps/pep-0485/#proposed-implementation */
 fun isclose(a : Double, b : Double) : Boolean {
     val rel_tol=1e-09
