@@ -21,7 +21,7 @@ fun meanShift(data : List<DoubleVector>, bandwidth : Double) : Pair<List<DoubleV
     repeat(30) {
 //    while ( true ) { // until we converge
         // update each particle moving over the surface
-        val new_particles = particles.map { p -> shift(p, data, bandwidth) }
+        val new_particles = particles.map { shift(it, data, bandwidth) }
         particles = new_particles.toMutableList()
     }
     return Pair(particles,clusters)
@@ -29,7 +29,7 @@ fun meanShift(data : List<DoubleVector>, bandwidth : Double) : Pair<List<DoubleV
 
 private fun shift(particle: DoubleVector, data: List<DoubleVector>, bandwidth : Double) : DoubleVector {
     val distances: List<Double> = data.map { x -> euclidean_distance(particle, x) }
-    val gauss: List<Double> = distances.map { d -> exp(d / bandwidth) }
+    val gauss: List<Double> = distances.map { d -> exp(-d / bandwidth) }
     val weighted_vector = sum(data.mapIndexed { i, x -> x * gauss[i] })
     val normalizing_weight = sum(gauss.toDoubleArray())
     return weighted_vector.map { x -> x / normalizing_weight }
