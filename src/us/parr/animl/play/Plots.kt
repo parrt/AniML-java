@@ -91,7 +91,7 @@ fun plot2GaussianMeanShift() {
     chart.styler.yAxisMin = -3.0
     chart.styler.markerSize = 10
 
-    val n = 1000
+    val n = 200
     val cluster1: List<DoubleVector> = (1..n).map { DoubleVector(normal(0.0, 1.0), normal(0.0, 1.0)) }
     val cluster2: List<DoubleVector> = (1..n).map { DoubleVector(normal(6.0, 1.5), normal(4.0, 1.5)) }
     val data = cluster1 + cluster2
