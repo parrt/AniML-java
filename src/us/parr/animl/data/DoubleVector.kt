@@ -138,3 +138,18 @@ fun argmin(v : DoubleVector) : Int {
     }
     return min_i
 }
+
+/** Take list of p-dimensional data and make p lists of values.
+ *  Each list is a column of the data.
+ */
+fun unzip(data : List<DoubleVector>) : Array<MutableList<Double>> {
+    if ( data.isEmpty() ) return emptyArray()
+    val p = data[0].size() // number of dimensions
+    val cols = Array<MutableList<Double>>(p, init = {mutableListOf<Double>()})
+    for (v in data) {
+        for (i in 0..p-1) {
+            cols[i].add(v[i])
+        }
+    }
+    return cols
+}

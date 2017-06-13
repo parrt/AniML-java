@@ -13,11 +13,12 @@ import java.lang.Math.exp
 import java.lang.Math.pow
 
 /** Mean shift algorithm. Given a list of vectors, return a list of density
- *  estimate maxima and a mapping of data point index to cluster number 0..k-1
+ *  estimate maxima, a mapping of data point index to cluster number 0..k-1,
+ *  and k
  */
-fun meanShift(data : List<DoubleVector>, bandwidth : Double) : Pair<List<DoubleVector>, List<Int>> {
+fun meanShift(data : List<DoubleVector>, bandwidth : Double) : Triple<List<DoubleVector>, IntArray, Int> {
     var particles = data.toList() // dup data list
-    repeat(35) {
+    repeat(45) {
 //    while ( true ) { // until we converge
         // update each particle moving over the surface
         val new_particles: List<DoubleVector> = particles.map { p -> shift(p, data, bandwidth) }
@@ -29,10 +30,11 @@ fun meanShift(data : List<DoubleVector>, bandwidth : Double) : Pair<List<DoubleV
     // identify maxima by converting to string with 2 decimal points
     val maximaAsStrings : List<String> = particles.map { p -> p.toString() }
     val uniqueMaxima = maximaAsStrings.toSet().toList()
+    val k = uniqueMaxima.size
     println(uniqueMaxima)
     val pointToCluster = maximaAsStrings.map { m -> uniqueMaxima.indexOf(m) }
     println(pointToCluster)
-    return Pair(particles,pointToCluster)
+    return Triple(particles,pointToCluster.toIntArray(),k)
 }
 
 private fun shift(particle: DoubleVector, data: List<DoubleVector>, bandwidth : Double) : DoubleVector {

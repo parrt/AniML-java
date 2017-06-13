@@ -11,6 +11,7 @@ import org.knowm.xchart.style.Styler
 import us.parr.animl.cluster.kmeans
 import us.parr.animl.cluster.meanShift
 import us.parr.animl.data.DoubleVector
+import us.parr.animl.data.unzip
 import us.parr.lib.ParrtStats.normal
 import java.lang.Math.pow
 import java.util.Collections.min
@@ -92,7 +93,7 @@ fun plot3GaussianMeanShift() {
 //    chart.styler.yAxisMin = -3.0
     chart.styler.markerSize = 10
 
-    val n = 300
+    val n = 200
     val cluster1: List<DoubleVector> = (1..n).map { DoubleVector(normal(0.0, 1.0), normal(0.0, 1.0)) }
     val cluster2: List<DoubleVector> = (1..n).map { DoubleVector(normal(6.0, 2.5), normal(4.0, 1.0)) }
     val cluster3: List<DoubleVector> = (1..n).map { DoubleVector(normal(2.0, 1.5), normal(9.0, 1.0)) }
@@ -103,13 +104,24 @@ fun plot3GaussianMeanShift() {
         xData.add(data[i][0])
         yData.add(data[i][1])
     }
-    chart.addSeries("Gaussian Blobs", xData, yData)
+//    chart.addSeries("Gaussian Blobs", xData, yData)
 
     val d = 2
     var bandwidth = pow(data.size.toDouble(), (-1.0/(d+4)))
     bandwidth = pow((n * (d + 2) / 4.0), (-1.0 / (d + 4)))
-    bandwidth = 1.5
-    val (maxima, pointToClusters) = meanShift(data, bandwidth)
+    bandwidth = 1.2
+    val (maxima, pointToClusters, k) = meanShift(data, bandwidth)
+    val clusters = Array<MutableList<DoubleVector>>(k, init={mutableListOf()})
+    for (i in pointToClusters.indices) {
+        clusters[pointToClusters[i]].add(data[i])
+    }
+
+    var i = 0
+    for (cluster in clusters) {
+        val columns: Array<MutableList<Double>> = unzip(cluster)
+        chart.addSeries("cluster "+i, columns[0], columns[1])
+        i++
+    }
 
     val xCentroid = mutableListOf<Double>()
     val yCentroid = mutableListOf<Double>()
