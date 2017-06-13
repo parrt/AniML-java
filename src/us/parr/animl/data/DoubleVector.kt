@@ -92,7 +92,7 @@ class DoubleVector {
         return true
     }
 
-    override fun toString() = '[' + elements.joinToString(", ") + ']'
+    override fun toString() = '[' + elements.joinToString(", ", transform = {e -> String.format("%.2f",e)}) + ']'
 }
 
 fun sum(v : DoubleVector) = v.sum()

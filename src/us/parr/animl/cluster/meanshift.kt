@@ -13,10 +13,9 @@ import java.lang.Math.exp
 import java.lang.Math.pow
 
 /** Mean shift algorithm. Given a list of vectors, return a list of density
- *  estimate maxima and a list of clusters (lists of vectors).
+ *  estimate maxima and a mapping of data point index to cluster number 0..k-1
  */
-fun meanShift(data : List<DoubleVector>, bandwidth : Double) : Pair<List<DoubleVector>, List<List<DoubleVector>>> {
-    var clusters = listOf<List<DoubleVector>>()
+fun meanShift(data : List<DoubleVector>, bandwidth : Double) : Pair<List<DoubleVector>, List<Int>> {
     var particles = data.toList() // dup data list
     repeat(35) {
 //    while ( true ) { // until we converge
@@ -27,8 +26,13 @@ fun meanShift(data : List<DoubleVector>, bandwidth : Double) : Pair<List<DoubleV
         particles = new_particles
     }
     // Find cluster maxima by finding unique values in particle list, map to 1, 2, 3, ...
-
-    return Pair(particles,clusters)
+    // identify maxima by converting to string with 2 decimal points
+    val maximaAsStrings : List<String> = particles.map { p -> p.toString() }
+    val uniqueMaxima = maximaAsStrings.toSet().toList()
+    println(uniqueMaxima)
+    val pointToCluster = maximaAsStrings.map { m -> uniqueMaxima.indexOf(m) }
+    println(pointToCluster)
+    return Pair(particles,pointToCluster)
 }
 
 private fun shift(particle: DoubleVector, data: List<DoubleVector>, bandwidth : Double) : DoubleVector {
@@ -46,7 +50,6 @@ private fun shift(particle: DoubleVector, data: List<DoubleVector>, bandwidth : 
 }
 
 private fun gaussianKernel(d: Double, bandwidth: Double)
-//        = exp(-0.5 * pow(d / bandwidth, 2.0)) / (bandwidth * sqrt(2 * PI))
     = exp(-0.5 * pow(d / bandwidth, 2.0))// / (bandwidth * sqrt(2 * PI))
 
 fun sum(data : List<Double>) : Double {

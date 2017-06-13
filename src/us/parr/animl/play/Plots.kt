@@ -92,7 +92,7 @@ fun plot3GaussianMeanShift() {
 //    chart.styler.yAxisMin = -3.0
     chart.styler.markerSize = 10
 
-    val n = 400
+    val n = 300
     val cluster1: List<DoubleVector> = (1..n).map { DoubleVector(normal(0.0, 1.0), normal(0.0, 1.0)) }
     val cluster2: List<DoubleVector> = (1..n).map { DoubleVector(normal(6.0, 2.5), normal(4.0, 1.0)) }
     val cluster3: List<DoubleVector> = (1..n).map { DoubleVector(normal(2.0, 1.5), normal(9.0, 1.0)) }
@@ -109,13 +109,13 @@ fun plot3GaussianMeanShift() {
     var bandwidth = pow(data.size.toDouble(), (-1.0/(d+4)))
     bandwidth = pow((n * (d + 2) / 4.0), (-1.0 / (d + 4)))
     bandwidth = 1.5
-    val (new_centroids, clusters) = meanShift(data, bandwidth)
+    val (maxima, pointToClusters) = meanShift(data, bandwidth)
 
     val xCentroid = mutableListOf<Double>()
     val yCentroid = mutableListOf<Double>()
-    for (i in new_centroids.indices) {
-        xCentroid.add(new_centroids[i][0])
-        yCentroid.add(new_centroids[i][1])
+    for (i in maxima.indices) {
+        xCentroid.add(maxima[i][0])
+        yCentroid.add(maxima[i][1])
     }
     chart.addSeries("Centroids", xCentroid, yCentroid)
 
