@@ -12,6 +12,7 @@ import us.parr.animl.cluster.kmeans
 import us.parr.animl.cluster.meanShift
 import us.parr.animl.data.DoubleVector
 import us.parr.lib.ParrtStats.normal
+import java.lang.Math.pow
 import java.util.Collections.min
 
 fun main(args: Array<String>) {
@@ -104,7 +105,10 @@ fun plot3GaussianMeanShift() {
     }
     chart.addSeries("Gaussian Blobs", xData, yData)
 
-    val (new_centroids, clusters) = meanShift(data, 1.5)
+    val d = 2
+    var bandwidth = pow(data.size.toDouble(), (-1.0/(d+4)))
+    bandwidth = 1.5
+    val (new_centroids, clusters) = meanShift(data, bandwidth)
 
     val xCentroid = mutableListOf<Double>()
     val yCentroid = mutableListOf<Double>()

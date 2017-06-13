@@ -9,31 +9,39 @@ package us.parr.animl.cluster
 import us.parr.animl.data.DoubleVector
 import us.parr.animl.data.euclidean_distance
 import us.parr.animl.data.sum
-import us.parr.lib.ParrtStats.sum
-import java.lang.Math.exp
+import java.lang.Math.*
 
 /** Mean shift algorithm. Given a list of vectors, return a list of density
  *  estimate maxima and a list of clusters (lists of vectors).
  */
 fun meanShift(data : List<DoubleVector>, bandwidth : Double) : Pair<List<DoubleVector>, List<List<DoubleVector>>> {
     var clusters = listOf<List<DoubleVector>>()
-    var particles = data.toMutableList()
-    repeat(30) {
+    var particles = data.toList() // dup data list
+    repeat(85) {
 //    while ( true ) { // until we converge
         // update each particle moving over the surface
-        val new_particles = particles.map { shift(it, data, bandwidth) }
-        particles = new_particles.toMutableList()
+        val new_particles: List<DoubleVector> = particles.map { p -> shift(p, data, bandwidth) }
+        particles = new_particles
     }
     return Pair(particles,clusters)
 }
 
 private fun shift(particle: DoubleVector, data: List<DoubleVector>, bandwidth : Double) : DoubleVector {
+    // Compute distance divided by standard deviation
     val distances: List<Double> = data.map { x -> euclidean_distance(particle, x) }
-    val gauss: List<Double> = distances.map { d -> exp(-d / bandwidth) }
-    val weighted_vector = sum(data.mapIndexed { i, x -> x * gauss[i] })
-    val normalizing_weight = sum(gauss.toDoubleArray())
+    val gauss:     List<Double> = distances.map { d -> gaussianKernel(d, bandwidth) }
+    // Weight each data point per its proximity using gaussian kernel
+    var gradient = mutableListOf<DoubleVector>()
+    for (i in data.indices) {
+        gradient.add(data[i] * gauss[i])
+    }
+    val weighted_vector    = sum(gradient)
+    val normalizing_weight = sum(gauss)
     return weighted_vector.map { x -> x / normalizing_weight }
 }
+
+private fun gaussianKernel(d: Double, bandwidth: Double)
+    = exp(-0.5 * pow(d / bandwidth, 2.0)) / (bandwidth * sqrt(2 * PI))
 
 fun sum(data : List<Double>) : Double {
     return data.reduce { s, x -> s + x }
