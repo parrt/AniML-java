@@ -13,27 +13,36 @@ import java.lang.Math.*
 
 /** Mean shift algorithm. Given a list of vectors, return a list of density
  *  estimate maxima, a mapping of data point index to cluster number 0..k-1,
- *  and k
+ *  and k (number of clusters).
+ *
+ *  Note: you should normalize the range of your features since this function
+ *  uses euclidean distance to compute data point density.
  */
 fun meanShift(data : List<DoubleVector>, bandwidth : Double) : Triple<List<DoubleVector>, IntArray, Int> {
-    var particles = data.toList() // dup data list
-    do { // until we converge
-        // update each particle moving over the surface
-        val new_particles: List<DoubleVector> = particles.map { p -> shift(p, data, bandwidth) }
-        val unique = particles.distinct()
-        val new_unique = new_particles.distinct()
+    var particles = data.toList() // start particles at all data points
+    do {
+        // update each particle, moving towards nearest density maximum
+        val new_particles: List<DoubleVector> = particles.map { shift(it, data, bandwidth) }
+        val done = particles == new_particles
         particles = new_particles
-    } while ( new_unique != unique )
+    } while ( !done )  // until we converge
 
-    // Find cluster maxima by finding unique values in particle list, map to 1, 2, 3, ...
-    // identify "same" maxima by converting to string with 2 decimal points
-    val maximaAsStrings : List<String> = particles.map { p -> p.toString() }
-    val uniqueMaxima = maximaAsStrings.toSet().toList()
+    // At this point, particles[i] has converged on maxima for cluster k
+    // and the goal is now to assign data[i] to cluster k
+
+    // Maximas are unique values in particle list
+    val uniqueMaxima: List<DoubleVector> = particles.distinct()
     val k = uniqueMaxima.size
-    println(uniqueMaxima)
-    val pointToCluster = maximaAsStrings.map { m -> uniqueMaxima.indexOf(m) }
-    println(pointToCluster)
-    return Triple(particles,pointToCluster.toIntArray(),k)
+    // Map those maxima to cluster numbers 0, 1, 2, 3, ...
+    val maximaToClusterMap = mutableMapOf<DoubleVector, Int>()
+    var cluster = 0
+    uniqueMaxima.forEach { maximaToClusterMap[it] = cluster++ }
+
+    val pointToCluster = IntArray(data.size)
+    for (i in data.indices) {
+        pointToCluster[i] = maximaToClusterMap.getOrDefault(particles[i],-1)
+    }
+    return Triple(uniqueMaxima,pointToCluster,k)
 }
 
 private fun shift(particle: DoubleVector, data: List<DoubleVector>, bandwidth : Double) : DoubleVector {
