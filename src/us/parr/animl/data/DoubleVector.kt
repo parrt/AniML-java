@@ -9,7 +9,7 @@ package us.parr.animl.data
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-val NUM_DECIMALS_TOLERANCE_FOR_EQUALS = 2
+val NUM_DECIMALS_TOLERANCE_FOR_EQUALS = 9
 
 class DoubleVector {
     var elements: kotlin.DoubleArray
@@ -32,7 +32,9 @@ class DoubleVector {
 
     /** Two vectors are equal if their elements are isclose() */
     override fun equals(other: Any?): Boolean {
-        return other is DoubleVector && this.isclose(other)
+        return other is DoubleVector &&
+                this.size()==other.size() &&
+                this.isclose(other)
     }
 
     infix fun isclose(other: DoubleVector) : Boolean {
@@ -54,13 +56,13 @@ class DoubleVector {
         return hash
     }
 
-    fun rounded() : DoubleVector {
+    fun rounded(ndec : Int = NUM_DECIMALS_TOLERANCE_FOR_EQUALS) : DoubleVector {
         val dup = DoubleVector(this)
-        dup.round()
+        dup.round(ndec)
         return dup
     }
 
-    /** Round to ndec rounding to nearest "neighbor" */
+    /** Round to ndec decimals rounding to nearest "neighbor" */
     fun round(ndec : Int = NUM_DECIMALS_TOLERANCE_FOR_EQUALS) {
         for (i in elements.indices) {
             var d = BigDecimal(elements[i])

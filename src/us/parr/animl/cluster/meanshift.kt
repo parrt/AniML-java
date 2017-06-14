@@ -20,12 +20,10 @@ fun meanShift(data : List<DoubleVector>, bandwidth : Double) : Triple<List<Doubl
     do { // until we converge
         // update each particle moving over the surface
         val new_particles: List<DoubleVector> = particles.map { p -> shift(p, data, bandwidth) }
-        val maximaAsStrings : List<String> = particles.map { p -> p.toString() }
-        val uniqueMaxima = maximaAsStrings.toSet()
-        val new_maximaAsStrings : List<String> = new_particles.map { p -> p.toString() }
-        val uniqueNewMaxima = new_maximaAsStrings.toSet()
+        val unique = particles.distinct()
+        val new_unique = new_particles.distinct()
         particles = new_particles
-    } while ( uniqueMaxima.joinToString(",")!=uniqueNewMaxima.joinToString(",") )
+    } while ( new_unique != unique )
 
     // Find cluster maxima by finding unique values in particle list, map to 1, 2, 3, ...
     // identify "same" maxima by converting to string with 2 decimal points
@@ -58,3 +56,4 @@ private fun gaussianKernel(d: Double, bandwidth: Double)
 fun sum(data : List<Double>) : Double {
     return data.reduce { s, x -> s + x }
 }
+
