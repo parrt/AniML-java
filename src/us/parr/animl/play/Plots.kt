@@ -98,13 +98,6 @@ fun plot3GaussianMeanShift() {
     val cluster2: List<DoubleVector> = (1..n).map { DoubleVector(normal(6.0, 2.5), normal(4.0, 1.0)) }
     val cluster3: List<DoubleVector> = (1..n).map { DoubleVector(normal(2.0, 1.5), normal(9.0, 1.0)) }
     val data = cluster1 + cluster2 + cluster3
-    val xData = mutableListOf<Double>()
-    val yData = mutableListOf<Double>()
-    for (i in data.indices) {
-        xData.add(data[i][0])
-        yData.add(data[i][1])
-    }
-//    chart.addSeries("Gaussian Blobs", xData, yData)
 
     val d = 2
     var bandwidth = pow(data.size.toDouble(), (-1.0/(d+4)))
