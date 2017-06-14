@@ -11,7 +11,7 @@ import org.knowm.xchart.style.Styler
 import us.parr.animl.cluster.kmeans
 import us.parr.animl.cluster.meanShift
 import us.parr.animl.data.DoubleVector
-import us.parr.animl.data.unzip
+import us.parr.animl.data.transpose
 import us.parr.lib.ParrtStats.normal
 import java.lang.Math.pow
 import java.util.Collections.min
@@ -104,6 +104,7 @@ fun plot3GaussianMeanShift() {
     bandwidth = pow((n * (d + 2) / 4.0), (-1.0 / (d + 4)))
     bandwidth = 1.2
     val (maxima, pointToClusters, k) = meanShift(data, bandwidth)
+    // TODO: try groupBy to create list of clusters
     val clusters = Array<MutableList<DoubleVector>>(k, init={mutableListOf()})
     for (i in pointToClusters.indices) {
         clusters[pointToClusters[i]].add(data[i])
@@ -111,8 +112,8 @@ fun plot3GaussianMeanShift() {
 
     var i = 0
     for (cluster in clusters) {
-        val columns: Array<MutableList<Double>> = unzip(cluster)
-        chart.addSeries("cluster "+i, columns[0], columns[1])
+        val columns: List<DoubleVector> = transpose(cluster)
+        chart.addSeries("cluster "+i, columns[0].elements, columns[1].elements)
         i++
     }
 

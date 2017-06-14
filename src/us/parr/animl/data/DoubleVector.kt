@@ -6,6 +6,11 @@
 
 package us.parr.animl.data
 
+import java.math.BigDecimal
+import java.math.RoundingMode
+
+val NUM_DECIMALS_TOLERANCE_FOR_EQUALS = 2
+
 class DoubleVector {
     var elements: kotlin.DoubleArray
 
@@ -23,6 +28,45 @@ class DoubleVector {
     }
     constructor(vararg x : Double) {
         elements = x.copyOf()
+    }
+
+    /** Two vectors are equal if their elements are isclose() */
+    override fun equals(other: Any?): Boolean {
+        return other is DoubleVector && this.isclose(other)
+    }
+
+    infix fun isclose(other: DoubleVector) : Boolean {
+        for (i in elements.indices) {
+            if ( !isclose(this[i], other[i]) ) return false
+        }
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var hash : Int = 1
+        for (element in elements) {
+            var rounded = BigDecimal(element)
+            rounded = rounded.setScale(NUM_DECIMALS_TOLERANCE_FOR_EQUALS, RoundingMode.HALF_UP)
+            val bits = java.lang.Double.doubleToLongBits(rounded.toDouble())
+            hash = 31 * hash + (bits xor (bits ushr 32)).toInt()
+        }
+
+        return hash
+    }
+
+    fun rounded() : DoubleVector {
+        val dup = DoubleVector(this)
+        dup.round()
+        return dup
+    }
+
+    /** Round to ndec rounding to nearest "neighbor" */
+    fun round(ndec : Int = NUM_DECIMALS_TOLERANCE_FOR_EQUALS) {
+        for (i in elements.indices) {
+            var d = BigDecimal(elements[i])
+            d = d.setScale(ndec, RoundingMode.HALF_UP)
+            elements[i] = d.toDouble()
+        }
     }
 
     operator fun get(i : Int) : Double = elements.get(i)
@@ -85,13 +129,6 @@ class DoubleVector {
         return result
     }
 
-    infix fun isclose(b : DoubleVector) : Boolean {
-        for (i in elements.indices) {
-            if ( !isclose(this[i],b[i]) ) return false
-        }
-        return true
-    }
-
     override fun toString() = '[' + elements.joinToString(", ", transform = {e -> String.format("%.2f",e)}) + ']'
 }
 
@@ -112,11 +149,22 @@ fun norm(x : DoubleVector) : Double {
     return Math.sqrt(sum(x.map { it * it }))
 }
 
-/** Using logic from https://www.python.org/dev/peps/pep-0485/#proposed-implementation */
-fun isclose(a : Double, b : Double) : Boolean {
-    val rel_tol=1e-09
-    val abs_tol=0.0
-    return Math.abs(a - b) <= Math.max(rel_tol * Math.max(Math.abs(a), Math.abs(b)), abs_tol)
+/** Using logic from https://www.python.org/dev/peps/pep-0485/#proposed-implementation.
+ *  default is that a, b must be same within 9 decimal digits
+ */
+//fun isclose(a : Double, b : Double, rel_tol : Double = pow(10.0,NUM_DECIMALS_TOLERANCE_FOR_EQUALS.toDouble())) : Boolean {
+//    val abs_tol=0.0
+//    return Math.abs(a - b) <= Math.max(rel_tol * Math.max(Math.abs(a), Math.abs(b)), abs_tol)
+//}
+
+/** Are a and b the same to ndec decimal points? Checks for NaN and Inf equality too. */
+fun isclose(a : Double, b : Double, ndec : Int = NUM_DECIMALS_TOLERANCE_FOR_EQUALS) : Boolean {
+    if ( a.isNaN() && b.isNaN() ) return true
+    if ( a.isInfinite() && b.isInfinite() ) return true
+    // ok, we have real (finite) values to compare.
+    val abig = BigDecimal(a).setScale(ndec, RoundingMode.HALF_UP)
+    val bbig = BigDecimal(b).setScale(ndec, RoundingMode.HALF_UP)
+    return abig == bbig
 }
 
 fun isclose(a : List<DoubleVector>, b : List<DoubleVector>) : Boolean {
@@ -139,17 +187,25 @@ fun argmin(v : DoubleVector) : Int {
     return min_i
 }
 
-/** Take list of p-dimensional data and make p lists of values.
- *  Each list is a column of the data.
+/** Take list of p-dimensional data n-vectors and make list of n-dimensional vectors of len n.
+ *  Each output list is a column of the data.
  */
-fun unzip(data : List<DoubleVector>) : Array<MutableList<Double>> {
-    if ( data.isEmpty() ) return emptyArray()
+fun transpose(data : List<DoubleVector>) : List<DoubleVector> {
+    if ( data.isEmpty() ) return emptyList()
     val p = data[0].size() // number of dimensions
-    val cols = Array<MutableList<Double>>(p, init = {mutableListOf<Double>()})
-    for (v in data) {
-        for (i in 0..p-1) {
-            cols[i].add(v[i])
+    val transposed = List<DoubleVector>(p, init = {DoubleVector(data.size)})
+    for (row in data.indices) {
+        for (col in 0..p-1) {
+            transposed[col][row] = data[row][col]
         }
     }
-    return cols
+    return transposed
+}
+
+fun main(args: Array<String>) {
+    val x = DoubleVector(5.2321, 32.021341)
+    val y = DoubleVector(5.2421, 32.02134100003)
+    println(x.hashCode())
+    println(y.hashCode())
+    println(x == y)
 }
