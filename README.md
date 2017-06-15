@@ -11,9 +11,7 @@ I'm going to start a series of clustering routines for fun. k-means, k-mediod, m
 
 To learn [Kotlin](https://kotlinlang.org), I'm building some of the code in Kotlin.
 
-## Notes
-
-### Random Forest(tm) in Java
+## Notes on Random Forest(tm) in Java
 
 [codebuff](https://github.com/antlr/codebuff) could really use a random forest so I'm playing with an implementation here.
 
@@ -51,7 +49,7 @@ for continuous variables, sort by that variable and choose those split points at
 I'm going to try encoding floats as int so int[] can always
 be the elements type of a row.
 
-<img src="whiteboard.jpg" width=300>
+<img src="images/whiteboard.jpg" width=300>
 
 More Jeremy notes from Jan 17, 2017:
 
@@ -110,9 +108,9 @@ of other moderately strong predictors. Then in the collection of bagged
 trees, most or all of the trees will use this strong predictor in the top split.
 Consequently, all of the bagged trees will look quite similar to each other.
 
-### Mean shift
+## Notes on Mean shift
 
-In my mind, it's an expensive but straightforward algorithm that associates cluster centroids with density function maxima. We use kernel density estimation with a Gaussian kernel, derived from the original data, and fix that for all time. Now launch a swarm of particles on the surface that seek maxima. Where do you start the particles? At each data original point. The algorithm terminates when no particle is making much progress, possibly oscillating around a maximum.
+In my mind, mean-shift is an expensive but straightforward algorithm that associates cluster centroids with density function maxima. We use kernel density estimation with a Gaussian kernel, derived from the original data, and fix that for all time. Now launch a swarm of particles on the surface that seek maxima. Where do you start the particles? At each data original point. The algorithm terminates when no particle is making much progress, possibly oscillating around a maximum.
 
 The problem with gradient ascent/descent is that we need the partial derivatives of the surface function in each dimension, which can get hairy for complex kernels. Fortunately, we can ignore the density estimate itself and go straight to the gradient per [Mean Shift: A robust approach toward future space analysis](http://web.eecs.umich.edu/~silvio/teaching/EECS598/papers/mean_shift.pdf). They show that a "shadow kernel" is proportional to the gradient of the kernel used for kernel density estimation. And the good news is that the shadow of a Gaussian kernel is a Gaussian kernel.  If we choose a "top hat" flat/uniform kernel for the density estimate, we use a Epanichnikov kernel function as an estimate of the gradient. Note: the Comaniciu and Meer paper appears to have a boo-boo cut-and-paste error. Their equation (20) on page 606 says y<sub>j+1</sub> = blah where blah is not a function of y<sub>j</sub>. As the plain x in blah is not defined, I assume this should be y<sub>j</sub>. That formula blah is a cut-and-paste of (17) so likely they forgot to update it.
 
@@ -126,34 +124,7 @@ I looked at [Saravanan Thirumuruganathan's blog](https://saravananthirumuruganat
 2. Compute the mean of data within the window. 
 3. Shift the window to the mean and repeat till convergence.
 
-Notice that it says it's computing the meaning of the data within the window not the meaning of the means. His Matlab code confirms:
-
-```matlab
-	function [origDataPoints,dataPoints] = doMeanShift(dataPoints,useKNNToGetH)
-		[numSamples,numFeatures] = size(dataPoints);
-
-		origDataPoints = dataPoints;
-
-		for i = 1:numSamples
-			diffBetweenIterations = 10;
-
-			while (diffBetweenIterations > threshold)
-				curDataPoint = dataPoints(i,:);
-				euclideanDist = sqdist(curDataPoint',origDataPoints');
-				bandwidth = getBandWith(origDataPoints(i,:),origDataPoints,euclideanDist,useKNNToGetH);
-				kernelDist = exp(-euclideanDist ./ (bandwidth^2));
-				numerator = kernelDist * origDataPoints;
-				denominator = sum(kernelDist);
-				newDataPoint = numerator/denominator;
-				dataPoints(i,:) = newDataPoint;
-				diffBetweenIterations = abs(curDataPoint - newDataPoint);
-			end
-		end
-		
-		[clusterCentroids,pointsToClusters] = getClusters(origDataPoints,dataPoints);
-		plotPoints(clusterCentroids,pointsToClusters,origDataPoints);
-	end
-```
+Notice that it says it's computing the meaning of the data within the window not the meaning of the means. His Matlab code confirms.
 
 I note that the [formula in this stackexchange.com answer](https://stats.stackexchange.com/questions/61743/understanding-the-mean-shift-algorithm-with-gaussian-kernel) also computes the next particle location using the original data, not the particles.
 
@@ -168,3 +139,13 @@ In [A review of mean-shift algorithms for clustering](https://pdfs.semanticschol
 > As will be shown below, Gaussian BMS [blurred mean shift] can be seen as an iterated filtering (in the signal processing sense) that **eventually leads to a dataset with all points coincident for any starting dataset and bandwidth.** However, before that happens, the dataset quickly collapses into meaningful, tight clusters which depend on σ (see fig. 6), and then these point-like clusters continue to move towards each other relatively slowly.
 
 In other words, the blurred mean shift would *not* converge and stop at the density function maxima. After we think it is found the maxima, we have to artificially stop the iteration.
+
+### Results
+
+Heh, cool. Got some interesting clustering results. For example, here is 1000 points per cluster from 3 Gaussian samples:
+
+<img src="images/cluster3.png" width=400>
+
+The blurred mean shift converges very rapidly but continues to wiggle and it seems hard to get it to settle down without putting a maximum number of iterations, or a very loose delta tolerance. In contrast, the non-blurring version takes forever to converge, but probably gets a better estimate of the density maxima. In my implementation of the regular mean-shift, I used the blurred version to get a head start as it converges much quicker. Then the slower but more accurate convergence method takes over.
+
+This thing is pretty slow. It took 17 seconds to calculate those clusters. I have not tried to parallelize yet.
