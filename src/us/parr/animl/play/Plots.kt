@@ -87,20 +87,17 @@ fun plot3GaussianMeanShift() {
     chart.styler.isChartTitleVisible = false
     chart.styler.legendPosition = Styler.LegendPosition.InsideSW
     chart.styler.xAxisMax = 15.0
-//    chart.styler.xAxisMin = -3.0
     chart.styler.yAxisMax = 15.0
-//    chart.styler.yAxisMin = -3.0
     chart.styler.markerSize = 10
 
-    val n = 300
+    val n = 1000
     val cluster1: List<DoubleVector> = (1..n).map { DoubleVector(normal(0.0, 1.0), normal(0.0, 1.0)) }
     val cluster2: List<DoubleVector> = (1..n).map { DoubleVector(normal(6.0, 2.5), normal(4.0, 1.0)) }
     val cluster3: List<DoubleVector> = (1..n).map { DoubleVector(normal(2.0, 1.5), normal(9.0, 1.0)) }
     val data = cluster1 + cluster2 + cluster3
 
-    val d = 2
-    val bandwidth = 1.5
-    val (maxima, pointToClusters, k) = meanShift(data, bandwidth)
+    val bandwidth = 1.0
+    val (maxima, pointToClusters, k) = meanShift(data, bandwidth, 1e-2)
 //    val (maxima, pointToClusters, k) = blurredMeanShift(data, bandwidth)
     // TODO: try groupBy to create list of clusters
     val clusters = Array<MutableList<DoubleVector>>(k, init={mutableListOf()})

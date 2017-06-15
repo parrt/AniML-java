@@ -8,38 +8,91 @@ package us.parr.animl.cluster
 
 import us.parr.animl.data.*
 import java.lang.Math.*
-import java.util.*
 
 /** Mean shift algorithm. Given a list of vectors, return a list of density
  *  estimate maxima, a mapping of data point index to cluster number 0..k-1,
  *  and k (number of clusters).
  *
+ *  The blurred meaning-shift mechanism rapidly converges but it's
+ *  harder to tell when to stop iterating (using particle deltas)
+ *  because the points will eventually merge together.  My approach is
+ *  to use the blurred shift to get good approximations as a head start
+ *  for the particles. Then, using the regular mean-shift, iterate more
+ *  stably to the cluster maxima. We don't actually need very precise
+ *  Maxima estimates because all we really care about is assigning
+ *  vectors to clusters. If the maxima are off even by as much as 0.01,
+ *  that's probably still good enough to cluster. That said, if the
+ *  cluster maxima are very close together, then a higher tolerance should be
+ *  used.
+ *
  *  Note: you should normalize the range of your features since this function
  *  uses euclidean distance to compute data point density.
  */
-fun meanShift(data : List<DoubleVector>, bandwidth : Double) : Triple<List<DoubleVector>, IntArray, Int> {
+fun meanShift(data : List<DoubleVector>,
+              bandwidth : Double,
+              tolerance : Double = 1e-2,
+              mergeTolerance : Double = 1e-2)
+        : Triple<List<DoubleVector>, IntArray, Int>
+{
+    val start = System.nanoTime()
+    // first use blurred mean-shift with max_blurred_iterations iterations to get faster
+    // initial movement of particles. See comments on that method
     var particles = data.toList() // start particles at all data points
-    var iterations = 0
+    var count = 0
+    val max_blurred_iterations = 10
+    if (max_blurred_iterations > 0) {
+        do {
+            count++
+            val new_particles: List<DoubleVector> = particles.map { shift(it, particles, bandwidth) }
+            println("num distinct particles "+ distinct(particles, 3).size)
+            val done = count == max_blurred_iterations ||
+                       isclose(particles, new_particles, tolerance = tolerance)
+            particles = new_particles
+        } while (!done)  // until we converge
+//    println("Iterations "+count)
+//    println("blurred left on here: "+particles.distinct())
+    }
+
+    count = 0
     do {
-        iterations++
+        count++
         // update each particle, moving towards nearest density maximum
         val new_particles: List<DoubleVector> = particles.map { shift(it, data, bandwidth) }
-        // Keep refiningwhen particles move even a little bit; they slow down as they approach maxima
-        val done = isclose(particles, new_particles, tolerance = 1e-6)
+//        println("distinct particles "+ distinct(particles, 3))
+        // Keep refining when particles move by at least tolerance; they slow down as they approach maxima
+        val done = isclose(particles, new_particles, tolerance = tolerance)
         particles = new_particles
-    } while ( !done )  // until we converge
-    println("Iterations "+iterations)
+    } while (!done)  // until we converge
+    val stop = System.nanoTime()
+    println("Iterations " + count+", time "+(stop-start)/1_000_000+"ms")
 
     // At this point, particles[i] has converged on maxima for cluster k
     // and the goal is now to assign data[i] to cluster k
 
-    // merge cluster maxima that are within 0.001; unlike the tolerance for
+    // merge cluster maxima that are within mergeTolerance; unlike the tolerance for
     // continued iteration above, we want to merge maxima that are pretty close.
-    // ndecimals could be a parameter I guess
-    return mapVectorsToClusters(particles, data, ndecimals = 3)
+    return mapVectorsToClusters(particles, data, ndecimals = round(-log10(mergeTolerance)).toInt())
 }
 
-/** Mean shift algorithm. Given a list of vectors, return a list of density
+/** Blurred mean shift algorithm that computes density on particles in
+ *  motion not the static original data points. This converges much faster
+ *  than vanilla mean-shift by an order of magnitude since the particles
+ *  are collapsing together into a "gravity well."
+ *
+ *  From "A review of mean-shift algorithms for clustering" by
+ *  Miguel Á. Carreira-Perpińan
+ *  https://pdfs.semanticscholar.org/399e/00c8a1cc5c3d98d3ce76747d3e0fe57c88f5.pdf
+ *
+ *  "Gaussian BMS can be seen as an iterated filtering
+ *   (in the signal processing sense) that eventually leads to a dataset
+ *   with all points coincident for any starting dataset and bandwidth.
+ *   However, before that happens, the dataset quickly collapses into
+ *   meaningful, tight clusters which depend on [bandwidth] sigma."
+ *
+ *  So we terminate iteration when particles are within tolerance of each other or
+ *  when we hit arg iterations.
+ *
+ *  Given a list of vectors, return a list of density
  *  estimate maxima, a mapping of data point index to cluster number 0..k-1,
  *  and k (number of clusters). It is the same as meanShift except that
  *  we compute density based upon the particles as we move around, not the
@@ -48,43 +101,51 @@ fun meanShift(data : List<DoubleVector>, bandwidth : Double) : Triple<List<Doubl
  *  Note: you should normalize the range of your features since this function
  *  uses euclidean distance to compute data point density.
  */
-fun blurredMeanShift(data : List<DoubleVector>, bandwidth : Double) : Triple<List<DoubleVector>, IntArray, Int> {
+fun blurredMeanShift(data : List<DoubleVector>,
+                     bandwidth : Double,
+                     tolerance : Double = 1e-2,
+                     mergeTolerance : Double = 1e-2,
+                     iterations : Int = 30)
+        : Triple<List<DoubleVector>, IntArray, Int>
+{
     var particles = data.toList() // start particles at all data points
-    var iterations = 0
+    var count = 0
     do {
-        iterations++
+        count++
         // update each particle, moving towards nearest density maximum
         val new_particles: List<DoubleVector> = particles.map { shift(it, particles, bandwidth) }
         println("${particles.distinct().size} ${new_particles.distinct().size}")
-        val done = isclose(particles, new_particles, 1e04)
+        // Iterate only until numbers match up to 3 decimals; even 4 seems
+        // to be too high of a tolerance. It keeps iterating very slowly
+        // shifting one or more clusters
+        val done = count==iterations ||
+                   isclose(particles, new_particles, tolerance = tolerance)
         particles = new_particles
     } while ( !done )  // until we converge
-    println("Iterations "+iterations)
+    println("Iterations "+count)
 
     // At this point, particles[i] has converged on maxima for cluster k
     // and the goal is now to assign data[i] to cluster k
 
-    return mapVectorsToClusters(particles, data, 4)
+    return mapVectorsToClusters(particles, data, ndecimals = round(-log10(mergeTolerance)).toInt())
 }
-
-
 
 private fun shift(particle: DoubleVector, data: List<DoubleVector>, bandwidth : Double) : DoubleVector {
     // Compute distance divided by standard deviation
-    val distances: List<Double> = data.map { x -> euclidean_distance(particle, x) }
-    val gauss:     List<Double> = distances.map { d -> gaussianKernel(d, bandwidth) }
+    val gauss_distances: List<Double> = data.map { x -> gaussianKernel(euclidean_distance(particle, x),bandwidth) }
+//    val gauss:     List<Double> = distances.map { d -> gaussianKernel(d, bandwidth) }
     // Weight each data point per its proximity using gaussian kernel
     var gradient = mutableListOf<DoubleVector>()
     for (i in data.indices) {
-        gradient.add(data[i] * gauss[i])
+        gradient.add(data[i] * gauss_distances[i])
     }
     val weighted_vector    = sum(gradient)
-    val normalizing_weight = sum(gauss)
+    val normalizing_weight = sum(gauss_distances)
     return weighted_vector.map { x -> x / normalizing_weight }
 }
 
 private fun mapVectorsToClusters(particles: List<DoubleVector>, data: List<DoubleVector>, ndecimals : Int)
-    : Triple<List<DoubleVector>, IntArray, Int>
+        : Triple<List<DoubleVector>, IntArray, Int>
 {
     // Maximas are unique values in particle list
     val uniqueMaxima: Set<DoubleVector> = distinct(particles, ndecimals)
@@ -99,12 +160,12 @@ private fun mapVectorsToClusters(particles: List<DoubleVector>, data: List<Doubl
         pointToCluster[i] = maximaToClusterMap.getOrDefault(particles[i].rounded(ndecimals), -1)
     }
     println(uniqueMaxima)
-    println(Arrays.toString(pointToCluster))
+//    println(Arrays.toString(pointToCluster))
     return Triple(uniqueMaxima.toList(), pointToCluster, k)
 }
 
 private fun gaussianKernel(d: Double, bandwidth: Double)
-    = exp(-0.5 * pow(d / bandwidth, 2.0)) / (bandwidth * sqrt(2 * PI))
+        = exp(-0.5 * pow(d / bandwidth, 2.0))// / (bandwidth * sqrt(2 * PI))
 
 fun sum(data : List<Double>) : Double {
     return data.reduce { s, x -> s + x }
