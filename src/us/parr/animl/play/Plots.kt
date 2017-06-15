@@ -13,7 +13,6 @@ import us.parr.animl.cluster.meanShift
 import us.parr.animl.data.DoubleVector
 import us.parr.animl.data.transpose
 import us.parr.lib.ParrtStats.normal
-import java.lang.Math.pow
 import java.util.Collections.min
 
 fun main(args: Array<String>) {
@@ -93,17 +92,16 @@ fun plot3GaussianMeanShift() {
 //    chart.styler.yAxisMin = -3.0
     chart.styler.markerSize = 10
 
-    val n = 200
+    val n = 300
     val cluster1: List<DoubleVector> = (1..n).map { DoubleVector(normal(0.0, 1.0), normal(0.0, 1.0)) }
     val cluster2: List<DoubleVector> = (1..n).map { DoubleVector(normal(6.0, 2.5), normal(4.0, 1.0)) }
     val cluster3: List<DoubleVector> = (1..n).map { DoubleVector(normal(2.0, 1.5), normal(9.0, 1.0)) }
     val data = cluster1 + cluster2 + cluster3
 
     val d = 2
-    var bandwidth = pow(data.size.toDouble(), (-1.0/(d+4)))
-    bandwidth = pow((n * (d + 2) / 4.0), (-1.0 / (d + 4)))
-    bandwidth = 1.2
+    val bandwidth = 1.5
     val (maxima, pointToClusters, k) = meanShift(data, bandwidth)
+//    val (maxima, pointToClusters, k) = blurredMeanShift(data, bandwidth)
     // TODO: try groupBy to create list of clusters
     val clusters = Array<MutableList<DoubleVector>>(k, init={mutableListOf()})
     for (i in pointToClusters.indices) {

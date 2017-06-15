@@ -31,24 +31,30 @@ class DoubleVector {
     }
 
     /** Two vectors are equal if their elements are isclose() */
-    override fun equals(other: Any?): Boolean {
+    override fun equals(other: Any?): Boolean = equals(other, 1e-9)
+
+    fun equals(other: Any?, tolerance: Double): Boolean {
         return other is DoubleVector &&
                 this.size()==other.size() &&
-                this.isclose(other)
+                isclose(this, other, tolerance)
     }
 
-    infix fun isclose(other: DoubleVector) : Boolean {
-        for (i in elements.indices) {
-            if ( !isclose(this[i], other[i]) ) return false
-        }
-        return true
-    }
+//    fun isclose(other: DoubleVector, ndec : Int = NUM_DECIMALS_TOLERANCE_FOR_EQUALS) : Boolean {
+//        for (i in elements.indices) {
+//            if ( !isclose(this[i], other[i], ndec) ) return false
+//        }
+//        return true
+//    }
 
-    override fun hashCode(): Int {
+
+    /** Hash of this vector is derived from element values rounded to ndec decimal places */
+    override fun hashCode(): Int = hashCode(NUM_DECIMALS_TOLERANCE_FOR_EQUALS)
+
+    fun hashCode(ndec : Int): Int {
         var hash : Int = 1
         for (element in elements) {
             var rounded = BigDecimal(element)
-            rounded = rounded.setScale(NUM_DECIMALS_TOLERANCE_FOR_EQUALS, RoundingMode.HALF_UP)
+            rounded = rounded.setScale(ndec, RoundingMode.HALF_UP)
             val bits = java.lang.Double.doubleToLongBits(rounded.toDouble())
             hash = 31 * hash + (bits xor (bits ushr 32)).toInt()
         }
@@ -123,6 +129,10 @@ class DoubleVector {
         return DoubleVector(elements.map { -it })
     }
 
+    fun abs() : DoubleVector {
+        return DoubleVector(elements.map { Math.abs(it) })
+    }
+
     infix fun map(transform: (Double) -> Double): DoubleVector {
         val result = DoubleVector(size())
         for (i in this.elements.indices) {
@@ -131,7 +141,14 @@ class DoubleVector {
         return result
     }
 
-    override fun toString() = '[' + elements.joinToString(", ", transform = {e -> String.format("%.2f",e)}) + ']'
+    override fun toString() =
+        '[' +
+            elements.joinToString(", ",
+            transform = {
+                e -> BigDecimal(e).setScale(NUM_DECIMALS_TOLERANCE_FOR_EQUALS,RoundingMode.HALF_UP).toString()
+            }
+            ) +
+        ']'
 }
 
 fun sum(v : DoubleVector) = v.sum()
@@ -151,28 +168,40 @@ fun norm(x : DoubleVector) : Double {
     return Math.sqrt(sum(x.map { it * it }))
 }
 
-/** Using logic from https://www.python.org/dev/peps/pep-0485/#proposed-implementation.
- *  default is that a, b must be same within 9 decimal digits
+/** Default is that a, b must be same within about 9 decimal digits.
+ *  Handles NaN and Inf cases.
  */
-//fun isclose(a : Double, b : Double, rel_tol : Double = pow(10.0,NUM_DECIMALS_TOLERANCE_FOR_EQUALS.toDouble())) : Boolean {
-//    val abs_tol=0.0
-//    return Math.abs(a - b) <= Math.max(rel_tol * Math.max(Math.abs(a), Math.abs(b)), abs_tol)
-//}
-
-/** Are a and b the same to ndec decimal points? Checks for NaN and Inf equality too. */
-fun isclose(a : Double, b : Double, ndec : Int = NUM_DECIMALS_TOLERANCE_FOR_EQUALS) : Boolean {
-    if ( a.isNaN() && b.isNaN() ) return true
-    if ( a.isInfinite() && b.isInfinite() ) return true
-    // ok, we have real (finite) values to compare.
-    val abig = BigDecimal(a).setScale(ndec, RoundingMode.HALF_UP)
-    val bbig = BigDecimal(b).setScale(ndec, RoundingMode.HALF_UP)
-    return abig == bbig
+fun isclose(a : Double, b : Double, tolerance: Double = 1e-9) : Boolean {
+    if ( a.isNaN() ) return b.isNaN()
+    if ( a.isInfinite() ) return b.isInfinite()
+    val close = Math.abs(a - b) <= tolerance
+//    println("$a==$b is ${close} with tolerance $tolerance")
+    return close
 }
 
-fun isclose(a : List<DoubleVector>, b : List<DoubleVector>) : Boolean {
+/** Are a and b the same to ndec decimal points? Checks for NaN and Inf equality too. */
+//fun isclose(a : Double, b : Double, tolerance: Double = 1e-9) : Boolean {
+//    if ( a.isNaN() && b.isNaN() ) return true
+//    if ( a.isInfinite() && b.isInfinite() ) return true
+//    // ok, we have real (finite) values to compare.
+//    val abig = BigDecimal(a).setScale(ndec, RoundingMode.HALF_UP)
+//    val bbig = BigDecimal(b).setScale(ndec, RoundingMode.HALF_UP)
+//    println("$abig==$bbig is ${abig==bbig} with scale $ndec")
+//    return abig == bbig
+//}
+
+fun isclose(a : DoubleVector, b: DoubleVector, tolerance: Double = 1e-9) : Boolean {
+    if ( a.size() != b.size() ) return false
+    for (i in a.elements.indices) {
+        if ( !isclose(a[i], b[i], tolerance) ) return false
+    }
+    return true
+}
+
+fun isclose(a : List<DoubleVector>, b : List<DoubleVector>, tolerance: Double = 1e-9) : Boolean {
     if ( a.size != b.size ) return false
     for (i in a.indices) {
-        if ( !(a[i] isclose b[i]) ) return false
+        if ( !(isclose(a[i], b[i], tolerance)) ) return false
     }
     return true
 }
@@ -202,6 +231,16 @@ fun transpose(data : List<DoubleVector>) : List<DoubleVector> {
         }
     }
     return transposed
+}
+
+fun distinct(data : List<DoubleVector>, ndec : Int = NUM_DECIMALS_TOLERANCE_FOR_EQUALS)
+    : Set<DoubleVector>
+{
+    val uniq = mutableSetOf<DoubleVector>()
+    for (v in data) {
+        uniq.add(v.rounded(ndec))
+    }
+    return uniq
 }
 
 fun main(args: Array<String>) {
