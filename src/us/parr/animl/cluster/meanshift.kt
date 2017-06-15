@@ -6,7 +6,10 @@
 
 package us.parr.animl.cluster
 
-import us.parr.animl.data.*
+import us.parr.animl.data.DoubleVector
+import us.parr.animl.data.distinct
+import us.parr.animl.data.euclidean_distance
+import us.parr.animl.data.isclose
 import java.lang.Math.*
 
 /** Mean shift algorithm. Given a list of vectors, return a list of density
@@ -130,17 +133,31 @@ fun blurredMeanShift(data : List<DoubleVector>,
     return mapVectorsToClusters(particles, data, ndecimals = round(-log10(mergeTolerance)).toInt())
 }
 
+/** Return and shift in particle that is the weighted mean relative to
+ *  the particle.
+ *
+ *  The weighted mean of particle vector within data set is the
+ *
+ *  Sum over i gaussian(x_i - particle) * x_i
+ *  ----------------------------------
+ *  Sum over i gaussian(x_i - particle)
+ *
+ *  For example, if we replace the Gaussian with 1, then we
+ *  our computing the unweighted centroid of all data points.
+ *  (Not a good idea of course but illustrates that is just a
+ *  weighted average where the distance falls off to zero as you
+ *  move away from the particle.
+ *
+ *  We compute this all in a single loop over the data for efficiency.
+ */
 private fun shift(particle: DoubleVector, data: List<DoubleVector>, bandwidth : Double) : DoubleVector {
-    // Compute distance divided by standard deviation
-    val gauss_distances: List<Double> = data.map { x -> gaussianKernel(euclidean_distance(particle, x),bandwidth) }
-//    val gauss:     List<Double> = distances.map { d -> gaussianKernel(d, bandwidth) }
-    // Weight each data point per its proximity using gaussian kernel
-    var gradient = mutableListOf<DoubleVector>()
-    for (i in data.indices) {
-        gradient.add(data[i] * gauss_distances[i])
+    var normalizing_weight = 0.0
+    var weighted_vector = DoubleVector(particle.size())
+    data.forEach {
+        val d = gaussianKernel(euclidean_distance(particle, it), bandwidth)
+        normalizing_weight += d
+        weighted_vector += it * d
     }
-    val weighted_vector    = sum(gradient)
-    val normalizing_weight = sum(gauss_distances)
     return weighted_vector.map { x -> x / normalizing_weight }
 }
 
