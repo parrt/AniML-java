@@ -10,15 +10,18 @@ import org.knowm.xchart.*
 import org.knowm.xchart.style.Styler
 import us.parr.animl.cluster.kmeans
 import us.parr.animl.cluster.parallelMeanShift
+import us.parr.animl.data.DataTable
 import us.parr.animl.data.DoubleVector
 import us.parr.animl.data.transpose
 import us.parr.lib.ParrtStats.normal
+import java.rmi.server.RMIClassLoader
 import java.util.Collections.min
 
 fun main(args: Array<String>) {
     //plotGrades()
 //    plot2Gaussian()
-    plot3GaussianMeanShift()
+//    plot3GaussianMeanShift()
+    plotSpiralMeanShift()
 }
 
 private fun plotGrades() {
@@ -109,6 +112,55 @@ fun plot3GaussianMeanShift() {
     for (cluster in clusters) {
         val columns: List<DoubleVector> = transpose(cluster)
         chart.addSeries("cluster "+i, columns[0].elements, columns[1].elements)
+        i++
+    }
+
+    val xCentroid = mutableListOf<Double>()
+    val yCentroid = mutableListOf<Double>()
+    for (i in maxima.indices) {
+        xCentroid.add(maxima[i][0])
+        yCentroid.add(maxima[i][1])
+    }
+    chart.addSeries("Centroids", xCentroid, yCentroid)
+
+    SwingWrapper(chart).displayChart()
+}
+
+fun plotSpiralMeanShift() {
+    val chart = XYChartBuilder().width(800).height(600).build()
+
+    // Customize Chart
+    chart.styler.defaultSeriesRenderStyle = XYSeries.XYSeriesRenderStyle.Scatter
+    chart.styler.isChartTitleVisible = false
+    chart.styler.legendPosition = Styler.LegendPosition.InsideSW
+//    chart.styler.xAxisMax = 15.0
+//    chart.styler.yAxisMax = 15.0
+    chart.styler.markerSize = 10
+
+    val fileName = "clustering/artificial/3-spiral.csv"
+    val url = DataTable().javaClass.getClassLoader().getResource(fileName)
+    val csv = DataTable.loadCSV(url!!.getFile(), null, null, null, true)
+    var data = mutableListOf<DoubleVector>()
+    for (i in 0..csv.size()-1) {
+        val x = csv.getAsFloat(i,0).toDouble()
+        val y = csv.getAsFloat(i,1).toDouble()
+        data.add(DoubleVector(x,y))
+    }
+//    println(data)
+
+    val bandwidth = 1.3
+    val (maxima, pointToClusters, k) = parallelMeanShift(data, bandwidth, tolerance = 1e-5, mergeTolerance = 1e-4)
+//    val (maxima, pointToClusters, k) = blurredMeanShift(data, bandwidth)
+    // TODO: try groupBy to create list of clusters
+    val clusters = Array<MutableList<DoubleVector>>(k, init = { mutableListOf() })
+    for (i in pointToClusters.indices) {
+        clusters[pointToClusters[i]].add(data[i])
+    }
+
+    var i = 0
+    for (cluster in clusters) {
+        val columns: List<DoubleVector> = transpose(cluster)
+        chart.addSeries("cluster " + i, columns[0].elements, columns[1].elements)
         i++
     }
 

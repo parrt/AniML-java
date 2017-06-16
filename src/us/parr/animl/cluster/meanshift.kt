@@ -105,7 +105,7 @@ fun parallelMeanShift(data : List<DoubleVector>,
     // initial movement of particles. See comments on that method
     var particles = data.toMutableList() // start particles at all data points
     var count = 0
-    val max_blurred_iterations = 10
+    val max_blurred_iterations = 15
     if (max_blurred_iterations > 0) {
         // we operate on particles and create new_particles list ala pure functional
         var new_particles: MutableList<DoubleVector> = data.toMutableList()
