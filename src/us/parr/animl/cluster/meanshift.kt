@@ -54,7 +54,7 @@ fun meanShift(data : List<DoubleVector>,
     // initial movement of particles. See comments on that method
     var particles = data.toList() // start particles at all data points
     var count = 0
-    val max_blurred_iterations = 10
+    val max_blurred_iterations = 20
     if (max_blurred_iterations > 0) {
         do {
             count++
@@ -75,6 +75,7 @@ fun meanShift(data : List<DoubleVector>,
         val new_particles: List<DoubleVector> = particles.map { shift(it, data, bandwidth) }
 //        println("distinct particles "+ distinct(particles, 3))
         // Keep refining when particles move by at least tolerance; they slow down as they approach maxima
+        println("num distinct particles "+ distinct(particles, 3).size)
         val done = isclose(particles, new_particles, tolerance = tolerance)
         particles = new_particles
     } while (!done)  // until we converge
@@ -105,7 +106,7 @@ fun parallelMeanShift(data : List<DoubleVector>,
     // initial movement of particles. See comments on that method
     var particles = data.toMutableList() // start particles at all data points
     var count = 0
-    val max_blurred_iterations = 15
+    val max_blurred_iterations = 20
     if (max_blurred_iterations > 0) {
         // we operate on particles and create new_particles list ala pure functional
         var new_particles: MutableList<DoubleVector> = data.toMutableList()

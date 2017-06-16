@@ -9,12 +9,12 @@ package us.parr.animl.play
 import org.knowm.xchart.*
 import org.knowm.xchart.style.Styler
 import us.parr.animl.cluster.kmeans
+import us.parr.animl.cluster.meanShift
 import us.parr.animl.cluster.parallelMeanShift
 import us.parr.animl.data.DataTable
 import us.parr.animl.data.DoubleVector
 import us.parr.animl.data.transpose
 import us.parr.lib.ParrtStats.normal
-import java.rmi.server.RMIClassLoader
 import java.util.Collections.min
 
 fun main(args: Array<String>) {
@@ -148,8 +148,8 @@ fun plotSpiralMeanShift() {
     }
 //    println(data)
 
-    val bandwidth = 1.3
-    val (maxima, pointToClusters, k) = parallelMeanShift(data, bandwidth, tolerance = 1e-5, mergeTolerance = 1e-4)
+    val bandwidth = 1.4
+    val (maxima, pointToClusters, k) = meanShift(data, bandwidth, tolerance = 1e-9, mergeTolerance = 1e-4)
 //    val (maxima, pointToClusters, k) = blurredMeanShift(data, bandwidth)
     // TODO: try groupBy to create list of clusters
     val clusters = Array<MutableList<DoubleVector>>(k, init = { mutableListOf() })
