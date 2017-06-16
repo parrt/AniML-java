@@ -149,3 +149,5 @@ Heh, cool. Got some interesting clustering results. For example, here is 1000 po
 The blurred mean shift converges very rapidly but continues to wiggle and it seems hard to get it to settle down without putting a maximum number of iterations, or a very loose delta tolerance. In contrast, the non-blurring version takes forever to converge, but probably gets a better estimate of the density maxima. In my implementation of the regular mean-shift, I used the blurred version to get a head start as it converges much quicker. Then the slower but more accurate convergence method takes over.
 
 This thing is pretty slow. It took 17 seconds to calculate those clusters. I have not tried to parallelize yet.
+
+Awesome. The parallel version with 7 core drops down to 6.9 seconds. Appears to get same results.

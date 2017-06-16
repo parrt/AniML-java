@@ -9,7 +9,7 @@ package us.parr.animl.play
 import org.knowm.xchart.*
 import org.knowm.xchart.style.Styler
 import us.parr.animl.cluster.kmeans
-import us.parr.animl.cluster.meanShift
+import us.parr.animl.cluster.parallelMeanShift
 import us.parr.animl.data.DoubleVector
 import us.parr.animl.data.transpose
 import us.parr.lib.ParrtStats.normal
@@ -97,7 +97,7 @@ fun plot3GaussianMeanShift() {
     val data = cluster1 + cluster2 + cluster3
 
     val bandwidth = 1.0
-    val (maxima, pointToClusters, k) = meanShift(data, bandwidth, 1e-2)
+    val (maxima, pointToClusters, k) = parallelMeanShift(data, bandwidth, 1e-2)
 //    val (maxima, pointToClusters, k) = blurredMeanShift(data, bandwidth)
     // TODO: try groupBy to create list of clusters
     val clusters = Array<MutableList<DoubleVector>>(k, init={mutableListOf()})

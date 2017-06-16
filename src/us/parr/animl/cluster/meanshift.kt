@@ -11,6 +11,10 @@ import us.parr.animl.data.distinct
 import us.parr.animl.data.euclidean_distance
 import us.parr.animl.data.isclose
 import java.lang.Math.*
+import java.util.*
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 /** Mean shift algorithm. Given a list of vectors, return a list of density
  *  estimate maxima, a mapping of data point index to cluster number 0..k-1,
@@ -30,6 +34,14 @@ import java.lang.Math.*
  *
  *  Note: you should normalize the range of your features since this function
  *  uses euclidean distance to compute data point density.
+ *
+ *  Note: From "A review of mean-shift algorithms for clustering" by
+ *  Miguel Á. Carreira-Perpińan
+ *  https://pdfs.semanticscholar.org/399e/00c8a1cc5c3d98d3ce76747d3e0fe57c88f5.pdf
+ *  "KDEs break down in high dimensions ... Indeed, most successful
+ *  applications of mean-shift have been in low-dimensional problems,
+ *  in particular image segmentation (using a few features
+ *  per pixel, such as color in LAB space)"
  */
 fun meanShift(data : List<DoubleVector>,
               bandwidth : Double,
@@ -68,6 +80,101 @@ fun meanShift(data : List<DoubleVector>,
     } while (!done)  // until we converge
     val stop = System.nanoTime()
     println("Iterations " + count+", time "+(stop-start)/1_000_000+"ms")
+
+    // At this point, particles[i] has converged on maxima for cluster k
+    // and the goal is now to assign data[i] to cluster k
+
+    // merge cluster maxima that are within mergeTolerance; unlike the tolerance for
+    // continued iteration above, we want to merge maxima that are pretty close.
+    return mapVectorsToClusters(particles, data, ndecimals = round(-log10(mergeTolerance)).toInt())
+}
+
+fun parallelMeanShift(data : List<DoubleVector>,
+                      bandwidth : Double,
+                      tolerance : Double = 1e-2,
+                      mergeTolerance : Double = 1e-2)
+        : Triple<List<DoubleVector>, IntArray, Int>
+{
+    val n = data.size
+    val ncpu = Runtime.getRuntime().availableProcessors()
+    val chunkSize = n / ncpu
+    val pool = Executors.newFixedThreadPool(ncpu - 1)
+    val start = System.nanoTime()
+
+    // first use blurred mean-shift with max_blurred_iterations iterations to get faster
+    // initial movement of particles. See comments on that method
+    var particles = data.toMutableList() // start particles at all data points
+    var count = 0
+    val max_blurred_iterations = 10
+    if (max_blurred_iterations > 0) {
+        // we operate on particles and create new_particles list ala pure functional
+        var new_particles: MutableList<DoubleVector> = data.toMutableList()
+        do {
+            count++
+            val jobs = ArrayList<Callable<Unit>>()
+            for (i in 0..n-1 step chunkSize) {
+                val job = Callable<Unit> {
+                    try {
+                        val end = min(n-1, i+chunkSize)
+//                        println("blurred j = $i..$end")
+                        for (j in i..end) {
+                            new_particles[j] = shift(particles[j], particles, bandwidth)
+                        }
+                    }
+                    catch (t : Throwable) {
+                        t.printStackTrace(System.err)
+                    }
+                }
+                jobs.add(job)
+            }
+            pool.invokeAll<Unit>(jobs)
+
+//            val new_particles: List<DoubleVector> = particles.map { shift(it, particles, bandwidth) }
+            println("num distinct particles "+ distinct(new_particles, 3).size)
+            val done = count == max_blurred_iterations ||
+                       isclose(particles, new_particles, tolerance = tolerance)
+            // We can't point particles at new_particles (same list) since then we'd be
+            // updating the particles as we compute density from them during parallel computation
+            particles = new_particles.toMutableList() // dup
+        } while (!done)  // until we converge
+        println("Iterations "+count)
+//    println("blurred left on here: "+particles.distinct())
+    }
+
+    count = 0
+    // we operate on particles and create new_particles list ala pure functional
+    var new_particles: MutableList<DoubleVector> = data.toMutableList()
+    do {
+        count++
+        // update each particle, moving towards nearest density maximum
+        val jobs = ArrayList<Callable<Unit>>()
+        for (i in 0..n-1 step chunkSize) {
+            val job = Callable<Unit> {
+                try {
+                    val end = min(n-1, i+chunkSize)
+//                    println("j = $i..$end")
+                    for (j in i..end) {
+                        new_particles[j] = shift(particles[j], data, bandwidth)
+                    }
+                }
+                catch (t : Throwable) {
+                    t.printStackTrace(System.err)
+                }
+            }
+            jobs.add(job)
+        }
+        pool.invokeAll<Unit>(jobs)
+
+        println("distinct particles "+ distinct(particles, 3).size)
+        // Keep refining when particles move by at least tolerance; they slow down as they approach maxima
+        val done = isclose(particles, new_particles, tolerance = tolerance)
+        particles = new_particles.toMutableList() // dup
+    } while (!done)  // until we converge
+    val stop = System.nanoTime()
+    println("Iterations " + count+", time "+(stop-start)/1_000_000+"ms")
+
+    pool.shutdown()
+    pool.awaitTermination(60, TimeUnit.MINUTES)
 
     // At this point, particles[i] has converged on maxima for cluster k
     // and the goal is now to assign data[i] to cluster k
