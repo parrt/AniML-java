@@ -151,3 +151,7 @@ The blurred mean shift converges very rapidly but continues to wiggle and it see
 This thing is pretty slow. It took 17 seconds to calculate those clusters. I have not tried to parallelize yet.
 
 Awesome. The parallel version with 7 core drops down to 6.9 seconds. Appears to get same results.
+
+Hmm..had to tweak algorithm along lines of [Matt Nedrich's sample code](https://github.com/mattnedrich/MeanShift_py/blob/master/mean_shift.py) before it handled spirals even close to correctly. After much bandwidth playing around I got only this good:
+
+<img src="images/spirals.png" width=400>

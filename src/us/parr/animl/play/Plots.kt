@@ -10,8 +10,8 @@ import org.knowm.xchart.*
 import org.knowm.xchart.style.Styler
 import us.parr.animl.cluster.kmeans
 import us.parr.animl.cluster.meanShift
-import us.parr.animl.cluster.parallelMeanShift
 import us.parr.animl.data.DataTable
+import us.parr.animl.data.DataTable.getAsFloat
 import us.parr.animl.data.DoubleVector
 import us.parr.animl.data.transpose
 import us.parr.lib.ParrtStats.normal
@@ -93,14 +93,14 @@ fun plot3GaussianMeanShift() {
     chart.styler.yAxisMax = 15.0
     chart.styler.markerSize = 10
 
-    val n = 1000
+    val n = 100
     val cluster1: List<DoubleVector> = (1..n).map { DoubleVector(normal(0.0, 1.0), normal(0.0, 1.0)) }
     val cluster2: List<DoubleVector> = (1..n).map { DoubleVector(normal(6.0, 2.5), normal(4.0, 1.0)) }
     val cluster3: List<DoubleVector> = (1..n).map { DoubleVector(normal(2.0, 1.5), normal(9.0, 1.0)) }
     val data = cluster1 + cluster2 + cluster3
 
-    val bandwidth = 1.0
-    val (maxima, pointToClusters, k) = parallelMeanShift(data, bandwidth, 1e-2)
+    val bandwidth = 1.2
+    val (maxima, pointToClusters, k) = meanShift(data, bandwidth, 1e-6, max_blurred_iterations = 0)
 //    val (maxima, pointToClusters, k) = blurredMeanShift(data, bandwidth)
     // TODO: try groupBy to create list of clusters
     val clusters = Array<MutableList<DoubleVector>>(k, init={mutableListOf()})
@@ -133,24 +133,44 @@ fun plotSpiralMeanShift() {
     chart.styler.defaultSeriesRenderStyle = XYSeries.XYSeriesRenderStyle.Scatter
     chart.styler.isChartTitleVisible = false
     chart.styler.legendPosition = Styler.LegendPosition.InsideSW
-//    chart.styler.xAxisMax = 15.0
+//    chart.styler.xAxisMin = 29.4
 //    chart.styler.yAxisMax = 15.0
     chart.styler.markerSize = 10
 
     val fileName = "clustering/artificial/3-spiral.csv"
+//    val fileName = "clustering/artificial/play.csv"
     val url = DataTable().javaClass.getClassLoader().getResource(fileName)
     val csv = DataTable.loadCSV(url!!.getFile(), null, null, null, true)
+//    val subset = bootstrapWithRepl(csv.rows, 45)
+    val subset = csv.rows
     var data = mutableListOf<DoubleVector>()
-    for (i in 0..csv.size()-1) {
-        val x = csv.getAsFloat(i,0).toDouble()
-        val y = csv.getAsFloat(i,1).toDouble()
+    for (i in 0..subset.size-1) {
+        val x = getAsFloat(subset[i][0]).toDouble()
+        val y = getAsFloat(subset[i][1]).toDouble()
         data.add(DoubleVector(x,y))
     }
 //    println(data)
 
-    val bandwidth = 1.4
-    val (maxima, pointToClusters, k) = meanShift(data, bandwidth, tolerance = 1e-9, mergeTolerance = 1e-4)
-//    val (maxima, pointToClusters, k) = blurredMeanShift(data, bandwidth)
+//    val cluster1: MutableList<DoubleVector> = mutableListOf<DoubleVector>(
+//            DoubleVector(0.298743,0.799992),
+//            DoubleVector(0.299058,0.799996)
+////            DoubleVector(0.299372,0.799998)
+////            DoubleVector(0.299686,0.8)
+//    )
+//    val cluster2 = mutableListOf<DoubleVector>(
+//            DoubleVector(0.305,0.793),
+//            DoubleVector(0.3045,0.793)
+////            DoubleVector(0.304,0.793)
+////            DoubleVector(0.3035,0.793)
+//            )
+//    data = (cluster1 + cluster2).toMutableList()
+//
+//    data = data.map { it * 10.0 }.toMutableList()
+
+    val bandwidth = 1.43
+    val (maxima, pointToClusters, k) =
+            meanShift(data, bandwidth, tolerance = 1e-9, mergeTolerance = 1e-4, max_blurred_iterations = 0)
+//    val (maxima, pointToClusters, k) = blurredMeanShift(data, bandwidth, tolerance = 1e-9, mergeTolerance = 1e-4, iterations = 2000)
     // TODO: try groupBy to create list of clusters
     val clusters = Array<MutableList<DoubleVector>>(k, init = { mutableListOf() })
     for (i in pointToClusters.indices) {

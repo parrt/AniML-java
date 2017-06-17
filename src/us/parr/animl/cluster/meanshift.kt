@@ -46,19 +46,19 @@ import java.util.concurrent.TimeUnit
 fun meanShift(data : List<DoubleVector>,
               bandwidth : Double,
               tolerance : Double = 1e-2,
-              mergeTolerance : Double = 1e-2)
+              mergeTolerance : Double = 1e-2,
+              max_blurred_iterations : Int = 20)
         : Triple<List<DoubleVector>, IntArray, Int>
 {
     val start = System.nanoTime()
     // first use blurred mean-shift with max_blurred_iterations iterations to get faster
     // initial movement of particles. See comments on that method
-    var particles = data.toList() // start particles at all data points
+    var particles = data.toMutableList() // start particles at all data points
     var count = 0
-    val max_blurred_iterations = 20
     if (max_blurred_iterations > 0) {
         do {
             count++
-            val new_particles: List<DoubleVector> = particles.map { shift(it, particles, bandwidth) }
+            val new_particles: MutableList<DoubleVector> = particles.map { shift(it, particles, bandwidth) }.toMutableList()
             println("num distinct particles "+ distinct(particles, 3).size)
             val done = count == max_blurred_iterations ||
                        isclose(particles, new_particles, tolerance = tolerance)
@@ -68,17 +68,33 @@ fun meanShift(data : List<DoubleVector>,
 //    println("blurred left on here: "+particles.distinct())
     }
 
+    var stillShifting = BooleanArray(data.size, {true})
     count = 0
     do {
+        var maxMinDistance = 0.0
         count++
         // update each particle, moving towards nearest density maximum
-        val new_particles: List<DoubleVector> = particles.map { shift(it, data, bandwidth) }
-//        println("distinct particles "+ distinct(particles, 3))
+//        var new_particles = particles.toMutableList()
+        for (i in data.indices) {
+            if ( !stillShifting[i] ) continue
+            val p = shift(particles[i], data, bandwidth)
+            val d = euclidean_distance(p, particles[i])
+            if ( d > maxMinDistance ) {
+                maxMinDistance = d
+            }
+            if ( d < tolerance ) {
+                stillShifting[i] = false
+            }
+            particles[i] = p
+        }
+//        val new_particles: List<DoubleVector> = particles.map { shift(it, data, bandwidth) }
+//        println("particles "+particles.joinToString { it.toString(3) })
+        println("distinct particles "+ distinct(particles, 3))
         // Keep refining when particles move by at least tolerance; they slow down as they approach maxima
-        println("num distinct particles "+ distinct(particles, 3).size)
-        val done = isclose(particles, new_particles, tolerance = tolerance)
-        particles = new_particles
-    } while (!done)  // until we converge
+//        println("num distinct particles "+ distinct(particles, 3).size)
+//        val done = isclose(particles, new_particles, tolerance = tolerance)
+//        particles = new_particles
+    } while (maxMinDistance > tolerance)  // until we converge
     val stop = System.nanoTime()
     println("Iterations " + count+", time "+(stop-start)/1_000_000+"ms")
 
@@ -241,32 +257,37 @@ fun blurredMeanShift(data : List<DoubleVector>,
     return mapVectorsToClusters(particles, data, ndecimals = round(-log10(mergeTolerance)).toInt())
 }
 
-/** Return and shift in particle that is the weighted mean relative to
- *  the particle.
+/** Return a shifted particle that is the weighted mean relative to
+ *  the particle and data arg.
  *
- *  The weighted mean of particle vector within data set is the
+ *  The weighted mean of particle vector within data set is:
  *
- *  Sum over i gaussian(x_i - particle) * x_i
+ *  Sum over i gaussian((x_i - particle)^2) * x_i
  *  ----------------------------------
- *  Sum over i gaussian(x_i - particle)
+ *  Sum over i gaussian((x_i - particle)^2)
  *
  *  For example, if we replace the Gaussian with 1, then we
  *  our computing the unweighted centroid of all data points.
  *  (Not a good idea of course but illustrates that is just a
  *  weighted average where the distance falls off to zero as you
- *  move away from the particle.
+ *  move away from the particle.)
  *
  *  We compute this all in a single loop over the data for efficiency.
  */
 private fun shift(particle: DoubleVector, data: List<DoubleVector>, bandwidth : Double) : DoubleVector {
     var normalizing_weight = 0.0
-    var weighted_vector = DoubleVector(particle.size())
-    data.forEach {
-        val d = gaussianKernel(euclidean_distance(particle, it), bandwidth)
-        normalizing_weight += d
-        weighted_vector += it * d
+    var weighted_vector = DoubleVector(particle.dims())
+    for (i in data.indices) {
+//    data.forEach {
+        val x_i = data[i]
+        val ed = euclidean_distance(particle, x_i)
+//        if ( ed > bandwidth ) continue
+        val gd = gaussianKernel(ed, bandwidth)
+        normalizing_weight += gd
+        weighted_vector += x_i * gd
     }
-    return weighted_vector.map { x -> x / normalizing_weight }
+    val v = weighted_vector.map { x -> x / normalizing_weight }
+    return v
 }
 
 private fun mapVectorsToClusters(particles: List<DoubleVector>, data: List<DoubleVector>, ndecimals : Int)
@@ -289,8 +310,9 @@ private fun mapVectorsToClusters(particles: List<DoubleVector>, data: List<Doubl
     return Triple(uniqueMaxima.toList(), pointToCluster, k)
 }
 
-private fun gaussianKernel(d: Double, bandwidth: Double)
-        = exp(-0.5 * pow(d / bandwidth, 2.0))// / (bandwidth * sqrt(2 * PI))
+private fun gaussianKernel(d: Double, bandwidth: Double) : Double {
+    return exp(-0.5 * pow(d / bandwidth, 2.0))// / (bandwidth * sqrt(2 * PI))
+}
 
 fun sum(data : List<Double>) : Double {
     return data.reduce { s, x -> s + x }

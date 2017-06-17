@@ -35,7 +35,7 @@ class DoubleVector {
 
     fun equals(other: Any?, tolerance: Double): Boolean {
         return other is DoubleVector &&
-                this.size()==other.size() &&
+                this.dims()==other.dims() &&
                 isclose(this, other, tolerance)
     }
 
@@ -83,7 +83,7 @@ class DoubleVector {
 
     fun copy() : DoubleVector = DoubleVector(elements.toList())
 
-    fun size() = elements.size
+    fun dims() = elements.size
 
     infix fun dot(b:DoubleVector) : Double {
         var sum : Double = 0.0
@@ -134,21 +134,23 @@ class DoubleVector {
     }
 
     infix fun map(transform: (Double) -> Double): DoubleVector {
-        val result = DoubleVector(size())
+        val result = DoubleVector(dims())
         for (i in this.elements.indices) {
             result.elements[i] = transform(this.elements[i])
         }
         return result
     }
 
-    override fun toString() =
+    fun toString(ndec : Int = NUM_DECIMALS_TOLERANCE_FOR_EQUALS) =
         '[' +
             elements.joinToString(", ",
             transform = {
-                e -> BigDecimal(e).setScale(NUM_DECIMALS_TOLERANCE_FOR_EQUALS,RoundingMode.HALF_UP).toString()
+                e -> BigDecimal(e).setScale(ndec,RoundingMode.HALF_UP).toString()
             }
             ) +
         ']'
+
+    override fun toString() = toString(NUM_DECIMALS_TOLERANCE_FOR_EQUALS)
 }
 
 fun sum(v : DoubleVector) = v.sum()
@@ -157,10 +159,15 @@ fun sum(data : List<DoubleVector>) : DoubleVector {
     return data.reduce { s, x -> s + x }
 }
 
-fun mean(v : DoubleVector) = v.sum() / v.size()
+fun mean(v : DoubleVector) = v.sum() / v.dims()
 
 /** Return L2 euclidean distance between scalars or vectors x and y */
 fun euclidean_distance(x : DoubleVector, y : DoubleVector) : Double {
+//    var sum : Double = 0.0
+//    for (i in x.elements.indices) { // for each dimension
+//        val d = x[i]-y[i]
+//        sum += d*d
+//    }
     return Math.sqrt(sum((x - y) map { it * it }))
 }
 
@@ -191,7 +198,7 @@ fun isclose(a : Double, b : Double, tolerance: Double = 1e-9) : Boolean {
 //}
 
 fun isclose(a : DoubleVector, b: DoubleVector, tolerance: Double = 1e-9) : Boolean {
-    if ( a.size() != b.size() ) return false
+    if ( a.dims() != b.dims() ) return false
     for (i in a.elements.indices) {
         if ( !isclose(a[i], b[i], tolerance) ) return false
     }
@@ -223,7 +230,7 @@ fun argmin(v : DoubleVector) : Int {
  */
 fun transpose(data : List<DoubleVector>) : List<DoubleVector> {
     if ( data.isEmpty() ) return emptyList()
-    val p = data[0].size() // number of dimensions
+    val p = data[0].dims() // number of dimensions
     val transposed = List<DoubleVector>(p, init = {DoubleVector(data.size)})
     for (row in data.indices) {
         for (col in 0..p-1) {
