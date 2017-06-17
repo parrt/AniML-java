@@ -94,6 +94,7 @@ fun meanShift(data : List<DoubleVector>,
 //        println("num distinct particles "+ distinct(particles, 3).size)
 //        val done = isclose(particles, new_particles, tolerance = tolerance)
 //        particles = new_particles
+        // stop when the max distance a particle travels is < tolerance
     } while (maxMinDistance > tolerance)  // until we converge
     val stop = System.nanoTime()
     println("Iterations " + count+", time "+(stop-start)/1_000_000+"ms")
