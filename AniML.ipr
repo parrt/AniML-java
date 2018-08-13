@@ -39,9 +39,6 @@
     </profile>
     <version value="1.0" />
   </component>
-  <component name="KotlinCommonCompilerArguments">
-    <option name="coroutinesWarn" value="false" />
-  </component>
   <component name="MavenProjectsManager">
     <option name="originalFiles">
       <list>
